@@ -9,9 +9,9 @@ import { Fmt } from './fmt.js';
 class Evt {
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(actor, tag, atts={}) {
-        Object.assign(this, atts);
         this.tag = tag;
         this.actor = actor;
+        Object.assign(this, atts);
     }
 
     // METHODS -------------------------------------------------------------
@@ -21,11 +21,13 @@ class Evt {
 }
 
 class EvtListener {
-    constructor(fcn, once=false, filter=undefined, priority=0) {
+    constructor(fcn, boundfcn, once=false, filter=undefined, priority=0, ctx=undefined) {
         this.fcn = fcn;
+        this.boundfcn = boundfcn;
         this.priority = priority;
         this.once = once;
         this.filter = filter;
+        this.ctx = ctx;
     }
     toString() {
         return Fmt.toString(this.constructor.name, this.priority, this.once);
@@ -40,7 +42,7 @@ class EvtEmitter {
         this.$listeners = []
     }
 
-    trigger(atts) {
+    trigger(atts={}) {
         // no listeners... no work...
         if (!this.$listeners.length) return;
         // build event
@@ -56,34 +58,19 @@ class EvtEmitter {
                 if (idx !== -1) this.$listeners.splice(idx, 1);
             }
             // execute listener callback
-            listener.fcn(evt);
-        }
-        let links = this.findLinksForEvt(emitter, evt.tag);
-        if (links.length) {
-            // sort listeners
-            links.sort((a,b) => a.priority-b.priority);
-            // delete any listener from emitter if marked w/ once attribute
-            for (const link of links.filter((v) => v.once && (!v.filter || v.filter(evt)))) {
-                this.delLink(link);
-            }
-            // trigger callback for each listener
-            for (const link of links) {
-                if (link.filter && !link.filter(evt)) continue;
-                link.fcn(evt);
-            }
+            listener.fcn(evt, listener.ctx);
         }
     }
 
-    listen(fcn, receiver, once=false, filter=undefined, priority=0) {
-        // bind receiver function
-        if (receiver) fcn = fcn.bind(receiver);
-        let listener = new EvtListener(fcn, once, filter, priority);
+    listen(fcn, receiver, once=false, filter=undefined, priority=0, ctx=undefined) {
+        let boundfcn = (receiver) ? fcn.bind(receiver) : fcn;
+        let listener = new EvtListener(fcn, boundfcn, once, filter, priority, ctx);
         this.$listeners.push(listener);
         this.$listeners.sort((a,b) => a.priority-b.priority);
     }
 
     ignore(fcn) {
-        let idx = this.$listeners.indexOf(listener);
+        let idx = this.$listeners.findIndex((v) = v.fcn === fcn);
         if (idx !== -1) this.$listeners.splice(idx, 1);
     }
 

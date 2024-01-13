@@ -40,31 +40,6 @@ class $GadgetDefaults {
     }
 }
 
-class GadgetCtx {
-
-    static current = new GadgetCtx();
-
-    // static properties that allow unique inheritance
-    static get $gid() {
-        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
-        return this.$$gid;
-    }
-    static set $gid(value) {
-        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
-        return this.$$gid = value;
-    }
-
-    constructor(spec={}) {
-        this.gid = ('gid' in spec) ? spec.gid : this.constructor.$gid++;
-        this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
-        this.dflts = ('dflts' in spec) ? spec.dflts : new $GadgetDefaults();
-    }
-
-    toString() {
-        return Fmt.toString(this.constructor.name, this.tag);
-    }
-}
-
 class $GadgetSchemaEntry {
     constructor(key, spec={}) {
         this.key = key;
@@ -79,6 +54,7 @@ class $GadgetSchemaEntry {
             if (this.generator) return this.generator(o,dflt);
             return dflt;
         });
+        // FIXME
         //this.atUpdate = spec.atUpdate;
         // link - if the value is an object, setup Gadget links between the trunk and leaf.
         this.link = ('link' in spec) ? spec.link : false;
@@ -156,41 +132,58 @@ class $GadgetSchemas {
     }
 }
 
+class GadgetCtx {
+
+    static current = new GadgetCtx();
+
+    // static properties that allow unique inheritance
+    static get $gid() {
+        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
+        return this.$$gid;
+    }
+    static set $gid(value) {
+        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
+        return this.$$gid = value;
+    }
+
+    constructor(spec={}) {
+        this.gid = ('gid' in spec) ? spec.gid : this.constructor.$gid++;
+        this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
+        this.dflts = ('dflts' in spec) ? spec.dflts : new $GadgetDefaults();
+    }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, this.tag);
+    }
+}
+
 class Gadget {
 
     static $registry = new Map();
     static $register() {
         if (!Object.hasOwn(this.prototype, '$registered')) {
-            this.prototype.$registered = true;
-            if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
+            let clsproto = this.prototype;
+            // registration
+            clsproto.$registered = true;
+            this.$registry.set(this.name, this);
+            // class defaults
+            clsproto.$dflts = new $GadgetDfltProxy(this.name, Object.getPrototypeOf(clsproto).$dflts);
+            // class schemas
+            clsproto.$schemas = new $GadgetSchemas(Object.getPrototypeOf(clsproto).$schemas);
         }
     }
 
     static $schema(key, spec={}) {
         this.$register();
-        let schemas;
-        let clsp = this.prototype;
-        // class defaults
-        if (!clsp.hasOwnProperty('$dflts')) {
-            clsp.$dflts = new $GadgetDfltProxy(this.name, Object.getPrototypeOf(clsp).$dflts);
-        }
-        if (!clsp.hasOwnProperty('$schemas')) {
-            schemas = new $GadgetSchemas(Object.getPrototypeOf(clsp).$schemas);
-            clsp.$schemas = schemas;
-        } else {
-            schemas = clsp.$schemas;
-        }
+        let schemas = this.prototype.$schemas;
         let sentry = new $GadgetSchemaEntry(key, spec);
         schemas.set(sentry);
     }
 
-    static xparse(o, spec) {
+    $cpre(...args) {
     }
 
-    cpre(...args) {
-    }
-
-    cparse(spec={}) {
+    $cparse(spec={}) {
         const schemas = this.$schemas;
         if (schemas) {
             for (const sentry of schemas.$entries) {
@@ -203,23 +196,38 @@ class Gadget {
         }
     }
 
-    /*
-    _at_modified
-    get at_modified() {
-        if (!this._at_modified) this._at_modified = new EvtEmitter(this, 'modified');
-        return this._at_modified;
+    static $at_created
+    static get at_created() {
+        if (!this.$at_created) this.$at_created = new EvtEmitter(this, 'created');
+        return this.$at_created;
     }
-    */
+
+    static $at_destroyed
+    static get at_destroyed() {
+        if (!this.$at_destroyed) this.$at_destroyed = new EvtEmitter(this, 'destroyed');
+        return this.$at_destroyed;
+    }
+
+    $at_modified
+    get at_modified() {
+        if (!this.$at_modified) this.$at_modified = new EvtEmitter(this, 'modified');
+        return this.$at_modified;
+    }
+
+    $at_destroyed
+    get at_destroyed() {
+        if (!this.$at_destroyed) this.$at_destroyed = new EvtEmitter(this, 'destroyed');
+        return this.$at_destroyed;
+    }
 
     constructor(...args) {
         this.constructor.$register();
-        this.cpre(...args);
-        this.cparse(...args);
-        /*
-        let proxy = new Proxy(this, {
+        this.$cpre(...args);
+        this.$cparse(...args);
+        this.$proxy = new Proxy(this, {
             get(target, key, receiver) {
                 //if (!sentry && o.$schema) sentry = o.$schema.get(key);
-                if (key === '$proxy') return receiver;
+                //if (key === '$proxy') return receiver;
                 if (key === '$target') return target;
                 if (target[key] instanceof Function) {
                     const value = target[key];
@@ -227,14 +235,15 @@ class Gadget {
                         return value.apply(this === receiver ? target : this, args);
                     };
                 }
-                return target.$get(key, target.$schema.get(key));
+                return target.$get(key, (target.$schemas) ? target.$schemas.get(key) : null);
             },
             set(target, key, value, receiver) {
-                //if (typeof key === 'string' && key.startsWith('$')) {
-                    target[key] = value;
-                //} else {
-                    //target.constructor.$set(target, key, value, target.esentry);
-                //}
+                let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+                if (sentry) {
+                    if (sentry.readonly) return false;
+                    return target.$set(key, value, sentry);
+                }
+                target[key] = value;
                 return true;
             },
             //ownKeys(target) {
@@ -247,58 +256,75 @@ class Gadget {
                     //value: target.$store[prop],
                 //};
             //},
-            //deleteProperty(target, key) {
-                //target.constructor.$delete(target, key, target.esentry);
-                //return true;
-            //}
+            deleteProperty(target, key) {
+                let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+                if (sentry) {
+                    if (sentry.readonly) return false;
+                    return target.$delete(key, sentry);
+                }
+                delete target[key];
+                return true;
+            }
         });
-        return proxy;
-        */
+        this.$ready = true;
+        if (this.constructor.$at_created) this.constructor.$at_created.trigger({actor:this.$proxy});
+        return this.$proxy;
     }
 
-    /*
-    $get(key, sentry=null) {
+    $get(key, sentry) {
         if (sentry && sentry.generator) {
             this[key] = sentry.generator(target, this[key]);
         }
         return this[key];
     }
 
-    $set(key, value, sentry=null) {
+    $set(key, value, sentry) {
         let storedValue = this[key];
-        if (target.$flags & FDEFINED) {
-            storedValue = target.$store[key];
-            if (Object.is(storedValue, value)) return true;
-            if (sentry.link && (storedValue instanceof Gadget) && !(storedValue instanceof Gizmo)) this.$unlink(target, storedValue);
+        if (Object.is(storedValue, value)) return true;
+        if (this.$ready && sentry && sentry.link && storedValue) {
+            this.$unlink(key, storedValue);
         }
-        if (value) {
-            if (sentry.link && (value instanceof Gadget) && !(value instanceof Gizmo)) {
-                this.$link(target, key, sentry, value);
-            } else if (sentry.link && Array.isArray(value)) {
-                value = new GadgetArray(value);
-                this.$link(target, key, sentry, value);
-            } else if (sentry.link && (typeof value === 'object') && !(value instanceof Gizmo) && !value.$proxy) {
-                value = new GadgetObject(value);
-                this.$link(target, key, sentry, value);
-            }
+        if (sentry && sentry.link && value) {
+            this.$link(key, value);
         }
-        target.$store[key] = value;
-        if (target.$flags & FDEFINED) {
-            if (sentry.atUpdate) sentry.atUpdate( target, key, storedValue, value );
-            for (const pgdt of this.eachInPath(target)) {
-                if (pgdt.$trunkSentry && pgdt.$trunkSentry.atUpdate) {
-                    pgdt.$trunkSentry.atUpdate(pgdt.$trunk, pgdt.$trunkKey, pgdt, pgdt);
-                }
-                pgdt.$v++;
-            }
-            if ((target.$flags & FEVENTABLE) && sentry.eventable) {
-                let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
-                let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) Evts.trigger(gemitter, 'GizmoSet', { 'set': { [path]: value }});
-            }
+        this[key] = value;
+        if (this.$ready) {
+            if (this.$at_modified) this.$at_modified.trigger({key:key, value:value});
         }
         return true;
     }
-    */
 
+    $link(key, value) {
+        if (value.at_modified) value.at_modified.listen(this.$on_link_modified, this, false, null, 0, key);
+    }
+
+    $unlink(key, value) {
+        if (value.at_modified) value.at_modified.ignore(this.$on_link_modified);
+    }
+
+    $on_link_modified(key, evt) {
+        if (this.$at_modified) {
+            let path = `${key}.${evt.key}`;
+            this.$at_modified.trigger({key:path, value:evt.value});
+        }
+    }
+
+    $delete(key, sentry) {
+        const storedValue = this[key];
+        if (sentry.link && storedValue) this.$unlink(key, storedValue);
+        delete target[key];
+        if (this.$at_modified) this.$at_modified.trigger({key:key, value:undefined, deleted:true});
+        return true;
+    }
+
+
+    destroy() {
+        for (const sentry of this.$schemas.$entries) {
+            if (sentry.link && this[sentry.key]) {
+                tihs[sentry.key].at_modified.ignore(this.$on_link_modified);
+            }
+        }
+        if (this.$at_destroyed) this.$at_destroyed.trigger();
+        if (this.constructor.$at_destroyed) this.constructor.$at_destroyed.trigger({actor:this});
+    }
 }

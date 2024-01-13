@@ -18,7 +18,7 @@ describe('gadgets', () => {
         expect(Gadget.$registry.has('tgadget')).toBeTruthy();
     });
 
-    it('has overrideable defaults', ()=>{
+    it('have overrideable defaults', ()=>{
         let cls = class tgadget extends Gadget {
             static { this.$schema('key', { dflt: 'hello' }); }
         };
@@ -32,18 +32,55 @@ describe('gadgets', () => {
         expect(o.key).toEqual('hello');
     });
 
-    /*
+    it('can have values set', ()=>{
+        let cls = class tgadget extends Gadget {
+            static { this.$schema('key', { dflt: 'hello' }); }
+        };
+        let o = new cls();
+        expect(o.key).toEqual('hello');
+        o.key = 'there';
+        expect(o.key).toEqual('there');
+    });
+
+    it('value changes trigger modified event', ()=>{
+        let cls = class tgadget extends Gadget {
+            static { this.$schema('key', { dflt: 'hello' }); }
+        };
+        let o = new cls();
+        let tevt;
+        o.at_modified.listen((evt) => tevt=evt);
+        expect(o.key).toEqual('hello');
+        o.key = 'there';
+        expect(o.key).toEqual('there');
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.key).toEqual('key');
+        expect(tevt.value).toEqual('there');
+    });
+
+    it('readonly keys cannot be modified', ()=>{
+        let cls = class tgadget extends Gadget {
+            static { this.$schema('key', { dflt:'hello', readonly:true }); }
+        };
+        let o = new cls();
+        let tevt;
+        o.at_modified.listen((evt) => tevt=evt);
+        expect(o.key).toEqual('hello');
+        expect(() => o.key = 'there').toThrow();
+        expect(o.key).toEqual('hello');
+        expect(tevt).toEqual(undefined);
+    });
+
     it('can have schema applied/redefined', ()=>{
-        class TCls1 extends gadgetClass {
-            static { this.schema('var1', { dflt: 'foo'} ); }
-            static { this.schema('var2', { dflt: 'bar'} ); }
+        class TCls1 extends Gadget {
+            static { this.$schema('var1', { dflt: 'foo'} ); }
+            static { this.$schema('var2', { dflt: 'bar'} ); }
         };
         class TCls2 extends TCls1 {
-            static { this.schema('var3', { dflt: 'hello', readonly: true} ); }
+            static { this.$schema('var3', { dflt: 'hello', readonly: true} ); }
         };
         class TCls3 extends TCls1 {
-            static { this.schema('var1', { dflt: 'there'} ); }
-            static { this.prototype.$schema.clear('var2'); }
+            static { this.$schema('var1', { dflt: 'there'} ); }
+            static { this.prototype.$schemas.clear('var2'); }
         };
         let o = new TCls1();
         let o2 = new TCls2();
@@ -59,6 +96,7 @@ describe('gadgets', () => {
         expect(o3.var3).toEqual(undefined);
     });
 
+    /*
     it('can have ordered schema', ()=>{
         class tBase extends gadgetClass {
             static { this.schema('var2', { dflt: 'bar', order: 2} ); }
