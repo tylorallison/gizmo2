@@ -1,8 +1,14 @@
+import { GadgetCtx } from '../js/gadget.js';
 import { System } from '../js/system.js';
 import { SystemMgr } from '../js/systemMgr.js';
 
-
 describe('a system manager', () => {
+    var gctx;
+    let tevt;
+    beforeEach(() => {
+        gctx = new GadgetCtx();
+        GadgetCtx.current = gctx;
+    });
 
     it('can watch for new systems', ()=>{
         let mgr = new SystemMgr();

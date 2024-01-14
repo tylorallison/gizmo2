@@ -8,14 +8,14 @@ import { Timer } from './timer.js';
 class System extends Gizmo {
     // STATIC VARIABLES ----------------------------------------------------
     static dfltIterateTTL = 200;
-    static dfltMatchFcn = (() => false);
+    static dfltMatchFcn = ((evt) => false);
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.$schema('iterateTTL', { eventable: false, dflt: (o) => o.constructor.dfltIterateTTL });
+        this.$schema('iterateTTL', { readonly: true, eventable: false, dflt: (o) => o.constructor.dfltIterateTTL });
         this.$schema('dbg', { eventable: false, dflt: false });
         this.$schema('active', { eventable: false, dflt: true });
-        this.$schema('matchFcn', { eventable: false, dflt: (o) => o.constructor.dfltMatchFcn });
+        this.$schema('matchFcn', { readonly: true, eventable: false, dflt: (o) => o.constructor.dfltMatchFcn });
         this.$schema('$store', { link: false, readonly: true, parser: () => new Map()});
         this.$schema('$iterating', { eventable: false, parser: () => false });
         this.$schema('$timer', { order: 1, readonly: true, parser: (o,x) => new Timer({ttl: o.iterateTTL, cb: o.$on_timer, loop: true})});
@@ -29,8 +29,8 @@ class System extends Gizmo {
     $cpost(spec) {
         super.$cpost(spec);
         // -- setup event handlers
-        GadgetCtx.at_created.listen(this.$on_gizmoCreated, this);
-        GadgetCtx.at_destroyed.listen(this.$on_gizmoDestroyed, this);
+        GadgetCtx.at_created.listen(this.$on_gizmoCreated, this, false, this.matchFcn);
+        GadgetCtx.at_destroyed.listen(this.$on_gizmoDestroyed, this, false, this.matchFcn);
     }
     destroy() {
         this.$timer.destroy();
@@ -50,10 +50,8 @@ class System extends Gizmo {
     }
 
     $on_gizmoCreated(evt) {
-        if (this.matchFcn(evt.actor)) {
-            if (this.dbg) console.log(`${this} onGizmoCreated: ${Fmt.ofmt(evt)} gid: ${evt.actor.gid}`);
-            this.$store.set(evt.actor.gid, evt.actor);
-        }
+        if (this.dbg) console.log(`${this} onGizmoCreated: ${Fmt.ofmt(evt)} gid: ${evt.actor.gid}`);
+        this.$store.set(evt.actor.gid, evt.actor);
     }
 
     $on_gizmoDestroyed(evt) {

@@ -4,18 +4,16 @@ import { Gizmo } from './gizmo.js';
 //import { KeySystem } from './keySystem.js';
 //import { MouseSystem } from './mouseSystem.js';
 import { RenderSystem } from './renderSystem.js';
-//import { UpdateSystem } from './updateSystem.js';
-import { StateMgr } from './stateMgr.js';
+//import { StateMgr } from './stateMgr.js';
 import { SystemMgr } from './systemMgr.js';
-import { Generator } from './generator.js';
+//import { Generator } from './generator.js';
 import { UiCanvas } from './uiCanvas.js';
 //import { SfxSystem } from './sfxSystem.js';
 //import { Configs } from './config.js';
-//import { Util } from './util.js';
 //import { Assets } from './asset.js';
-//import { Evts } from './evt.js';
 //import { Global } from './global.js';
 import { Fmt } from './fmt.js';
+import { GadgetCtx } from './gadget.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -35,56 +33,52 @@ class Game extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {*} Game#dbg - enables debugging for gizmo */
-    static { this.schema('dbg', { eventable: false, dflt: false}); }
+    static { this.$schema('dbg', { eventable: false, dflt: false}); }
     /** @member {string} Game#name - name for game */
-    static { this.schema('name', { dflt: this.name, readonly: true}); }
+    static { this.$schema('name', { dflt: this.name, readonly: true}); }
     /** @member {int} Game#maxDeltaTime - max value for a single frame delta time */
-    static { this.schema('maxDeltaTime', { eventable: false, dflt: 50 }); }
+    static { this.$schema('maxDeltaTime', { eventable: false, dflt: 50 }); }
     /** @member {int} Game#frame - frame counter */
-    static { this.schema('frame', { eventable: false, dflt: 0}); }
+    static { this.$schema('$frame', { eventable: false, parser: () => 0}); }
     /** @member {float} Game#lastUpdate - time of last update */
-    static { this.schema('lastUpdate', { eventable: false, dflt: 0}); }
+    static { this.$schema('lastUpdate', { eventable: false, dflt: 0}); }
     /** @member {SystemMgr} Game#systems - game systems {@link System} */
-    static { this.schema('systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
+    static { this.$schema('systems', { readonly: true, parser: (o,x) => new SystemMgr()}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
-    static { this.schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
+    //static { this.$schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
     /** @member {Generator} Game#generator - generator for gizmos in game */
-    static { this.schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx })}); }
-    /** @member {bool} Game#userActive - boolean tracking if player has interacted w/ game interface */
-    static { this.schema('userActive', { dflt: false }); }
-    static { this.schema('xcfgs', {dflt: (o) => o.constructor.xcfgs}); }
-    static { this.schema('xassets', {dflt: (o) => o.constructor.xassets}); }
+    //static { this.$schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx })}); }
+    static { this.$schema('xcfgs', {dflt: (o) => o.constructor.xcfgs}); }
+    static { this.$schema('xassets', {dflt: (o) => o.constructor.xassets}); }
     /** @member {bool} Game#ticksPerMS - game clock runs on ticks per ms */
-    static { this.schema('ticksPerMS', {dflt: 1}); }
-    static { this.schema('elapsedRollover', {dflt: 0}); }
+    static { this.$schema('ticksPerMS', {dflt: 1}); }
+    static { this.$schema('$elapsedRollover', {parser: () => 0}); }
 
     // CONSTRUCTOR ---------------------------------------------------------
-    cpre(spec) {
-        super.cpre(spec);
-        this.loop = this.loop.bind(this);
-        Global.game = this;
+    $cpre(spec) {
+        super.$cpre(spec);
+        this.$loop = this.$loop.bind(this);
+        //Global.game = this;
     }
-    cpost(spec) {
-        super.cpost(spec);
+    $cpost(spec) {
+        super.$cpost(spec);
         // -- build out game state
-        Generator.dflt = this.generator;
+        //Generator.dflt = this.generator;
     }
 
     // METHODS -------------------------------------------------------------
-    async doinit() {
+    async $doinit() {
         if (this.dbg) console.log(`${this.name} starting initialization`);
-        // listen for user interaction w/ UI (click or key press)
-        UiCanvas.getCanvas().addEventListener('click', () => this.userActive = true, {once: true});
-        Evts.listen(null, 'KeyDown', () => this.userActive = true, this, {once: true});
+        //Evts.listen(null, 'KeyDown', () => this.userActive = true, this, {once: true});
         // init contexts
         // -- config
-        if (this.xcfgs) Configs.setValues(this.xcfgs);
+        //if (this.xcfgs) Configs.setValues(this.xcfgs);
         // -- assets
-        if (this.xassets) Assets.add(this.xassets);
+        //if (this.xassets) Assets.add(this.xassets);
         // game init
-        await this.init();
+        await this.$init();
         if (this.dbg) console.log(`${this.name} initialization complete`);
-        Evts.trigger(this, 'GameInited');
+        //Evts.trigger(this, 'GameInited');
         return Promise.resolve();
     }
 
@@ -93,16 +87,15 @@ class Game extends Gizmo {
      * Override to perform game specific initialization.
      * @returns {Promise}
      */
-    async init() {
+    async $init() {
         return Promise.resolve();
     }
 
-    async doload() {
+    async $doload() {
         if (this.dbg) console.log(`${this.name} starting loading`);
-        await Assets.advance();
-        await this.load();
+        //await Assets.advance();
+        await this.$load();
         if (this.dbg) console.log(`${this.name} loading complete`);
-        Evts.trigger(this, 'GameLoaded');
         return Promise.resolve();
     }
 
@@ -110,26 +103,24 @@ class Game extends Gizmo {
      * load is called during game startup to perform game loading functions.  
      * @returns {Promise}
      */
-    async load() {
+    async $load() {
         return Promise.resolve();
     }
 
-    prepareSystems() {
-        new KeySystem({gctx: this.gctx});
-        new MouseSystem({gctx: this.gctx, dbg: false});
-        new RenderSystem({gctx: this.gctx, dbg: false});
-        new UpdateSystem({gctx: this.gctx, dbg: false});
-        new SfxSystem({gctx: this.gctx, dbg: false});
+    $prepareSystems() {
+        //new KeySystem({gctx: this.gctx});
+        //new MouseSystem({gctx: this.gctx, dbg: false});
+        new RenderSystem({dbg: true});
+        //new SfxSystem({gctx: this.gctx, dbg: false});
     }
 
-    async doprepare() {
+    async $doprepare() {
         if (this.dbg) console.log(`${this.name} starting prepare`);
         // -- bring game systems online
-        this.prepareSystems();
+        this.$prepareSystems();
         // -- game specific prepare
-        await this.prepare();
+        await this.$prepare();
         if (this.dbg) console.log(`${this.name} prepare complete`);
-        Evts.trigger(this, 'GamePrepared');
         return Promise.resolve();
     }
 
@@ -138,7 +129,7 @@ class Game extends Gizmo {
      * logic to start your game.
      * @returns {Promise}
      */
-    async prepare() {
+    async $prepare() {
         return Promise.resolve();
     }
 
@@ -149,31 +140,31 @@ class Game extends Gizmo {
      */
     async start() {
         // initialization
-        await this.doinit();
+        await this.$doinit();
         // load
-        await this.doload();
+        await this.$doload();
         // prepare
-        await this.doprepare();
-        Evts.trigger(this, 'GameStarted');
+        await this.$doprepare();
+        //Evts.trigger(this, 'GameStarted');
         // start the game loop
-        window.requestAnimationFrame(this.loop);
+        window.requestAnimationFrame(this.$loop);
         return Promise.resolve();
     }
 
-    loop(timestamp) {
+    $loop(timestamp) {
         // increment frame counter
-        this.frame++;
+        this.$frame++;
         // compute elapsed
         const elapsed = Math.min(this.maxDeltaTime, timestamp - this.lastUpdate);
         this.lastUpdate = timestamp;
         // compute ticks on the game clock
-        let ticksTotal = (elapsed+this.elapsedRollover)*this.ticksPerMS;
+        let ticksTotal = (elapsed+this.$elapsedRollover)*this.ticksPerMS;
         let ticks = Math.floor(ticksTotal);
-        this.elapsedRollover = Math.round((ticksTotal - ticks)/this.ticksPerMS);
+        this.$elapsedRollover = Math.round((ticksTotal - ticks)/this.ticksPerMS);
         // trigger tock event
-        Evts.trigger(this, 'GameTock', { elapsed: parseInt(elapsed), ticks: ticks, frame: this.frame });
+        GadgetCtx.at_tocked.trigger({ elapsed:parseInt(elapsed), ticks:ticks, frame:this.$frame });
         // next iteration
-        window.requestAnimationFrame(this.loop);
+        window.requestAnimationFrame(this.$loop);
     }
 
 }

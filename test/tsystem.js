@@ -12,7 +12,7 @@ describe('systems', () => {
     it('automatically track entities based on match rules', ()=>{
         let e = { gid: 1, wanted: true };
         let system = new System({
-            matchFcn: (e) => e.wanted,
+            matchFcn: (evt) => evt.actor.wanted,
         });
         gctx.at_created.trigger({ actor:e });
         expect(system.$store.has(1)).toBeTrue();
@@ -26,7 +26,7 @@ describe('systems', () => {
     it('can iterate over tracked entities', ()=>{
         let e = { gid: 1, wanted: true };
         let system = new System({
-            matchFcn: (e) => e.wanted,
+            matchFcn: (evt) => evt.actor.wanted,
             iterateTTL: 100,
         });
         system.$iterate = (evt, e) => e.visited = true;

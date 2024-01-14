@@ -1,4 +1,4 @@
-export { GadgetCtx, Gadget, GadgetArray };
+export { GadgetCtx, Gadget, GadgetArray, GadgetGenerator };
 
 import { EvtEmitter } from './evt.js';
 import { Fmt } from './fmt.js';
@@ -130,47 +130,6 @@ class $GadgetSchemas {
         let idx = this.$order.indexOf(key);
         if (idx !== -1) this.$order.splice(idx, 1);
         if (Object.hasOwn(this, key)) delete this[key];
-    }
-}
-
-class GadgetCtx {
-
-    static current = new GadgetCtx();
-
-    // static properties that allow unique inheritance
-    static get $gid() {
-        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
-        return this.$$gid;
-    }
-    static set $gid(value) {
-        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
-        return this.$$gid = value;
-    }
-
-    static get dflts() {
-        return this.current.dflts;
-    }
-    static get at_tocked() {
-        return this.current.at_tocked;
-    }
-    static get at_created() {
-        return this.current.at_created;
-    }
-    static get at_destroyed() {
-        return this.current.at_destroyed;
-    }
-
-    constructor(spec={}) {
-        this.gid = ('gid' in spec) ? spec.gid : this.constructor.$gid++;
-        this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
-        this.dflts = ('dflts' in spec) ? spec.dflts : new $GadgetDefaults();
-        this.at_tocked = new EvtEmitter(this, 'tocked');
-        this.at_created = new EvtEmitter(this, 'created');
-        this.at_destroyed = new EvtEmitter(this, 'destroyed');
-    }
-
-    toString() {
-        return Fmt.toString(this.constructor.name, this.tag);
     }
 }
 
@@ -468,3 +427,102 @@ class GadgetArray extends Array {
     }
 
 }
+
+/**
+ * The Generator class creates instances of {@link Gadget} or {@link Gizmo} based on specified GadgetSpec object specification.
+ */
+class GadgetGenerator {
+
+    // CONSTRUCTOR ---------------------------------------------------------
+    constructor(spec={}) {
+        this.registry = spec.registry || Gadget.$registry;
+        //this.assets = spec.assets || Assets;
+    }
+
+    // METHODS -------------------------------------------------------------
+    resolve(spec) {
+        let nspec = Util.copy(spec);
+        for (const [k,v,o] of Util.kvWalk(nspec)) {
+            if (this.assets && v && (v.cls === '$Asset')) {
+                const tag = v.args[0].tag;
+                o[k] = this.assets.get(tag);
+            } else if (v && typeof v === 'object' && v.$gzx) {
+                let nv = this.generate(v);
+                o[k] = nv;
+                if (this.dbg) console.log(`-- generator: resolve ${k}->${Fmt.ofmt(v)} to ${k}->${nv}`);
+            }
+        }
+        return nspec;
+    }
+
+    generate(spec) {
+        if (!spec) return undefined;
+        // resolve sub references within spec...
+        // -- sub references are tagged w/ the '$gzx' property and are replaced with the generated object
+        spec = this.resolve(spec);
+        // look up class definition
+        let cls = this.registry.get(spec.cls);
+        if (!cls) {
+            console.error(`generator failed for ${Fmt.ofmt(spec)} -- undefined class ${spec.cls}`);
+            return undefined;
+        }
+        let gzd = new cls(...spec.args);
+        if (gzd) return gzd;
+        console.error(`generator failed for ${Fmt.ofmt(spec)} -- constructor failed`);
+        return undefined;
+    }
+
+}
+
+class GadgetCtx {
+
+    static current = new GadgetCtx();
+
+    // static properties that allow unique inheritance
+    static get $gid() {
+        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
+        return this.$$gid;
+    }
+    static set $gid(value) {
+        if (!this.hasOwnProperty('$$gid')) Object.defineProperty(this, '$$gid', { value: 0, writable: true });
+        return this.$$gid = value;
+    }
+
+    static get dflts() {
+        return this.current.dflts;
+    }
+    static get at_tocked() {
+        return this.current.at_tocked;
+    }
+    static get at_created() {
+        return this.current.at_created;
+    }
+    static get at_destroyed() {
+        return this.current.at_destroyed;
+    }
+    static get interacted() {
+        return this.current.interacted;
+    }
+    static set interacted(v) {
+        return this.current.interacted = v;
+    }
+    static generate(spec) {
+        return this.current.generator.generate(spec);
+    }
+
+    constructor(spec={}) {
+        this.gid = ('gid' in spec) ? spec.gid : this.constructor.$gid++;
+        this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
+        this.dflts = ('dflts' in spec) ? spec.dflts : new $GadgetDefaults();
+        this.generator = ('generator' in spec) ? spec.generator: new GadgetGenerator();
+        this.interacted = false;
+        this.at_tocked = new EvtEmitter(this, 'tocked');
+        this.at_created = new EvtEmitter(this, 'created');
+        this.at_destroyed = new EvtEmitter(this, 'destroyed');
+    }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, this.tag);
+    }
+}
+

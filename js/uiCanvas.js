@@ -1,5 +1,6 @@
 export { UiCanvas };
 
+import { GadgetCtx } from './gadget.js';
 import { UiView } from './uiView.js';
 import { XForm } from './xform.js';
 
@@ -19,6 +20,7 @@ class UiCanvas extends UiView {
             canvas.constructed = true;
             document.body.appendChild(canvas);
         }
+        if (!GadgetCtx.interacted) canvas.addEventListener('click', () => GadgetCtx.interacted = true, {once: true});
         if (fit) {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
