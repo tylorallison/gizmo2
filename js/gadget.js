@@ -45,6 +45,7 @@ class $GadgetSchemaEntry {
         this.key = key;
         this.xkey = spec.xkey || this.key;
         this.dflt = spec.dflt;
+        this.eventable = ('eventable' in spec) ? spec.eventable : true;
         // generator function of format (object, value) => { <function returning final value> };
         this.generator = spec.generator;
         this.readonly = (this.generator) ? true : ('readonly' in spec) ? spec.readonly : false;
@@ -180,8 +181,8 @@ class Gadget {
         schemas.set(sentry);
     }
 
-    $cpre(...args) {
-    }
+    $cpre(...args) { }
+    $cpost(...args) { }
 
     $cparse(spec={}) {
         const schemas = this.$schemas;
@@ -255,6 +256,7 @@ class Gadget {
                 return true;
             }
         });
+        this.$cpost(...args);
         this.$ready = true;
         if (this.constructor.$at_created) this.constructor.$at_created.trigger({actor:this.$proxy});
         return this.$proxy;
@@ -281,7 +283,7 @@ class Gadget {
         }
         this[key] = value;
         if (this.$ready) {
-            if (this.$at_modified) this.$at_modified.trigger({key:key, value:value});
+            if (this.$at_modified && (!sentry || (sentry && sentry.eventable))) this.$at_modified.trigger({key:key, value:value});
         }
         return true;
     }
