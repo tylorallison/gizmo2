@@ -16,7 +16,7 @@ class Gizmo extends Gadget {
     /** @member {string} Gizmo#tag - tag for this gizmo */
     static { this.$schema('tag', { order: 1, readonly: true, dflt: (o) => `${o.constructor.name}.${o.gid}` }); }
     static { this.$schema('parent', { link: false, serializable: false, parser: () => null }); }
-    static { this.$schema('children', { link: false, parser: () => [] }); }
+    static { this.$schema('children', { link: true, parser: () => [] }); }
 
     $cpost(spec={}) {
         for (const el of (spec.children || [])) this.adopt(el);
@@ -29,43 +29,32 @@ class Gizmo extends Gadget {
             child.parent.orphan(child);
         }
         // avoid cycles in parent
-        if (this.$root.$find((v) => v === child)) {
+        if (this.root.find((v) => v === child)) {
             throw new Error(`hierarchy loop detected ${child} already in root for ${this}`);
         }
         // avoid cycles in children
-        if (child.$find((v) => v === self)) {
+        if (child.find((v) => v === self)) {
             throw new Error(`hierarchy loop detected ${child} already in children for: ${this}`);
         }
         // assign parent/child links
+        child.$set('parent', self);
         child.parent = self;
         this.children.push(child);
-        // event handling
-        /*
-        Evts.trigger(child, 'GizmoAdopted', {parent: parent, child: child});
-        Evts.trigger(parent, 'GizmoChilded', {parent: parent, child: child});
-        let root = this.root(parent);
-        Evts.trigger(child, 'GizmoRooted', {root: root});
-        for (const dec of this.children(child)) {
-            Evts.trigger(dec, 'GizmoRooted', {root: root});
-        }
-        */
     }
 
     orphan(child) {
         child.parent = null;
         let idx = this.children.indexOf(child);
-        if (idx != -1) this.children.splice(idx, 1);
-        /*
-        Evts.trigger(child, 'GizmoOrphaned', {parent: parent, child: child});
-        Evts.trigger(parent, 'GizmoUnchilded', {parent: parent, child: child});
-        */
+        if (idx != -1) {
+            this.children.splice(idx, 1);
+        }
     }
 
     /**
      * find object in parent hierarchy (evaluating parent hierarchy)
      * @param {*} filter 
      */
-    $findInParent(filter) {
+    findInParent(filter) {
         for (let parent = this.parent; parent; parent = parent.parent) {
             if (filter(parent)) return parent;
         }
@@ -77,21 +66,28 @@ class Gizmo extends Gadget {
      * @param {*} obj 
      * @param {*} filter 
      */
-    $find(filter) {
+    find(filter) {
         if (filter(this)) return this;
         for (const child of this.children) {
             if (filter(child)) return child;
-            let match = child.$find(filter);
+            let match = child.find(filter);
             if (match) return match;
         }
         return null;
+    }
+
+    *forEachChild(filter=()=>true) {
+        for (const child of (Array.from(this.children))) {
+            if (!filter || filter(child)) yield child;
+            yield *this.forEachChild(filter);
+        }
     }
 
     /**
      * find root for given object
      * @param {*} obj 
      */
-    get $root() {
+    get root() {
         let gzo = this;
         while(gzo.parent) gzo = gzo.parent;
         return gzo;
@@ -102,7 +98,7 @@ class Gizmo extends Gadget {
     }
 
     destroy() {
-        if (this.parent) this.parent.$orphan(this);
+        if (this.parent) this.parent.orphan(this);
         for (const child of (Array.from(this.children))) {
             child.destroy();
         }

@@ -1,9 +1,7 @@
 export { UiView };
 
-//import { Evts } from './evt.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
-//import { Hierarchy } from './hierarchy.js';
 //import { SfxSystem } from './sfxSystem.js';
 import { XForm } from './xform.js';
 
@@ -21,32 +19,22 @@ class UiView extends Gizmo {
     // SCHEMA --------------------------------------------------------------
     static {
         this.$schema('xform', { order: -1, link: true, dflt: () => new XForm() });
-        this.$schema('visible', { dflt: true});
-        this.$schema('active', { dflt: false});
-        this.$schema('smoothing', { dflt: null});
-        this.$schema('alpha', { dflt: 1});
-        this.$schema('dbg', { dflt: false, eventable: false});
-        this.$schema('mask', { dflt: false});
-        this.$schema('mouseOver', { dflt: false});
-        this.$schema('mousePressed', { dflt: false});
-        this.$schema('mousePriority', { dflt: 0});
-        this.$schema('mouseBlock', { dflt: false});
+        this.$schema('active', { dflt: true });
+        this.$schema('visible', { dflt: true });
+        this.$schema('smoothing', { dflt: null });
+        this.$schema('alpha', { dflt: 1 });
+        this.$schema('dbg', { dflt: false, eventable: false });
+        this.$schema('mask', { dflt: false });
+        this.$schema('mouseOver', { dflt: false });
+        this.$schema('mousePressed', { dflt: false });
+        this.$schema('mousePriority', { dflt: 0 });
+        this.$schema('mouseBlock', { dflt: false });
         this.$schema('mouseClickedSound');
         this.$schema('mouseEnteredSound');
         this.$schema('mouseExitedSound');
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
-    $cpost(spec) {
-        super.$cpost(spec);
-        // activate if required
-        if (this.active) this.enable();
-    }
-
-    destroy() {
-        this.disable();
-        super.destroy();
-    }
 
     adopt(child) {
         super.adopt(child);
@@ -69,40 +57,17 @@ class UiView extends Gizmo {
     $onMouseExited(evt) {
         //if (this.mouseExitedSound) SfxSystem.playSfx(this, this.mouseExitedSound);
     }
-
-    $onCanvasResized(evt) {
-        this.xform.$regen();
-    }
-
-    $onGizmoRooted(evt) {
-        this.xform.$regen();
-        if (evt.root.constructor.canvasable && !this.active) {
-            this.active = true;
-            this.enable();
-        }
-    }
-
-    $onGizmoOrphaned(evt) {
-        if (this.xform) this.xform.$regen();
-        if (this.active) {
-            this.disable();
-        }
-    }
     */
 
     // METHODS -------------------------------------------------------------
-    enable() {
-    }
-    disable() {
-    }
 
-    prerender(ctx) {
+    $prerender(ctx) {
     }
-    subrender(ctx) {
+    $subrender(ctx) {
     }
-    postrender(ctx) {
+    $postrender(ctx) {
     }
-    childrender(ctx) {
+    $childrender(ctx) {
         for (const child of this.children) {
             child.render(ctx);
         }
@@ -130,13 +95,13 @@ class UiView extends Gizmo {
             ctx.clip();
         }
         // pre render, specific to subclass
-        this.prerender(ctx);
+        this.$prerender(ctx);
         // private render, specific to subclass
-        this.subrender(ctx);
+        this.$subrender(ctx);
         // child render
-        this.childrender(ctx);
+        this.$childrender(ctx);
         // post render, specific to subclass
-        this.postrender(ctx);
+        this.$postrender(ctx);
         // handle masking
         if (this.mask) {
             ctx.restore();
@@ -148,20 +113,5 @@ class UiView extends Gizmo {
         if (this.dbg && this.dbg.xform) this.xform.render(ctx);
         if (!this.parent) ctx.restore();
     }
-
-    /*
-    resize(width, height) {
-        if (width != this.xform.width || height != this.xform.height) {
-            this.xform.width = width;
-            this.xform.height = height;
-            Evts.trigger(this, 'ViewResized', {width: width, height: height});
-            this.evt.trigger(this.constructor.evtResized, {actor: this, width: width, height: height});
-            for (const child of Hierarchy.children(this)) {
-                child.evt.trigger(child.constructor.evtResized, {actor: child, root: this});
-            }
-            this.evt.trigger(this.constructor.evtUpdated, {actor: this});
-        }
-    }
-    */
 
 }

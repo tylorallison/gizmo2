@@ -227,7 +227,6 @@ class Gadget {
         this.$cparse(...args);
         this.$proxy = new Proxy(this, {
             get(target, key, receiver) {
-                //if (key === '$proxy') return receiver;
                 if (key === '$target') return target;
                 if (target[key] instanceof Function) {
                     const value = target[key];
@@ -289,14 +288,14 @@ class Gadget {
     }
 
     $link(key, value) {
-        if (value.at_modified) value.at_modified.listen(this.$on_link_modified, this, false, null, 0, key);
+        if (value.at_modified) value.at_modified.listen(this.$on_linkModified, this, false, null, 0, key);
     }
 
     $unlink(key, value) {
-        if (value.at_modified) value.at_modified.ignore(this.$on_link_modified);
+        if (value.at_modified) value.at_modified.ignore(this.$on_linkModified);
     }
 
-    $on_link_modified(evt, key) {
+    $on_linkModified(evt, key) {
         if (this.$at_modified) {
             let path = `${key}.${evt.key}`;
             this.$at_modified.trigger({key:path, value:evt.value});
@@ -314,7 +313,7 @@ class Gadget {
     destroy() {
         for (const sentry of this.$schemas.$entries) {
             if (sentry.link && this[sentry.key]) {
-                tihs[sentry.key].at_modified.ignore(this.$on_link_modified);
+                this[sentry.key].at_modified.ignore(this.$on_linkModified);
             }
         }
         if (this.$at_destroyed) this.$at_destroyed.trigger();
@@ -436,14 +435,14 @@ class GadgetArray extends Array {
     }
 
     $link(key, value) {
-        if (value.at_modified) value.at_modified.listen(this.$on_link_modified, this, false, null, 0, key);
+        if (value.at_modified) value.at_modified.listen(this.$on_linkModified, this, false, null, 0, key);
     }
 
     $unlink(key, value) {
-        if (value.at_modified) value.at_modified.ignore(this.$on_link_modified);
+        if (value.at_modified) value.at_modified.ignore(this.$on_linkModified);
     }
 
-    $on_link_modified(evt, key) {
+    $on_linkModified(evt, key) {
         if (this.$at_modified) {
             let path = `${key}.${evt.key}`;
             this.$at_modified.trigger({key:path, value:evt.value});

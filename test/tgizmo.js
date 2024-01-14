@@ -6,6 +6,7 @@ describe('gizmos', () => {
     afterEach(() => {
         Gizmo.at_created.clear();
         Gizmo.at_destroyed.clear();
+        tevt = null;
     });
 
     it('trigger static created event', ()=>{
@@ -39,5 +40,23 @@ describe('gizmos', () => {
         child.children.push(parent);
         expect(() => parent.adopt(child)).toThrow();
     });
+
+    it('adopted children updates trigger root events', ()=>{
+        class tgizmo extends Gizmo {
+            static { this.$schema('data', { dflt:'hello' }) };
+        }
+        let c1 = new tgizmo();
+        let c2 = new tgizmo();
+        c1.adopt(c2);
+        c1.at_modified.listen((evt) => tevt=evt);
+        c2.data = 'there';
+        expect(tevt.key).toEqual('children.0.data');
+        expect(tevt.value).toEqual('there');
+        c1.orphan(c2);
+        tevt = null;
+        c2.data = 'again';
+        expect(tevt).toEqual(null);
+    });
+
 
 });
