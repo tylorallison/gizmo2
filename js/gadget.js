@@ -1,4 +1,4 @@
-export { Gadget, GadgetCtx };
+export { GadgetCtx, Gadget, GadgetArray };
 
 import { EvtEmitter } from './evt.js';
 import { Fmt } from './fmt.js';
@@ -188,9 +188,9 @@ class Gadget {
         if (schemas) {
             for (const sentry of schemas.$entries) {
                 if (sentry.generator) {
-                    this[sentry.key] = sentry.getDefault(this);
+                    this.$set(sentry.key, sentry.getDefault(this), sentry);
                 } else {
-                    this[sentry.key] = sentry.parser(this, spec);
+                    this.$set(sentry.key, sentry.parser(this, spec), sentry);
                 }
             }
         }
@@ -210,13 +210,13 @@ class Gadget {
 
     $at_modified
     get at_modified() {
-        if (!this.$at_modified) this.$at_modified = new EvtEmitter(this, 'modified');
+        if (!this.$at_modified) this.$at_modified = new EvtEmitter(this.$proxy, 'modified');
         return this.$at_modified;
     }
 
     $at_destroyed
     get at_destroyed() {
-        if (!this.$at_destroyed) this.$at_destroyed = new EvtEmitter(this, 'destroyed');
+        if (!this.$at_destroyed) this.$at_destroyed = new EvtEmitter(this.$proxy, 'destroyed');
         return this.$at_destroyed;
     }
 
@@ -226,7 +226,6 @@ class Gadget {
         this.$cparse(...args);
         this.$proxy = new Proxy(this, {
             get(target, key, receiver) {
-                //if (!sentry && o.$schema) sentry = o.$schema.get(key);
                 //if (key === '$proxy') return receiver;
                 if (key === '$target') return target;
                 if (target[key] instanceof Function) {
@@ -246,16 +245,6 @@ class Gadget {
                 target[key] = value;
                 return true;
             },
-            //ownKeys(target) {
-                //return Object.keys(target);
-            //},
-            //getOwnPropertyDescriptor(target, prop) {
-                //return {
-                    //enumerable: true,
-                    //configurable: true,
-                    //value: target.$store[prop],
-                //};
-            //},
             deleteProperty(target, key) {
                 let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
                 if (sentry) {
@@ -285,6 +274,9 @@ class Gadget {
             this.$unlink(key, storedValue);
         }
         if (sentry && sentry.link && value) {
+            if (value && Array.isArray(value)) {
+                value = new GadgetArray(...value);
+            }
             this.$link(key, value);
         }
         this[key] = value;
@@ -302,7 +294,7 @@ class Gadget {
         if (value.at_modified) value.at_modified.ignore(this.$on_link_modified);
     }
 
-    $on_link_modified(key, evt) {
+    $on_link_modified(evt, key) {
         if (this.$at_modified) {
             let path = `${key}.${evt.key}`;
             this.$at_modified.trigger({key:path, value:evt.value});
@@ -312,11 +304,10 @@ class Gadget {
     $delete(key, sentry) {
         const storedValue = this[key];
         if (sentry.link && storedValue) this.$unlink(key, storedValue);
-        delete target[key];
+        delete this[key];
         if (this.$at_modified) this.$at_modified.trigger({key:key, value:undefined, deleted:true});
         return true;
     }
-
 
     destroy() {
         for (const sentry of this.$schemas.$entries) {
@@ -327,4 +318,134 @@ class Gadget {
         if (this.$at_destroyed) this.$at_destroyed.trigger();
         if (this.constructor.$at_destroyed) this.constructor.$at_destroyed.trigger({actor:this});
     }
+
+    toString() {
+        return Fmt.toString(this.constructor.name);
+    }
+}
+
+class GadgetArray extends Array {
+    constructor(...args) {
+        super(...args);
+        for (const key of Object.keys(this)) {
+            if (this[key]) this.$link(key, this[key]);
+        }
+        this.$proxy = new Proxy(this, {
+            get(target, key, receiver) {
+                if (target[key] instanceof Function) {
+                    const value = target[key];
+                    return function (...args) {
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
+                return target[key];
+            },
+            set(target, key, value, receiver) {
+                return target.$set(key, value);
+            },
+            deleteProperty(target, key) {
+                return target.$delete(key);
+            }
+        });
+        this.$ready = true;
+        return this.$proxy;
+    }
+
+    push(...v) {
+        let i=this.length;
+        for (const el of v) {
+            this.$set(String(i++), el);
+        }
+        return this.length;
+    }
+
+    pop() {
+        let idx = this.length-1;
+        if (idx < 0) return undefined;
+        const v = this[idx];
+        this.$set(String(idx), undefined);
+        super.pop();
+        return v;
+    }
+
+    unshift(...v) {
+        let i=0;
+        for (const el of v) {
+            super.splice(i, 0, undefined);
+            this.$set(String(i++), el);
+        }
+        return this.length;
+    }
+
+    shift() {
+        if (this.length < 0) return undefined;
+        const v = this[0];
+        this.$set('0', undefined);
+        super.shift();
+        return v;
+    }
+
+    splice(start, deleteCount=0, ...avs) {
+        let tidx = start;
+        let aidx = 0;
+        let dvs = [];
+        // splice out values to delete, replace w/ items to add (if any)
+        for (let i=0; i<deleteCount; i++ ) {
+            dvs.push(this[tidx])
+            if (aidx < avs.length) {
+                this.$set(String(tidx++), avs[aidx++]);
+            } else {
+                this.$set(String(tidx), undefined);
+                super.splice(tidx++, 1);
+            }
+        }
+        // splice in any remainder of items to add
+        for ( ; aidx<avs.length; aidx++ ) {
+            super.splice(tidx, 0, undefined);
+            this.$set(String(tidx++), avs[aidx]);
+        }
+        return dvs;
+    }
+
+    $set(key, value) {
+        let storedValue = this[key];
+        if (Object.is(storedValue, value)) return true;
+        if (storedValue) this.$unlink(key, storedValue);
+        if (value) this.$link(key, value);
+        this[key] = value;
+        if (this.$ready) {
+            if (this.$at_modified) this.$at_modified.trigger({key:key, value:value});
+        }
+        return true;
+    }
+
+    $delete(key) {
+        const storedValue = this[key];
+        if (storedValue) this.$unlink(key, storedValue);
+        delete this[key];
+        if (this.$at_modified) this.$at_modified.trigger({key:key, value:undefined, deleted:true});
+        return true;
+    }
+
+    $at_modified
+    get at_modified() {
+        if (!this.$at_modified) this.$at_modified = new EvtEmitter(this.$proxy, 'modified');
+        return this.$at_modified;
+    }
+
+    $link(key, value) {
+        if (value.at_modified) value.at_modified.listen(this.$on_link_modified, this, false, null, 0, key);
+    }
+
+    $unlink(key, value) {
+        if (value.at_modified) value.at_modified.ignore(this.$on_link_modified);
+    }
+
+    $on_link_modified(evt, key) {
+        if (this.$at_modified) {
+            let path = `${key}.${evt.key}`;
+            this.$at_modified.trigger({key:path, value:evt.value});
+        }
+    }
+
 }

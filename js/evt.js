@@ -1,4 +1,4 @@
-export { Evt, EvtListener, EvtEmitter };
+export { Evt, EvtEmitter };
 
 import { Fmt } from './fmt.js';
 //import { GizmoCtx } from './gizmoCtx.js';
@@ -20,7 +20,7 @@ class Evt {
     }
 }
 
-class EvtListener {
+class $EvtListener {
     constructor(fcn, boundfcn, once=false, filter=undefined, priority=0, ctx=undefined) {
         this.fcn = fcn;
         this.boundfcn = boundfcn;
@@ -58,19 +58,19 @@ class EvtEmitter {
                 if (idx !== -1) this.$listeners.splice(idx, 1);
             }
             // execute listener callback
-            listener.fcn(evt, listener.ctx);
+            listener.boundfcn(evt, listener.ctx);
         }
     }
 
     listen(fcn, receiver, once=false, filter=undefined, priority=0, ctx=undefined) {
         let boundfcn = (receiver) ? fcn.bind(receiver) : fcn;
-        let listener = new EvtListener(fcn, boundfcn, once, filter, priority, ctx);
+        let listener = new $EvtListener(fcn, boundfcn, once, filter, priority, ctx);
         this.$listeners.push(listener);
         this.$listeners.sort((a,b) => a.priority-b.priority);
     }
 
     ignore(fcn) {
-        let idx = this.$listeners.findIndex((v) = v.fcn === fcn);
+        let idx = this.$listeners.findIndex((v) => v.fcn === fcn);
         if (idx !== -1) this.$listeners.splice(idx, 1);
     }
 

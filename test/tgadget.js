@@ -1,21 +1,39 @@
-//import { Evts } from '../js/evt.js';
-//import { Fmt } from '../js/fmt.js';
-import { Gadget, GadgetCtx } from '../js/gadget.js';
+import { Fmt } from '../js/fmt.js';
+import { Gadget, GadgetArray, GadgetCtx } from '../js/gadget.js';
 
 describe('gadgets', () => {
     var gctx;
+    let tevt;
     beforeEach(() => {
         gctx = new GadgetCtx();
         GadgetCtx.current = gctx;
     });
-    //afterEach(() => {
-        //Evts.clear();
-    //});
+    afterEach(() => {
+        Gadget.at_created.clear();
+        Gadget.at_destroyed.clear();
+    });
 
     it('can be registered', ()=>{
         let cls = class tgadget extends Gadget {};
         let o = new cls;
         expect(Gadget.$registry.has('tgadget')).toBeTruthy();
+    });
+
+    it('trigger static created event', ()=>{
+        let cls = class tgadget extends Gadget {};
+        cls.at_created.listen((evt) => tevt=evt);
+        let o = new cls;
+        expect(tevt.tag).toEqual('created');
+        expect(tevt.actor).toEqual(o);
+    });
+
+    it('trigger destroyed events on destroy', ()=>{
+        let cls = class tgadget extends Gadget {};
+        cls.at_destroyed.listen((evt) => tevt=evt);
+        let o = new cls;
+        o.destroy();
+        expect(tevt.tag).toEqual('destroyed');
+        expect(tevt.actor).toEqual(o);
     });
 
     it('have overrideable defaults', ()=>{
@@ -47,7 +65,6 @@ describe('gadgets', () => {
             static { this.$schema('key', { dflt: 'hello' }); }
         };
         let o = new cls();
-        let tevt;
         o.at_modified.listen((evt) => tevt=evt);
         expect(o.key).toEqual('hello');
         o.key = 'there';
@@ -71,20 +88,20 @@ describe('gadgets', () => {
     });
 
     it('can have schema applied/redefined', ()=>{
-        class TCls1 extends Gadget {
+        class tgadget extends Gadget {
             static { this.$schema('var1', { dflt: 'foo'} ); }
             static { this.$schema('var2', { dflt: 'bar'} ); }
         };
-        class TCls2 extends TCls1 {
+        class tgadget2 extends tgadget {
             static { this.$schema('var3', { dflt: 'hello', readonly: true} ); }
         };
-        class TCls3 extends TCls1 {
+        class tgadget3 extends tgadget {
             static { this.$schema('var1', { dflt: 'there'} ); }
             static { this.prototype.$schemas.clear('var2'); }
         };
-        let o = new TCls1();
-        let o2 = new TCls2();
-        let o3 = new TCls3();
+        let o = new tgadget();
+        let o2 = new tgadget2();
+        let o3 = new tgadget3();
         expect(o.var1).toEqual('foo');
         expect(o.var2).toEqual('bar');
         expect(o.var3).toEqual(undefined);
@@ -96,161 +113,62 @@ describe('gadgets', () => {
         expect(o3.var3).toEqual(undefined);
     });
 
-    /*
     it('can have ordered schema', ()=>{
-        class tBase extends gadgetClass {
-            static { this.schema('var2', { dflt: 'bar', order: 2} ); }
-            static { this.schema('var1', { dflt: 'bar', order: 1} ); }
-            static { this.schema('var0', { dflt: 'foo', order: 0} ); }
+        class tgadget extends Gadget {
+            static { this.$schema('var2', { dflt: 'bar', order: 2} ); }
+            static { this.$schema('var1', { dflt: 'bar', order: 1} ); }
+            static { this.$schema('var0', { dflt: 'foo', order: 0} ); }
         }
-        expect(tBase.prototype.$schema.$order).toEqual(['var0', 'var1', 'var2']);
+        expect(tgadget.prototype.$schemas.$order).toEqual(['var0', 'var1', 'var2']);
     });
 
     it('subclass schema can be reordered', ()=>{
-        class tBase extends gadgetClass {
-            static { this.schema('var2', { dflt: 'bar', order: 2} ); }
-            static { this.schema('var1', { dflt: 'bar', order: 1} ); }
-            static { this.schema('var0', { dflt: 'foo', order: 0} ); }
+        class tgadget extends Gadget {
+            static { this.$schema('var2', { dflt: 'bar', order: 2} ); }
+            static { this.$schema('var1', { dflt: 'bar', order: 1} ); }
+            static { this.$schema('var0', { dflt: 'foo', order: 0} ); }
         }
-        class tSub extends tBase {
-            static { this.schema('var2', { dflt: 'bar', order: -1} ); }
+        class tsub extends tgadget {
+            static { this.$schema('var2', { dflt: 'bar', order: -1} ); }
         }
-        expect(tBase.prototype.$schema.$order).toEqual(['var0', 'var1', 'var2']);
-        expect(tSub.prototype.$schema.$order).toEqual(['var2', 'var0', 'var1']);
+        expect(tgadget.prototype.$schemas.$order).toEqual(['var0', 'var1', 'var2']);
+        expect(tsub.prototype.$schemas.$order).toEqual(['var2', 'var0', 'var1']);
     });
 
     it('can be linked', ()=>{
-        class TGizmoDataSub extends gadgetClass {
-            static { this.schema('data'); };
+        class tdata extends Gadget {
+            static { this.$schema('var'); };
         };
-        class TGizmoData extends gadgetClass {
-            static { this.schema('sub', { link: true }); };
+        class tgadget extends Gadget {
+            static { this.$schema('data', { link: true }); };
         };
-        let o = new TGizmoData({sub: new TGizmoDataSub({data: 'foo'})});
-        expect(o.sub.data).toEqual('foo');
+        let o = new tgadget({data: new tdata({var: 'foo'})});
+        expect(o.data.var).toEqual('foo');
     });
 
-    it('links cannot loop', ()=>{
-        class TLeaf extends gadgetClass {
-            static { this.schema('data'); };
+    it('linked vars trigger base at_modified', ()=>{
+        class tdata extends Gadget {
+            static { this.$schema('var'); };
         };
-        class TRoot extends gadgetClass {
-            static gid = 0;
-            static { this.schema('sub', { link: true }); };
-            constructor(spec={}) {
-                super(spec);
-                this.id = this.constructor.gid++;
-            }
-            toString() {
-                return Fmt.toString(this.constructor.name, this.id);
-            }
+        class tgadget extends Gadget {
+            static { this.$schema('data', { link: true }); };
         };
-        let n1 = new TRoot();
-        let n2 = new TRoot();
-        let n3 = new TRoot();
-        let l = new TLeaf({data: 'leaf'});
-        gSetter(n3, 'sub', l);
-        expect(n3.sub.data).toEqual('leaf');
-        expect(() => gSetter(n1, 'sub', n1)).toThrow();
-        expect(n1.sub).toEqual(undefined);
-        gSetter(n2, 'sub', n3);
-        expect(n2.sub.sub.data).toEqual('leaf');
-        expect(() => gSetter(n3, 'sub', n2)).toThrow();
-        expect(n2.sub.sub.data).toEqual('leaf');
-        gSetter(n1, 'sub', n2);
-        expect(n1.sub.sub.sub.data).toEqual('leaf');
-        expect(() => gSetter(n3, 'sub', n1)).toThrow();
-        expect(n1.sub.sub.sub.data).toEqual('leaf');
+        let o = new tgadget({data: new tdata({var: 'foo'})});
+        expect(o.data.var).toEqual('foo');
+        o.at_modified.listen((evt) => tevt=evt);
+        o.data.var = 'hello';
+        expect(o.data.var).toEqual('hello');
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.key).toEqual('data.var');
+        expect(tevt.value).toEqual('hello');
+        let odata = o.data;
+        o.data = new tdata();
+        tevt = null;
+        odata.var = 'there';
+        expect(tevt).toEqual(null);
     });
 
-    it('atUpdate atts trigger for root object', ()=>{
-        let update = {};
-        class TLeaf extends gadgetClass {
-            static { this.schema('el'); }
-            static { this.schema('elu', { atUpdate: (o,k,ov,nv) => update = { o:o, k:k, ov:ov, nv:nv } }); }
-        };
-        let leaf = new TLeaf({el: 'hello', elu: 'really'});
-        expect(update).toEqual({});
-        gSetter(leaf, 'el', 'there');
-        expect(update).toEqual({});
-        gSetter(leaf, 'elu', 'yes');
-        expect(update).toEqual({ o:leaf, k:'elu', ov:'really', nv:'yes'});
-    });
-
-    it('atUpdate atts trigger for leaf', ()=>{
-        let subUpdate = {};
-        let rootUpdate = {};
-        class TLeaf extends gadgetClass {
-            static { this.schema('el'); }
-        };
-        class TSub extends gadgetClass {
-            static { this.schema('leaf', { link: true }); }
-        };
-        class TSubUpdate extends gadgetClass {
-            static { this.schema('leaf', { atUpdate: (o,k,ov,nv) => {
-                subUpdate = { ov: ov, nv: nv };
-            }, link: true }); }
-        };
-        class TRoot extends gadgetClass {
-            static { this.schema('sub', { atUpdate: (o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
-        };
-        let leaf = new TLeaf({el: 'hello'});
-        let sub = new TSub();
-        let subu = new TSubUpdate();
-        let root = new TRoot();
-        gSetter(leaf, 'el', 'there');
-        expect(subUpdate).toEqual({});
-        expect(rootUpdate).toEqual({});
-        gSetter(sub, 'leaf', leaf);
-        gSetter(leaf, 'el', 'leaf1');
-        expect(subUpdate).toEqual({});
-        expect(rootUpdate).toEqual({});
-        gSetter(root, 'sub', sub);
-        gSetter(leaf, 'el', 'sub1');
-        // root->sub->leaf->el
-        expect(subUpdate).toEqual({});
-        expect(rootUpdate).toEqual({ov: sub, nv: sub});
-        rootUpdate = {};
-        gSetter(subu, 'leaf', leaf);
-        gSetter(leaf, 'el', 'leaf2');
-        expect(subUpdate).toEqual({ov: leaf, nv: leaf});
-        expect(rootUpdate).toEqual({});
-        subUpdate = {};
-        gSetter(root, 'sub', subu);
-        gSetter(leaf, 'el', 'sub2');
-        expect(subUpdate).toEqual({ov: leaf, nv: leaf});
-        expect(rootUpdate).toEqual({ov: subu, nv: subu});
-    });
-
-    it('leaf atUpdate reset w/ new root', ()=>{
-        let rootUpdate = {};
-        class TLeaf extends gadgetClass {
-            static { this.schema('el'); }
-        };
-        class TARoot extends gadgetClass {
-            static { this.schema('sub', { atUpdate: (o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
-        };
-        class TBRoot extends gadgetClass {
-            static { this.schema('sub', { link: true } ); }
-        };
-        let leaf = new TLeaf({el: 'hello'});
-        let roota = new TARoot();
-        let rootb = new TBRoot();
-        gSetter(roota, 'sub', leaf);
-        gSetter(leaf, 'el', 'v1');
-        expect(rootUpdate).toEqual({ov: leaf, nv: leaf});
-        gSetter(roota, 'sub', null);
-        rootUpdate = {};
-        gSetter(leaf, 'el', 'v2');
-        expect(rootUpdate).toEqual({});
-        gSetter(roota, 'sub', leaf);
-        gSetter(leaf, 'el', 'v3');
-        expect(rootUpdate).toEqual({ov: leaf, nv: leaf});
-        rootUpdate = {};
-        gSetter(rootb, 'sub', leaf);
-        gSetter(leaf, 'el', 'v4');
-        expect(rootUpdate).toEqual({});
-    });
+    /*
 
     it('base generator updates on gadget change', ()=>{
         class TBase extends gadgetClass {
@@ -364,9 +282,11 @@ describe('gadgets', () => {
         expect(tevt).toEqual({});
         expect(l.data).toEqual('v2');
     });
+    */
 
 });
 
+/*
 describe('gizmos', () => {
     var counter;
     beforeEach(() => {
@@ -431,186 +351,128 @@ describe('gizmos', () => {
     });
 
 });
+*/
 
 describe('gadget arrays', () => {
 
-    var gid = 0;
-    class TRef extends gadgetClass {
-        static { this.prototype.$emitter = true}
-        static { 
-            this.schema('items', { link: true, dflt: () => [] }); 
-            this.schema('auto', { generator: (o,v) => {
-                return (o.items.length) ? 'hello:there' : 'wait';
-            }}); 
-        };
-        static { this.schema('gid', { dflt: () => gid++ }); }
-    };
-    let gzd, tevt;
+    let arr;
+    let tevt;
     beforeEach(() => {
-        gzd = new TRef();
-        Evts.listen(gzd, 'GizmoSet', (evt) => tevt = evt);
-    });
-    afterEach(() => {
-        Evts.clear();
-    })
-
-    it('causes gizmo events when k/v set', ()=>{
-        gzd.items[0] = 'foo';
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['items.0']).toEqual('foo');
-        expect(gzd.items[0]).toEqual('foo');
+        arr = new GadgetArray();
+        arr.at_modified.listen((evt) => tevt=evt);
     });
 
-    it('causes gizmo events when items pushed', ()=>{
-        gzd.items.push('foo');
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['items.0']).toEqual('foo');
-        expect(gzd.items[0]).toEqual('foo');
-        gzd.items.push('bar', 'baz');
-        expect(tevt.set['items.2']).toEqual('baz');
+    it('causes modified events when k/v set', ()=>{
+        arr[0] = 'foo';
+        expect(arr[0]).toEqual('foo');
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.actor).toBe(arr);
+        expect(tevt.key).toEqual('0')
+        expect(tevt.value).toEqual('foo');
     });
 
-    it('causes gizmo events when items unshifted', ()=>{
-        gzd.items.unshift('foo');
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['items.0']).toEqual('foo');
-        expect(gzd.items[0]).toEqual('foo');
-        gzd.items.unshift('bar', 'baz');
-        expect(tevt.set['items.1']).toEqual('baz');
-        expect(gzd.items[0]).toEqual('bar');
-        expect(gzd.items[1]).toEqual('baz');
-        expect(gzd.items[2]).toEqual('foo');
-        expect(gzd.items.length).toEqual(3);
+    it('causes modified events when items pushed', ()=>{
+        arr.push('foo');
+        expect(arr[0]).toEqual('foo');
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.actor).toBe(arr);
+        expect(tevt.key).toEqual('0')
+        expect(tevt.value).toEqual('foo');
+        arr.push('hello');
+        expect(arr[1]).toEqual('hello');
+        expect(tevt.key).toEqual('1')
+        expect(tevt.value).toEqual('hello');
     });
 
-    it('causes gizmo events when items popped', ()=>{
-        gzd.items.push('foo', 'bar', 'baz');
-        let v = gzd.items.pop();
+    it('causes modified events when items unshifted', ()=>{
+        arr.unshift('foo');
+        expect(arr[0]).toEqual('foo');
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.actor).toBe(arr);
+        expect(tevt.key).toEqual('0')
+        expect(tevt.value).toEqual('foo');
+        arr.unshift('hello');
+        expect(arr[0]).toEqual('hello');
+        expect(arr[1]).toEqual('foo');
+        expect(tevt.key).toEqual('0')
+        expect(tevt.value).toEqual('hello');
+    });
+
+    it('causes modified events when items popped', ()=>{
+        arr.push('foo', 'bar', 'baz');
+        let v = arr.pop();
         expect(v).toEqual('baz');
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['items.2']).toEqual(undefined);
-        expect(gzd.items.length).toEqual(2);
-        expect(gzd.items[0]).toEqual('foo');
-        expect(gzd.items[1]).toEqual('bar');
-        v = gzd.items.pop();
-        expect(v).toEqual('bar');
-        expect(gzd.items.length).toEqual(1);
+        expect(arr.length).toEqual(2);
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.actor).toBe(arr);
+        expect(tevt.key).toEqual('2')
+        expect(tevt.value).toEqual(undefined);
     });
 
-    it('causes gizmo events when items shifted', ()=>{
-        gzd.items.push('foo', 'bar', 'baz');
-        let v = gzd.items.shift();
+    it('causes modified events when items shifted', ()=>{
+        arr.push('foo', 'bar', 'baz');
+        let v = arr.shift();
         expect(v).toEqual('foo');
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['items.0']).toEqual(undefined);
-        expect(gzd.items.length).toEqual(2);
-        expect(gzd.items[0]).toEqual('bar');
-        expect(gzd.items[1]).toEqual('baz');
-        v = gzd.items.shift();
-        expect(v).toEqual('bar');
-        expect(gzd.items.length).toEqual(1);
+        expect(arr.length).toEqual(2);
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.actor).toBe(arr);
+        expect(tevt.key).toEqual('0')
+        expect(tevt.value).toEqual(undefined);
     });
 
-    it('causes gizmo events when items spliced', ()=>{
-        gzd.items.push('foo', 'bar', 'baz');
-        let v = gzd.items.splice(1, 1);
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['items.1']).toEqual(undefined);
+    it('causes modified events when items spliced', ()=>{
+        arr.push('foo', 'bar', 'baz');
+        let v = arr.splice(1, 1);
+        expect(tevt.key).toEqual('1');
+        expect(tevt.value).toEqual(undefined);
         expect(v).toEqual(['bar']);
-        expect(gzd.items[0]).toEqual('foo');
-        expect(gzd.items[1]).toEqual('baz');
-        expect(gzd.items.length).toEqual(2);
-        v = gzd.items.splice(1, 0, 'hello', 'there');
+        expect(arr[0]).toEqual('foo');
+        expect(arr[1]).toEqual('baz');
+        expect(arr.length).toEqual(2);
+        v = arr.splice(1, 0, 'hello', 'there');
         expect(v).toEqual([]);
-        expect(gzd.items[0]).toEqual('foo');
-        expect(gzd.items[1]).toEqual('hello');
-        expect(gzd.items[2]).toEqual('there');
-        expect(gzd.items[3]).toEqual('baz');
-        expect(tevt.set['items.2']).toEqual('there');
-        expect(gzd.items.length).toEqual(4);
-        v = gzd.items.splice(1, 1, 'nihao');
+        expect(arr[0]).toEqual('foo');
+        expect(arr[1]).toEqual('hello');
+        expect(arr[2]).toEqual('there');
+        expect(arr[3]).toEqual('baz');
+        expect(tevt.key).toEqual('2');
+        expect(tevt.value).toEqual('there');
+        expect(arr.length).toEqual(4);
+        v = arr.splice(1, 1, 'nihao');
         expect(v).toEqual(['hello']);
-        expect(gzd.items.length).toEqual(4);
-        expect(gzd.items[1]).toEqual('nihao');
-        expect(tevt.set['items.1']).toEqual('nihao');
-        v = gzd.items.splice(1, 2, 'hola');
+        expect(arr.length).toEqual(4);
+        expect(arr[1]).toEqual('nihao');
+        expect(tevt.key).toEqual('1');
+        expect(tevt.value).toEqual('nihao');
+        v = arr.splice(1, 2, 'hola');
         expect(v).toEqual(['nihao', 'there']);
-        expect(gzd.items.length).toEqual(3);
-        expect(tevt.set['items.2']).toEqual(undefined);
-        expect(gzd.items[0]).toEqual('foo');
-        expect(gzd.items[1]).toEqual('hola');
-        expect(gzd.items[2]).toEqual('baz');
+        expect(arr.length).toEqual(3);
+        expect(tevt.key).toEqual('2');
+        expect(tevt.value).toEqual(undefined);
+        expect(arr[0]).toEqual('foo');
+        expect(arr[1]).toEqual('hola');
+        expect(arr[2]).toEqual('baz');
     });
 
-});
-
-describe('gadget objects', () => {
-    var gid = 0;
-    class TRef extends gadgetClass {
-        static { this.prototype.$emitter = true}
-        static { this.schema('atts', { dflt: () => ({}), link: true }); };
-        static { this.schema('gid', { dflt: () => gid++ }); }
-        static { this.schema('gen', { dflt: 0, generator:(o, ov) => ov+1 }); }
-    };
-    let gzd, tevt = {};
-    beforeEach(() => {
-        gzd = new TRef();
-        Evts.listen(gzd, 'GizmoSet', (evt) => tevt = evt);
-        Evts.listen(gzd, 'GizmoDelete', (evt) => tevt = evt);
+    it('sub arrays are linked', ()=>{
+        class tgadget extends Gadget {
+            static { this.$schema('data', { dflt: () => [], link:true }); }
+        };
+        class tdata extends Gadget {
+            static { this.$schema('value', { dflt:42 }); }
+        };
+        let o = new tgadget({data:[
+            new tdata({value:1}),
+            new tdata({value:2}),
+        ]});
+        expect(o.data[0].value).toEqual(1);
+        o.at_modified.listen((evt) => tevt=evt);
+        o.data[0].value = 101;
+        expect(tevt.key).toEqual('data.0.value');
+        expect(tevt.value).toEqual(101);
+        o.data[0] = new tdata({value:88});
+        expect(tevt.key).toEqual('data.0');
+        expect(tevt.value.value).toEqual(88);
     });
-    afterEach(() => {
-        Evts.clear();
-    });
-
-    it('causes gizmo events when k/v set', ()=>{
-        gzd.atts['foo'] = 'bar';
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['atts.foo']).toEqual('bar');
-    });
-
-    it('causes gizmo events when k deleted', ()=>{
-        gzd.atts['foo'] = 'bar';
-        delete gzd.atts['foo'];
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['atts.foo']).toEqual(undefined);
-        expect(gzd.atts.foo).toBeFalsy();
-    });
-
-    it('can use gizmodata.set', ()=>{
-        gSetter(gzd.atts, 'foo', 'bar');
-        expect(gzd.atts.foo).toBeTruthy();
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(gzd);
-        expect(tevt.set['atts.foo']).toEqual('bar');
-    });
-
-    it('can iterate object keys', ()=>{
-        gzd.atts['foo'] = 'bar';
-        gzd.atts['hello'] = 'there';
-        expect(Object.keys(gzd.atts)).toEqual(['foo', 'hello']);
-    });
-
-    it('can iterate object entries', ()=>{
-        gzd.atts['foo'] = 'bar';
-        gzd.atts['hello'] = 'there';
-        expect(Object.entries(gzd.atts)).toEqual([['foo', 'bar'], ['hello', 'there']]);
-    });
-
-    it('causes parent generator updates', ()=>{
-        expect(gzd.gen).toEqual(1);
-        gzd.atts['foo'] = 'bar';
-        expect(gzd.gen).toEqual(2);
-        gzd.atts['hello'] = 'there';
-        expect(gzd.gen).toEqual(3);
-    });
-    */
 
 });
