@@ -11,7 +11,7 @@ class UiCanvas extends UiView {
     static { this.prototype.canvasable = true; }
 
     // STATIC PROPERTIES ---------------------------------------------------
-    static getCanvas(id, fit=true) {
+    static getCanvas(id='game.canvas', fit=true) {
         let canvas = document.getElementById(id);
         if (!canvas) {
             canvas = document.createElement('canvas');
