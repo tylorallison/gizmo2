@@ -16,6 +16,8 @@ import { Shape } from '../js/shape.js';
 import { ImageMedia } from '../js/media.js';
 import { GadgetCtx } from '../js/gadget.js';
 import { UiView } from '../js/uiView.js';
+import { TextToken } from '../js/textToken.js';
+import { TextFormat } from '../js/textFormat.js';
 //import { Assets } from '../js/asset.js';
 
 /*
@@ -62,17 +64,19 @@ class AssetTest extends Game {
 
         let cvs = new UiCanvas({ canvasId: 'game.canvas'});
 
-        let animator = GadgetCtx.assets.get('test.animator');
+        let animator = GadgetCtx.assets.get('test.animator', { fitter: 'ratio'});
+        let text = new TextToken({text:'hello', fmt: new TextFormat({color:'red', size:40}), fitter: 'none'});
 
         let view1 = new UiPanel({
-            sketch: animator,
+            sketch: GadgetCtx.assets.get('test.rect', { fitter:'stretch' }),
             dbg: { xform: true },
             xform: new XForm({ left:.4, right:.6, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 200}),
         });
         cvs.adopt(view1);
 
         let view2 = new UiPanel({
-            sketch: GadgetCtx.assets.get('test.rect', { fitter:'none' }),
+            //sketch: GadgetCtx.assets.get('test.rect', { fitter:'none' }),
+            sketch: text,
             dbg: { xform: true },
             xform: new XForm({ left:.6, right:.4, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 400}),
         });
@@ -95,10 +99,10 @@ class AssetTest extends Game {
 
         new Timer({ttl: 1000, loop: true, cb: () => { 
             if (animator.state === 'on') {
-                console.log(`animator: ${animator.state}->off`);
+                //console.log(`animator: ${animator.state}->off`);
                 animator.state = 'off';
             } else {
-                console.log(`animator: ${animator.state}->off`);
+                //console.log(`animator: ${animator.state}->off`);
                 animator.state = 'on';
             }
         }});

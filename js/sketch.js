@@ -81,7 +81,7 @@ class Sketch extends Asset {
         ctx.globalAlpha *= this.alpha;
         let savedSmoothing = ctx.imageSmoothingEnabled;
         if (this.smoothing !== null) ctx.imageSmoothingEnabled = this.smoothing;
-        this.renderSketch(ctx, x, y, width, height);
+        this.$fitSketch(ctx, x, y, width, height);
         // revert global context settings
         ctx.globalAlpha = savedAlpha;
         ctx.imageSmoothingEnabled = savedSmoothing;
@@ -97,7 +97,7 @@ class Sketch extends Asset {
     }
 
     // METHODS -------------------------------------------------------------
-    renderSketch(ctx, x, y, width, height) {
+    $fitSketch(ctx, x, y, width, height) {
         switch (this.fitter) {
             case 'none': {
                 let xo = Math.round((width - this.width)*this.alignx);
@@ -163,7 +163,6 @@ class Sketch extends Asset {
             }
             case 'stretch':
             default: {
-                //sketch.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
                 this.$render(ctx, x, y, width, height);
                 break;
             }
