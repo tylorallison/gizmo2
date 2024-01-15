@@ -205,18 +205,21 @@ class Gadget {
         this.$proxy = new Proxy(this, {
             get(target, key, receiver) {
                 if (key === '$target') return target;
+                /*
+                //FIXME
                 if (target[key] instanceof Function && key !== 'constructor') {
                     const value = target[key];
                     return Util.nameFunction(value.name, function (...args) {
                         return value.apply(receiver, args);
                     });
                 }
+                */
                 return target.$get(key, (target.$schemas) ? target.$schemas.get(key) : null);
             },
             set(target, key, value, receiver) {
                 let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
                 if (sentry) {
-                    if (sentry.readonly) return false;
+                    if (target.$ready && sentry.readonly) return false;
                     return target.$set(key, value, sentry);
                 }
                 target[key] = value;
@@ -225,13 +228,16 @@ class Gadget {
             deleteProperty(target, key) {
                 let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
                 if (sentry) {
-                    if (sentry.readonly) return false;
+                    if (target.$ready && sentry.readonly) return false;
                     return target.$delete(key, sentry);
                 }
                 delete target[key];
                 return true;
             }
         });
+        //this.$proxy.$cpre(...args);
+        //this.$proxy.$cparse(...args);
+        //this.$proxy.$cpost(...args);
         this.$cpost(...args);
         this.$ready = true;
         GadgetCtx.at_created.trigger({actor:this.$proxy});
@@ -291,7 +297,9 @@ class Gadget {
     destroy() {
         for (const sentry of this.$schemas.$entries) {
             if (sentry.link && this[sentry.key]) {
-                this[sentry.key].at_modified.ignore(this.$on_linkModified);
+                let value = this[sentry.key];
+                if (value.at_modified) value.at_modified.ignore(this.$on_linkModified);
+                if (value.destroy) value.destroy();
             }
         }
         if (this.$at_destroyed) this.$at_destroyed.trigger();

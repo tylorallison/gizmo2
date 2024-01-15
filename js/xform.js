@@ -67,9 +67,6 @@ class XForm extends Gadget {
         return this.$bounds;
     }
 
-    // private internal state
-    //#savedTransform;
-
     constructor(spec={}) {
         let gripOffset = spec.gripOffset || 0;
         if (!('gripOffsetLeft' in spec)) spec.gripOffsetLeft = gripOffset;
@@ -149,11 +146,6 @@ class XForm extends Gadget {
             let bottom = gb - this.gripOffsetBottom;
             return top + Math.round((bottom-top)*this.origy);
         }
-    }
-
-    // the defined rect boundary in world coordinates
-    // FIXME
-    get worldBounds() {
     }
 
     // min/max x/y returns min/max of bounds/rect in local space

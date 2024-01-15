@@ -18,7 +18,13 @@ class UiPanel extends UiView {
         return new Rect({ color: 'rgba(255,255,255,.25)' });
     }
 
+    $cpost(spec) {
+        super.$cpost(spec);
+        this.at_modified.listen((evt) => console.log(`panel modified: ${evt}`));
+    }
+
     // METHODS -------------------------------------------------------------
+    // FIXME: remove
     renderSketch(ctx, sketch ) {
         if (!sketch)  return;
         switch (this.fitter) {

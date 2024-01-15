@@ -6,7 +6,7 @@ import { Rect } from '../js/rect.js';
 //import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
 import { Sprite } from '../js/sprite.js';
-//import { Animation } from '../js/animation.js';
+import { Animation } from '../js/animation.js';
 //import { Generator } from '../js/generator.js';
 import { UiPanel } from '../js/uiPanel.js';
 //import { Animator } from '../js/animator.js';
@@ -36,15 +36,15 @@ class AssetTest extends Game {
         Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
         /*
         Shape.xspec({tag: 'test.shape', color: 'purple', border: 2, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
-        Animation.xspec({tag: 'test.animation', jitter: true, sketches: [
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-        ]}),
         */
+        Animation.xspec({tag: 'test.animation', jitter: false, sketches: [
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 250 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
+        ]}),
 
         /*
         Animator.xspec({ 
@@ -70,7 +70,7 @@ class AssetTest extends Game {
         console.log(`cvs: ${cvs}`);
 
         let view1 = new UiPanel({
-            sketch: GadgetCtx.assets.get('test.sprite'),
+            sketch: GadgetCtx.assets.get('test.animation'),
             dbg: { xform: true },
             xform: new XForm({ left:.4, right:.6, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 200}),
         });

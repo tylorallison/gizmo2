@@ -1,6 +1,14 @@
-export { Timer };
+export { Timer, Ticker };
 import { Gadget } from './gadget.js';
 import { GadgetCtx } from './gadget.js';
+
+/**
+ * game timer has two "time" variables
+ * ticks: game clock measure of time.  this can be adjusted to "speed up" or "slow down" the game.
+ * elapsed: actual milliseconds that have elapsed since last game timer
+ * Timers operate on elapsed time.
+ * Tickers operate on ticks.
+ */
 
 class Timer extends Gadget {
     static {
@@ -41,27 +49,23 @@ class Timer extends Gadget {
 
 }
 
-// FIXME: combined back to timer
-/*
 class Ticker extends Timer {
-    static { this.$schema('elapsed', { dflt: 0 }); }
+    static { this.$schema('$elapsed', { eventable: false, parser: () => 0 }); }
 
-    onTock(evt) {
+    $on_tocked(evt) {
         this.ttl -= evt.ticks;
-        this.elapsed += evt.elapsed;
+        this.$elapsed += evt.elapsed;
         if (this.ttl <= 0) {
-            let elapsed = this.elapsed;
+            let elapsed = this.$elapsed;
             let overflow = -this.ttl;
             if (this.loop) {
-                this.elapsed = 0;
-                this.ttl += this.startTTL;
+                this.$elapsed = 0;
+                this.ttl += this.$startTTL;
                 if (this.ttl < 0) this.ttl = 0;
             } else {
                 GadgetCtx.at_tocked.ignore(this.$on_tocked);
             }
-            this.cb(Object.assign( {}, evt, this.data, { ticks: this.startTTL + overflow, overflow: overflow, elapsed: elapsed } ));
+            this.cb(Object.assign( {}, evt, this.data, { ticks: this.$startTTL + overflow, overflow: overflow, elapsed: elapsed } ));
         }
     }
 }
-
-*/

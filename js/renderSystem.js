@@ -29,7 +29,6 @@ class RenderSystem extends System {
 
     // METHODS -------------------------------------------------------------
     $iterate(evt, e) {
-        console.log(`render iterate dim: ${e.canvas.width},${e.canvas.height}`);
         // clear canvas
         e.ctx.clearRect(0, 0, e.canvas.width, e.canvas.height);
         // render

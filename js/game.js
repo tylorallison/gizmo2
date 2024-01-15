@@ -14,7 +14,7 @@ import { UiCanvas } from './uiCanvas.js';
 //import { Global } from './global.js';
 import { Fmt } from './fmt.js';
 import { GadgetCtx } from './gadget.js';
-import { Assets } from './assets.js';
+//import { Assets } from './assets.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
