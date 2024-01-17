@@ -14,6 +14,7 @@ import { UiCanvas } from './uiCanvas.js';
 //import { Global } from './global.js';
 import { Fmt } from './fmt.js';
 import { GadgetCtx } from './gadget.js';
+import { Assets } from './assets.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -75,6 +76,7 @@ class Game extends Gizmo {
         //if (this.xcfgs) Configs.setValues(this.xcfgs);
         // -- assets
         //if (this.xassets) Assets.add(this.xassets);
+        GadgetCtx.assets.push(this.xassets);
         // game init
         await this.$init();
         if (this.dbg) console.log(`${this.name} initialization complete`);
@@ -93,7 +95,7 @@ class Game extends Gizmo {
 
     async $doload() {
         if (this.dbg) console.log(`${this.name} starting loading`);
-        //await Assets.advance();
+        await GadgetCtx.assets.load();
         await this.$load();
         if (this.dbg) console.log(`${this.name} loading complete`);
         return Promise.resolve();

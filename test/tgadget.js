@@ -23,6 +23,31 @@ describe('gadgets', () => {
         expect(tevt.actor).toEqual(o);
     });
 
+    it('generators work', ()=>{
+        class tgadget extends Gadget {
+            static { this.$schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
+            getg() {
+                return this.g;
+            }
+        };
+        let o = new tgadget();
+        expect(o.g).toEqual(2);
+        expect(o.g).toEqual(4);
+        expect(o.g).toEqual(8);
+        expect(o.getg()).toEqual(16);
+    });
+
+    it('privates work', ()=>{
+        class tgadget extends Gadget {
+            #p = 42;
+            getp() {
+                return this.#p;
+            }
+        };
+        let o = new tgadget();
+        expect(o.getp()).toEqual(42);
+    });
+
     it('trigger destroyed events on destroy', ()=>{
         let cls = class tgadget extends Gadget {};
         gctx.at_destroyed.listen((evt) => tevt=evt);

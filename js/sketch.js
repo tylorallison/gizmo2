@@ -35,6 +35,9 @@ class Sketch extends Asset {
     static { this.$schema('ttl', {readonly: true, dflt: 0}); }
     /** @member {boolean} Sketch#done=false - if sketch has finished animation */
     static { this.$schema('done', {parser: () => false}); }
+    static { this.$schema('fitter', { dflt: 'stretch' }); }
+    static { this.$schema('alignx', { dflt: .5 }); }
+    static { this.$schema('aligny', { dflt: .5 }); }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     destroy() {
@@ -78,15 +81,93 @@ class Sketch extends Asset {
         ctx.globalAlpha *= this.alpha;
         let savedSmoothing = ctx.imageSmoothingEnabled;
         if (this.smoothing !== null) ctx.imageSmoothingEnabled = this.smoothing;
+        this.renderSketch(ctx, x, y, width, height);
+        // revert global context settings
+        ctx.globalAlpha = savedAlpha;
+        ctx.imageSmoothingEnabled = savedSmoothing;
+    }
+
+    $render(ctx, x=0, y=0, width=0, height=0) {
         // pre render, specific to subclass
         this.$prerender(ctx, x, y, width, height);
         // private render, specific to subclass
         this.$subrender(ctx, x, y, width, height);
         // post render, specific to subclass
         this.$postrender(ctx, x, y, width, height);
-        // revert global context settings
-        ctx.globalAlpha = savedAlpha;
-        ctx.imageSmoothingEnabled = savedSmoothing;
+    }
+
+    // METHODS -------------------------------------------------------------
+    renderSketch(ctx, x, y, width, height) {
+        switch (this.fitter) {
+            case 'none': {
+                let xo = Math.round((width - this.width)*this.alignx);
+                let yo = Math.round((height - this.height)*this.aligny);
+                this.$render(ctx, x + xo, y + yo, 0, 0);
+                break;
+            }
+            case 'ratio': {
+                let adjustedWidth = width;
+                let adjustedHeight = height;
+                if (width && height) {
+                    let desiredRatio = (this.width && this.height) ? this.width/this.height : 1;
+                    let currentRatio = width/height;
+                    if (currentRatio>desiredRatio) {
+                        adjustedWidth = height * desiredRatio;
+                        x += Math.round((width-adjustedWidth)*this.alignx);
+                    } else if (currentRatio<desiredRatio) {
+                        adjustedHeight = width / desiredRatio;
+                        y += Math.round((height-adjustedHeight)*this.aligny);
+                    }
+                }
+                this.$render(ctx, x, y, adjustedWidth, adjustedHeight);
+                break;
+            }
+            case 'tile': {
+                if (!width || !height || !this.width || !this.height) return;
+                // clip to xform area
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(x, y, width, height);
+                ctx.clip();
+                // calculate/render tiled sketches
+                let wd = ((width % this.width)-this.width) * (this.alignx);
+                let hd = ((height % this.height)-this.height) * (this.aligny);
+                if (Math.abs(wd) >= this.width) wd = 0;
+                if (Math.abs(hd) >= this.height) hd = 0;
+                let xo, yo;
+                for (let i=0; i<=(width/this.width); i++) {
+                    for (let j=0; j<=(height/this.height); j++) {
+                        xo = wd + i*this.width;
+                        yo = hd + j*this.height;
+                        this.$render(ctx, x+xo, y+yo);
+                    }
+                }
+                // restore context to remove clip
+                ctx.restore();
+                break;
+            }
+            case 'autotile': {
+                if (!width || !height || !this.width || !this.height) return;
+                let xtiles = (width > this.width) ? Math.floor(width/this.width) : 1;
+                let scaledWidth = width/xtiles;
+                let ytiles = (height > this.height) ? Math.floor(height/this.height) : 1;
+                let scaledHeight = height/ytiles;
+                for (let i=0; i<xtiles; i++) {
+                    for (let j=0; j<ytiles; j++) {
+                        let xo = i*scaledWidth;
+                        let yo = j*scaledHeight;
+                        this.$render(ctx, x+xo, y+yo, scaledWidth, scaledHeight);
+                    }
+                }
+                break;
+            }
+            case 'stretch':
+            default: {
+                //sketch.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
+                this.$render(ctx, x, y, width, height);
+                break;
+            }
+        }
     }
 
     /**

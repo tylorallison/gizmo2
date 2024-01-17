@@ -1,7 +1,8 @@
-export { GadgetCtx, Gadget, GadgetArray, GadgetGenerator };
+export { Gadget, GadgetArray, GadgetGenerator, GadgetAssets, GadgetCtx };
 
 import { EvtEmitter } from './evt.js';
 import { Fmt } from './fmt.js';
+import { Util } from './util.js';
 
 class $GadgetDefaults {
 
@@ -156,6 +157,19 @@ class Gadget {
         schemas.set(sentry);
     }
 
+    /**
+     * xspec provides an GizmoSpec which can be used by a {@link Generator} class to create a Gadget object.
+     * @param {Object} spec={} - overrides for properties to create in the GizmoSpec
+     * @returns {...GizmoSpec}
+     */
+    static xspec(spec={}) {
+        return {
+            $gzx: true,
+            cls: this.name,
+            args: [Object.assign({}, spec)],
+        }
+    }
+
     $cpre(...args) { }
     $cpost(...args) { }
 
@@ -171,20 +185,6 @@ class Gadget {
             }
         }
     }
-
-    /*
-    static $at_created
-    static get at_created() {
-        if (!this.$at_created) this.$at_created = new EvtEmitter(this, 'created');
-        return this.$at_created;
-    }
-
-    static $at_destroyed
-    static get at_destroyed() {
-        if (!this.$at_destroyed) this.$at_destroyed = new EvtEmitter(this, 'destroyed');
-        return this.$at_destroyed;
-    }
-    */
 
     $at_modified
     get at_modified() {
@@ -205,11 +205,11 @@ class Gadget {
         this.$proxy = new Proxy(this, {
             get(target, key, receiver) {
                 if (key === '$target') return target;
-                if (target[key] instanceof Function) {
+                if (target[key] instanceof Function && key !== 'constructor') {
                     const value = target[key];
-                    return function (...args) {
-                        return value.apply(this === receiver ? target : this, args);
-                    };
+                    return Util.nameFunction(value.name, function (...args) {
+                        return value.apply(receiver, args);
+                    });
                 }
                 return target.$get(key, (target.$schemas) ? target.$schemas.get(key) : null);
             },
@@ -239,8 +239,9 @@ class Gadget {
     }
 
     $get(key, sentry) {
+        //if (key === 'width') console.log(`sentry: ${sentry}`);
         if (sentry && sentry.generator) {
-            this[key] = sentry.generator(target, this[key]);
+            this[key] = sentry.generator(this, this[key]);
         }
         return this[key];
     }
@@ -436,16 +437,17 @@ class GadgetGenerator {
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
         this.registry = spec.registry || Gadget.$registry;
-        //this.assets = spec.assets || Assets;
+        this.assets = spec.assets;
     }
 
     // METHODS -------------------------------------------------------------
     resolve(spec) {
         let nspec = Util.copy(spec);
+        let assets = this.assets || GadgetCtx.assets;
         for (const [k,v,o] of Util.kvWalk(nspec)) {
-            if (this.assets && v && (v.cls === '$Asset')) {
+            if (v && (v.cls === '$Asset')) {
                 const tag = v.args[0].tag;
-                o[k] = this.assets.get(tag);
+                o[k] = assets.get(tag);
             } else if (v && typeof v === 'object' && v.$gzx) {
                 let nv = this.generate(v);
                 o[k] = nv;
@@ -470,6 +472,80 @@ class GadgetGenerator {
         if (gzd) return gzd;
         console.error(`generator failed for ${Fmt.ofmt(spec)} -- constructor failed`);
         return undefined;
+    }
+
+}
+
+class GadgetAssets {
+    // CONSTRUCTOR ---------------------------------------------------------
+    constructor(spec={}) {
+        // the asset references defined by the user...
+        this.$xassets = [];
+        // the generated/loaded asset cache
+        this.$stack = [{}];
+        this.$assets = this.$stack[0];
+        if (spec.xassets) {
+            let xassets = spec.xassets;
+            if (!Array.isArray(xassets)) xassets = [ xassets ];
+            for (const xasset of xassets) this.$add(xasset);
+        }
+    }
+
+    $add(xasset) {
+        if (xasset.assetable) {
+            if (xasset.tag in this.$assets) {
+                console.error(`duplicate asset tag detected: ${xasset.tag}, previous asset: ${this.$assets[xasset.tag]}, new asset: ${xasset}`);
+            }
+            this.$assets[xasset.tag] = xasset;
+        } else {
+            this.$xassets.push(xasset);
+        }
+    }
+
+    push(xassets) {
+        let assets = {}
+        Object.setPrototypeOf(assets, this.$assets);
+        this.$stack.push(assets);
+        this.$assets = assets;
+        if (!Array.isArray(xassets)) xassets = [xassets];
+        for (const xasset of xassets) {
+            this.$add(xasset)
+        }
+    }
+
+    pop() {
+        if (this.$stack.length > 1) {
+            this.$stack.pop();
+            this.$assets = this.$stack[this.$stack.length-1];
+        }
+    }
+
+    async load() {
+        // load unresolves assets
+        let xassets = this.$xassets;
+        this.$xassets = [];
+        for (const xasset of xassets) {
+            let asset = GadgetCtx.generate(xasset);
+            if (!asset) {
+                console.error(`failed to generate asset for: ${Fmt.ofmt(xasset)}`);
+                continue;
+            }
+            if (asset.tag in this.$assets) {
+                console.error(`duplicate asset tag detected: ${asset.tag}, previous asset: ${this.$assets[asset.tag]}, new asset: ${asset}`);
+            }
+            this.$assets[asset.tag] = asset;
+        }
+        return Promise.all(Object.values(this.$assets).map((x) => x.load()));
+    }
+
+    get(tag, overrides={}) {
+        // search for asset tag
+        let asset = this.$assets[tag];
+        if (!asset) {
+            console.error(`-- missing asset for ${tag}`);
+            return null;
+        }
+        return asset.copy(Object.assign({}, overrides, { loadable: true }));
     }
 
 }
@@ -503,6 +579,12 @@ class GadgetCtx {
     static get interacted() {
         return this.current.interacted;
     }
+    static get media() {
+        return this.current.media;
+    }
+    static get assets() {
+        return this.current.assets;
+    }
     static set interacted(v) {
         return this.current.interacted = v;
     }
@@ -515,14 +597,16 @@ class GadgetCtx {
         this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
         this.dflts = ('dflts' in spec) ? spec.dflts : new $GadgetDefaults();
         this.generator = ('generator' in spec) ? spec.generator: new GadgetGenerator();
+        this.assets = ('assets' in spec) ? spec.assets: new GadgetAssets();
         this.interacted = false;
         this.at_tocked = new EvtEmitter(this, 'tocked');
         this.at_created = new EvtEmitter(this, 'created');
         this.at_destroyed = new EvtEmitter(this, 'destroyed');
+        // the raw media cache
+        this.media = {};
     }
 
     toString() {
         return Fmt.toString(this.constructor.name, this.tag);
     }
 }
-

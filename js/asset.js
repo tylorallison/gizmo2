@@ -1,7 +1,7 @@
 export { Asset };
 
 import { Fmt } from './fmt.js';
-import { Gadget } from './gizmo.js';
+import { Gadget } from './gadget.js';
 
 /**
  * Assets represent game resources such as textures, audio files, etc. used by the game.
@@ -15,10 +15,11 @@ import { Gadget } from './gizmo.js';
  */
 class Asset extends Gadget {
 
+    static { this.prototype.assetable = true };
     static _gid = 1;
 
     static { this.$schema('tag', { dflt: (o) => `${o.constructor.name}.${o.constructor._gid++}`}); }
-    static { this.$schema('$assetable', { readonly:true, dflt:false, xkey:assetable }); }
+    static { this.$schema('$loadable', { readonly:true, dflt:false, xkey:'loadable' }); }
 
     static from(src, spec={}) {
         let asset = new this(spec);

@@ -100,7 +100,7 @@ class UiPanel extends UiView {
         }
     }
 
-    subrender(ctx) {
+    $subrender(ctx) {
         this.renderSketch(ctx, this.sketch);
     }
 
