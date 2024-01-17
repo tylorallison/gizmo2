@@ -1,17 +1,21 @@
 import { Fmt } from '../js/fmt.js';
+import { GadgetCtx } from '../js/gadget.js';
 import { Gizmo } from '../js/gizmo.js';
 
 describe('gizmos', () => {
+    var gctx;
     var tevt;
+    beforeEach(() => {
+        gctx = new GadgetCtx();
+        GadgetCtx.current = gctx;
+    });
     afterEach(() => {
-        Gizmo.at_created.clear();
-        Gizmo.at_destroyed.clear();
         tevt = null;
     });
 
     it('trigger static created event', ()=>{
         let cls = class tgadget extends Gizmo {};
-        cls.at_created.listen((evt) => tevt=evt);
+        gctx.at_created.listen((evt) => tevt=evt);
         let o = new cls;
         expect(tevt.tag).toEqual('created');
         expect(tevt.actor).toEqual(o);

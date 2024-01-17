@@ -8,10 +8,6 @@ describe('gadgets', () => {
         gctx = new GadgetCtx();
         GadgetCtx.current = gctx;
     });
-    afterEach(() => {
-        Gadget.at_created.clear();
-        Gadget.at_destroyed.clear();
-    });
 
     it('can be registered', ()=>{
         let cls = class tgadget extends Gadget {};
@@ -21,7 +17,7 @@ describe('gadgets', () => {
 
     it('trigger static created event', ()=>{
         let cls = class tgadget extends Gadget {};
-        cls.at_created.listen((evt) => tevt=evt);
+        gctx.at_created.listen((evt) => tevt=evt);
         let o = new cls;
         expect(tevt.tag).toEqual('created');
         expect(tevt.actor).toEqual(o);
@@ -29,7 +25,7 @@ describe('gadgets', () => {
 
     it('trigger destroyed events on destroy', ()=>{
         let cls = class tgadget extends Gadget {};
-        cls.at_destroyed.listen((evt) => tevt=evt);
+        gctx.at_destroyed.listen((evt) => tevt=evt);
         let o = new cls;
         o.destroy();
         expect(tevt.tag).toEqual('destroyed');

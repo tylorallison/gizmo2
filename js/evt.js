@@ -1,7 +1,6 @@
 export { Evt, EvtEmitter };
 
 import { Fmt } from './fmt.js';
-//import { GizmoCtx } from './gizmoCtx.js';
 
 /** ========================================================================
  * represents an instance of an event that is triggered, along w/ associated event data
@@ -79,5 +78,3 @@ class EvtEmitter {
     }
 
 }
-
-//const Evts = new EvtCtx();

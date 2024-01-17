@@ -83,10 +83,10 @@ class $GadgetDfltProxy {
         if (base) Object.setPrototypeOf(this, base);
     }
     has(key) {
-        return GadgetCtx.current.dflts.has(this.$cls, key)
+        return GadgetCtx.dflts.has(this.$cls, key)
     }
     get(key) {
-        return GadgetCtx.current.dflts.get(this.$cls, key)
+        return GadgetCtx.dflts.get(this.$cls, key)
     }
 }
 
@@ -147,10 +147,26 @@ class GadgetCtx {
         return this.$$gid = value;
     }
 
+    static get dflts() {
+        return this.current.dflts;
+    }
+    static get at_tocked() {
+        return this.current.at_tocked;
+    }
+    static get at_created() {
+        return this.current.at_created;
+    }
+    static get at_destroyed() {
+        return this.current.at_destroyed;
+    }
+
     constructor(spec={}) {
         this.gid = ('gid' in spec) ? spec.gid : this.constructor.$gid++;
         this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
         this.dflts = ('dflts' in spec) ? spec.dflts : new $GadgetDefaults();
+        this.at_tocked = new EvtEmitter(this, 'tocked');
+        this.at_created = new EvtEmitter(this, 'created');
+        this.at_destroyed = new EvtEmitter(this, 'destroyed');
     }
 
     toString() {
@@ -197,6 +213,7 @@ class Gadget {
         }
     }
 
+    /*
     static $at_created
     static get at_created() {
         if (!this.$at_created) this.$at_created = new EvtEmitter(this, 'created');
@@ -208,6 +225,7 @@ class Gadget {
         if (!this.$at_destroyed) this.$at_destroyed = new EvtEmitter(this, 'destroyed');
         return this.$at_destroyed;
     }
+    */
 
     $at_modified
     get at_modified() {
@@ -257,7 +275,7 @@ class Gadget {
         });
         this.$cpost(...args);
         this.$ready = true;
-        if (this.constructor.$at_created) this.constructor.$at_created.trigger({actor:this.$proxy});
+        GadgetCtx.at_created.trigger({actor:this.$proxy});
         return this.$proxy;
     }
 
@@ -317,7 +335,7 @@ class Gadget {
             }
         }
         if (this.$at_destroyed) this.$at_destroyed.trigger();
-        if (this.constructor.$at_destroyed) this.constructor.$at_destroyed.trigger({actor:this});
+        GadgetCtx.at_destroyed.trigger({actor:this});
     }
 
     toString() {

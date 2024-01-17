@@ -1,17 +1,15 @@
-export { Timer, Ticker };
-import { Gadget } from './gizmo.js';
+export { Timer };
+import { Gadget } from './gadget.js';
 import { GadgetCtx } from './gadget.js';
 
 class Timer extends Gadget {
     static {
-        /** @member {int} Timer#gid - unique timer id used for event handling */
-        this.$schema('gid', { readonly: true, dflt: () => (Gadget.getgid()) });
         this.$schema('ttl', { eventable: false, dflt: 1000 });
-        this.$schema('startTTL', { readonly: true, parser: (o,x) => o.ttl });
         this.$schema('loop', { readonly: true, dflt: false });
         this.$schema('cb', { readonly: true, dflt: () => false });
         this.$schema('data', { readonly: true });
-        this.$schema('ticks', { dflt: 0 });
+        this.$schema('$startTTL', { readonly: true, parser: (o,x) => o.ttl });
+        this.$schema('$ticks', { eventable: false, parser: () => 0 });
     }
 
     $cpost(spec={}) {
@@ -26,23 +24,25 @@ class Timer extends Gadget {
 
     $on_tocked(evt) {
         this.ttl -= evt.elapsed;
-        this.ticks += evt.ticks;
+        this.$ticks += evt.ticks;
         if (this.ttl <= 0) {
-            let ticks = this.ticks;
+            let ticks = this.$ticks;
             let overflow = -this.ttl;
             if (this.loop) {
-                this.ttl += this.startTTL;
-                this.ticks = 0;
+                this.ttl += this.$startTTL;
+                this.$ticks = 0;
                 if (this.ttl < 0) this.ttl = 0;
             } else {
                 GadgetCtx.at_tocked.ignore(this.$on_tocked);
             }
-            this.cb(Object.assign( {}, evt, this.data, { ticks: ticks, overflow: overflow, elapsed: this.startTTL + overflow } ));
+            this.cb(Object.assign( {}, evt, this.data, { ticks: ticks, overflow: overflow, elapsed: this.$startTTL + overflow } ));
         }
     }
 
 }
 
+// FIXME: combined back to timer
+/*
 class Ticker extends Timer {
     static { this.$schema('elapsed', { dflt: 0 }); }
 
@@ -63,3 +63,5 @@ class Ticker extends Timer {
         }
     }
 }
+
+*/
