@@ -37,7 +37,6 @@ class Gizmo extends Gadget {
             throw new Error(`hierarchy loop detected ${child} already in children for: ${this}`);
         }
         // assign parent/child links
-        child.$set('parent', self);
         child.parent = self;
         this.children.push(child);
     }

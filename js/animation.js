@@ -5,6 +5,7 @@ import { Ticker } from './timer.js';
 import { Random } from './random.js';
 import { ImageMedia } from './media.js';
 import { Sprite } from './sprite.js';
+import { Fmt } from './fmt.js';
 
 // =========================================================================
 /** 
@@ -24,11 +25,11 @@ class Animation extends Sketch {
     /** @member {boolean} Animation#sketch - the current animation frame/sketch */
     static { this.$schema('sketch', { link: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
     /** @member {boolean} Animation#width - width of current animation frame */
-    static { this.$schema('width', { getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.$schema('width', { generator: ((o,ov) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {boolean} Animation#height - height of current animation frame */
-    static { this.$schema('height', { getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.$schema('height', { generator: ((o,ov) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animation frame */
-    static { this.$schema('ttl', { getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
+    static { this.$schema('ttl', { generator: (o,ov) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
 
     static from(srcs, spec={}) {
         let sketches = [];
@@ -59,7 +60,6 @@ class Animation extends Sketch {
         if (spec.jitter) spec.sketchIdx = Random.rangeInt(0, sketches.length-1);
         this.$on_timer = this.$on_timer.bind(this);
         super.$cpre(spec);
-        this.at_modified.listen((evt) => console.log(`animation modified: ${evt}`));
     }
     destroy() {
         super.destroy();
@@ -138,7 +138,6 @@ class Animation extends Sketch {
         if (idx !== this.sketchIdx) {
             this.sketch.disable();
             this.sketchIdx = idx;
-            console.log(`sketchidx: ${this.sketchIdx}`);
             this.sketch = this.sketches[this.sketchIdx];
             this.sketch.enable();
         }
@@ -167,7 +166,7 @@ class Animation extends Sketch {
 
     copy(overrides={}) {
         let sketches = (this.sketches || []).map((x) => x.copy());
-        return new this.constructor(Object.assign({}, this.$store, { sketches: sketches}, overrides));
+        return new this.constructor(Object.assign({}, this, { sketches: sketches}, overrides));
     }
 
     /**

@@ -77,4 +77,8 @@ class EvtEmitter {
         this.$listeners.splice(0,this.$listeners.length);
     }
 
+    toString() {
+        return Fmt.toString(this.constructor.name, this.$actor, this.$tag);
+    }
+
 }

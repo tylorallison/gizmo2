@@ -12,6 +12,7 @@ class Rect extends Sketch {
         this.$schema('border', {dflt: 0});
         this.$schema('borderColor', {dflt: 'black'});
         this.$schema('color', {dflt: 'rgba(127,127,127,.75'});
+        this.$schema('joint', { dflt:'miter' });
         this.$schema('fill', {dflt: true});
         this.$schema('dash', {dflt: null});
     }
@@ -27,6 +28,7 @@ class Rect extends Sketch {
         }
         if (this.border) {
             ctx.lineWidth = this.border;
+            ctx.lineJoin = this.joint;
             ctx.strokeStyle = this.borderColor;
             if (this.dash) ctx.setLineDash(this.dash);
             ctx.strokeRect(x, y, width, height);

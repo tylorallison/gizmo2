@@ -9,10 +9,10 @@ import { Sprite } from '../js/sprite.js';
 import { Animation } from '../js/animation.js';
 //import { Generator } from '../js/generator.js';
 import { UiPanel } from '../js/uiPanel.js';
-//import { Animator } from '../js/animator.js';
-//import { Timer } from '../js/timer.js';
+import { Animator } from '../js/animator.js';
+import { Timer } from '../js/timer.js';
 //import { CompositeSprite } from '../js/compositeSprite.js';
-//import { Shape } from '../js/shape.js';
+import { Shape } from '../js/shape.js';
 import { ImageMedia } from '../js/media.js';
 import { GadgetCtx } from '../js/gadget.js';
 import { UiView } from '../js/uiView.js';
@@ -30,36 +30,30 @@ class AssetTest extends Game {
 
     static xassets = [
 
-        //Rect.xspec({ tag: 'rect.one', color: 'rgba(255,0,0,.5)', borderColor: 'red', border: 2, width: 40, height: 40 }),
-        //Rect.xspec({ tag: 'rect.two', color: 'rgba(0,255,0,.25)', borderColor: 'yellow', border: 2, width: 40, height: 40 }),
-        Rect.xspec({ tag: 'test.rect', color: 'blue', borderColor:'red', border: 5, width: 40, height: 40 }),
+        Rect.xspec({ tag: 'test.rect', joint:'round', color: 'blue', borderColor:'red', border: 3, width: 40, height: 40 }),
         Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
-        /*
-        Shape.xspec({tag: 'test.shape', color: 'purple', border: 2, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
-        */
+        Shape.xspec({tag: 'test.shape', joint:'round', color: 'purple', border: 3, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
         Animation.xspec({tag: 'test.animation', jitter: false, sketches: [
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 250 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
-            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 250 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 100 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 100 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 100 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 100 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 100 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 100 }),
         ]}),
 
-        /*
         Animator.xspec({ 
             tag: 'test.animator', state: 'on', 
             sketches: {
-                on: Rect.xspec({ color: 'green', borderColor: 'red', border: 2, width: 40, height: 40 }),
-                off: Rect.xspec({ color: 'gray', borderColor: 'red', border: 2, width: 40, height: 40 }),
+                on: Rect.xspec({ color: 'green', borderColor: 'blue', border: 2, width: 40, height: 40 }),
+                off: Rect.xspec({ color: 'gray', borderColor: 'blue', border: 2, width: 40, height: 40 }),
             },
             transitions: {
                 off: [{ sketch: Animation.xspec({ loop: false, sketches: [ 
-                    Rect.xspec({ color: 'orange', borderColor: 'red', border: 2, width: 40, height: 40, ttl: 200 }),
+                    Rect.xspec({ color: 'orange', borderColor: 'red', border: 2, width: 40, height: 40, ttl: 250 }),
                 ]}) }],
             },
         }),
-        */
 
     ];
 
@@ -67,28 +61,22 @@ class AssetTest extends Game {
         //Evts.listen(null, 'KeyDown', (evt) => { console.log(`key pressed: ${Fmt.ofmt(evt)}`)});
 
         let cvs = new UiCanvas({ canvasId: 'game.canvas'});
-        console.log(`cvs: ${cvs}`);
+
+        let animator = GadgetCtx.assets.get('test.animator');
 
         let view1 = new UiPanel({
-            sketch: GadgetCtx.assets.get('test.animation'),
+            sketch: animator,
             dbg: { xform: true },
             xform: new XForm({ left:.4, right:.6, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 200}),
         });
         cvs.adopt(view1);
 
         let view2 = new UiPanel({
-            sketch: GadgetCtx.assets.get('test.rect', { fitter:'tile' }),
+            sketch: GadgetCtx.assets.get('test.rect', { fitter:'none' }),
             dbg: { xform: true },
             xform: new XForm({ left:.6, right:.4, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 400}),
         });
         cvs.adopt(view2);
-
-        //let rect = Assets.get('test.rect');
-        //let sprite = GadgetCtx.assets.get('test.sprite');
-        //console.log(`sprite: ${sprite}`);
-        //let shape = Assets.get('test.shape');
-        //let anim = Assets.get('test.animation');
-        //let animator = Assets.get('test.animator');
 
         /*
         // FIXME: needs to be refactored
@@ -105,7 +93,15 @@ class AssetTest extends Game {
         Hierarchy.adopt(cvs, p);
         */
 
-        //new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
+        new Timer({ttl: 1000, loop: true, cb: () => { 
+            if (animator.state === 'on') {
+                console.log(`animator: ${animator.state}->off`);
+                animator.state = 'off';
+            } else {
+                console.log(`animator: ${animator.state}->off`);
+                animator.state = 'on';
+            }
+        }});
 
 
     }

@@ -134,6 +134,72 @@ class $GadgetSchemas {
     }
 }
 
+class $GadgetProxyHandler {
+    constructor() {
+        this.$fcns = {};
+    }
+
+    $link(proxy, key, value) {
+        if (value.at_modified) value.at_modified.listen(proxy.$on_linkModified, proxy, false, null, 0, key);
+    }
+
+    $unlink(proxy, value) {
+        if (value.at_modified) value.at_modified.ignore(proxy.$on_linkModified);
+    }
+
+    get(target, key, proxy) {
+        if (key === '$target') return target;
+        let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+        if (sentry && sentry.generator) {
+            target[key] = sentry.generator(proxy, target[key]);
+        }
+        return Reflect.get(target, key, proxy);
+    }
+
+    set(target, key, value, proxy) {
+        let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+        if (sentry) {
+            if (target.$ready && sentry.readonly) return false;
+
+            let storedValue = target[key];
+            if (Object.is(storedValue, value)) return true;
+
+            if (target.$ready && sentry.link && storedValue) {
+                this.$unlink(proxy, storedValue);
+            }
+            if (sentry.link && value) {
+                if (value && Array.isArray(value)) {
+                    value = new GadgetArray(...value);
+                }
+                this.$link(proxy, key, value);
+            }
+            target[key] = value;
+            if (target.$ready && target.$at_modified && sentry && sentry.eventable) {
+                target.$at_modified.trigger({key:key, value:value});
+            }
+            return true;
+
+        }
+        target[key] = value;
+        return Reflect.set(target, key, value, proxy);
+    }
+
+    deleteProperty(target, key) {
+        let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+        if (sentry) {
+            if (target.$ready && sentry.readonly) return false;
+            const storedValue = target[key];
+            if (sentry.link && storedValue) this.$unlink(proxy, storedValue);
+        }
+        if (target.$ready && target.$at_modified && sentry && sentry.eventable) {
+            target.$at_modified.trigger({key:key, value:undefined, deleted:true});
+        }
+        delete target[key];
+        return true;
+    }
+
+}
+
 class Gadget {
 
     static $registry = new Map();
@@ -178,9 +244,9 @@ class Gadget {
         if (schemas) {
             for (const sentry of schemas.$entries) {
                 if (sentry.generator) {
-                    this.$set(sentry.key, sentry.getDefault(this), sentry);
+                    this[sentry.key]  = sentry.getDefault(this);
                 } else {
-                    this.$set(sentry.key, sentry.parser(this, spec), sentry);
+                    this[sentry.key]  = sentry.parser(this, spec);
                 }
             }
         }
@@ -200,83 +266,13 @@ class Gadget {
 
     constructor(...args) {
         this.constructor.$register();
-        this.$cpre(...args);
-        this.$cparse(...args);
-        this.$proxy = new Proxy(this, {
-            get(target, key, receiver) {
-                if (key === '$target') return target;
-                /*
-                //FIXME
-                if (target[key] instanceof Function && key !== 'constructor') {
-                    const value = target[key];
-                    return Util.nameFunction(value.name, function (...args) {
-                        return value.apply(receiver, args);
-                    });
-                }
-                */
-                return target.$get(key, (target.$schemas) ? target.$schemas.get(key) : null);
-            },
-            set(target, key, value, receiver) {
-                let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
-                if (sentry) {
-                    if (target.$ready && sentry.readonly) return false;
-                    return target.$set(key, value, sentry);
-                }
-                target[key] = value;
-                return true;
-            },
-            deleteProperty(target, key) {
-                let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
-                if (sentry) {
-                    if (target.$ready && sentry.readonly) return false;
-                    return target.$delete(key, sentry);
-                }
-                delete target[key];
-                return true;
-            }
-        });
-        //this.$proxy.$cpre(...args);
-        //this.$proxy.$cparse(...args);
-        //this.$proxy.$cpost(...args);
-        this.$cpost(...args);
+        this.$proxy = new Proxy(this, new $GadgetProxyHandler());
+        this.$proxy.$cpre(...args);
+        this.$proxy.$cparse(...args);
+        this.$proxy.$cpost(...args);
         this.$ready = true;
         GadgetCtx.at_created.trigger({actor:this.$proxy});
         return this.$proxy;
-    }
-
-    $get(key, sentry) {
-        //if (key === 'width') console.log(`sentry: ${sentry}`);
-        if (sentry && sentry.generator) {
-            this[key] = sentry.generator(this, this[key]);
-        }
-        return this[key];
-    }
-
-    $set(key, value, sentry) {
-        let storedValue = this[key];
-        if (Object.is(storedValue, value)) return true;
-        if (this.$ready && sentry && sentry.link && storedValue) {
-            this.$unlink(key, storedValue);
-        }
-        if (sentry && sentry.link && value) {
-            if (value && Array.isArray(value)) {
-                value = new GadgetArray(...value);
-            }
-            this.$link(key, value);
-        }
-        this[key] = value;
-        if (this.$ready) {
-            if (this.$at_modified && (!sentry || (sentry && sentry.eventable))) this.$at_modified.trigger({key:key, value:value});
-        }
-        return true;
-    }
-
-    $link(key, value) {
-        if (value.at_modified) value.at_modified.listen(this.$on_linkModified, this, false, null, 0, key);
-    }
-
-    $unlink(key, value) {
-        if (value.at_modified) value.at_modified.ignore(this.$on_linkModified);
     }
 
     $on_linkModified(evt, key) {
@@ -284,14 +280,6 @@ class Gadget {
             let path = `${key}.${evt.key}`;
             this.$at_modified.trigger({key:path, value:evt.value});
         }
-    }
-
-    $delete(key, sentry) {
-        const storedValue = this[key];
-        if (sentry.link && storedValue) this.$unlink(key, storedValue);
-        delete this[key];
-        if (this.$at_modified) this.$at_modified.trigger({key:key, value:undefined, deleted:true});
-        return true;
     }
 
     destroy() {

@@ -189,190 +189,26 @@ describe('gadgets', () => {
         expect(tevt).toEqual(null);
     });
 
-    /*
-
-    it('base generator updates on gadget change', ()=>{
-        class TBase extends gadgetClass {
-            static { this.schema('el'); }
-            static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
+    it('proxy is called', ()=>{
+        class tgadget extends Gadget {
+            static { this.$schema('data', { dflt:42 }); }
+            get paccess() {
+                return this.access();
+            }
+            access() {
+                return this.$target['data'];
+            }
+            access2() {
+                return this.access();
+            }
         };
-        let b = new TBase();
-        expect(b.g).toEqual(2);
-        expect(b.g).toEqual(2);
-        b.el = 'v1';
-        expect(b.g).toEqual(4);
-        expect(b.g).toEqual(4);
-        b.el = 'v2';
-        expect(b.g).toEqual(8);
-        expect(b.g).toEqual(8);
-        b.el = 'v2';
-        expect(b.g).toEqual(8);
-    });
-
-    it('root generator updates on leaf change', ()=>{
-        class TLeaf extends gadgetClass {
-            static { this.schema('el'); }
-        };
-        class TBase extends gadgetClass {
-            static { this.schema('el', { link: true }); }
-            static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
-        };
-        let b = new TBase({el: new TLeaf()});
-        expect(b.g).toEqual(2);
-        expect(b.g).toEqual(2);
-        b.el.el = 'v1';
-        expect(b.g).toEqual(4);
-        expect(b.g).toEqual(4);
-        b.el.el = 'v2';
-        expect(b.g).toEqual(8);
-        expect(b.g).toEqual(8);
-        b.el.el = 'v2';
-        expect(b.g).toEqual(8);
-    });
-
-    it('leaf generator updates on link change', ()=>{
-        class TLeaf extends gadgetClass {
-            static { this.schema('el'); }
-            static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
-        };
-        class TBase extends gadgetClass {
-            static { this.schema('el', { link: true }); }
-        };
-        let b = new TBase();
-        let l = new TLeaf();
-        expect(l.g).toEqual(2);
-        b.el = l;
-        expect(l.g).toEqual(4);
-        b.el = null;
-        expect(l.g).toEqual(8);
-    });
-
-    it('root changes trigger events', ()=>{
-        var gid = 0;
-        class TRoot extends gadgetClass {
-            static { this.prototype.$emitter = true}
-            static { this.schema('data'); }
-            static { this.schema('ndata', { eventable: false }); }
-            static { this.schema('gid', { dflt: () => gid++ }); }
-        };
-        let o = new TRoot({data: 'foo', ndata: 'ok'});
-        expect(o.data).toEqual('foo');
-        let tevt;
-        Evts.listen(o, 'GizmoSet', (evt) => tevt = evt);
-        gSetter(o, 'data', 'bar');
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(o);
-        expect(tevt.set['data']).toEqual('bar');
-        tevt = undefined;
-        gSetter(o, 'ndata', 'bar');
-        expect(tevt).toBeFalsy();
-        expect(o.ndata).toEqual('bar');
-    });
-
-    it('leaf changes trigger events', ()=>{
-        var gid = 0;
-        class TLeaf extends gadgetClass {
-            static { this.schema('data'); };
-            static { this.schema('ndata', { eventable: false }); };
-        };
-        class TRoot extends gadgetClass {
-            static { this.prototype.$emitter = true}
-            static { this.schema('sub', { link: true }); }
-            static { this.schema('nsub', { link: true, eventable: false }); }
-            static { this.schema('gid', { dflt: () => gid++ }); }
-        };
-        let o = new TRoot({sub: new TLeaf({data: 'foo', ndata: 'nfoo'}), nsub: new TLeaf({data: 'nfoo'})});
-        expect(o.sub.data).toEqual('foo');
-        expect(o.sub.ndata).toEqual('nfoo');
-        let tevt = {};
-        Evts.listen(o, 'GizmoSet', (evt) => tevt = evt);
-        gSetter(o.sub, 'data', 'bar');
-        expect(tevt.tag).toEqual('GizmoSet');
-        expect(tevt.actor).toBe(o);
-        expect(tevt.set['sub.data']).toEqual('bar');
-        tevt = {};
-        gSetter(o.sub, 'ndata', 'bar');
-        expect(tevt).toEqual({});
-        gSetter(o.nsub, 'data', 'nv2');
-        expect(tevt).toEqual({});
-        let l = o.sub;
-        gSetter(o, 'sub', null);
-        tevt = {};
-        l.data = 'v2';
-        gSetter(l, 'data', 'v2');
-        expect(tevt).toEqual({});
-        expect(l.data).toEqual('v2');
-    });
-    */
-
-});
-
-/*
-describe('gizmos', () => {
-    var counter;
-    beforeEach(() => {
-        counter = 0;
-    });
-    afterEach(() => {
-        Evts.clear();
-    });
-
-    it('can trigger events', ()=>{
-        let g = new Gizmo();
-        Evts.listen(g, 'test', () => counter++);
-        Evts.trigger(g, 'test');
-        expect(counter).toBe(1);
-    });
-
-    it('triggers creation event when created', ()=>{
-        Evts.listen(null, 'GizmoCreated', () => counter++);
-        let g = new Gizmo();
-        expect(counter).toBe(1);
-    });
-
-    it('can receive global gizmo events', ()=>{
-        let g = new Gizmo();
-        Evts.listen(null, 'test', () => counter++);
-        Evts.trigger(g, 'test');
-        expect(counter).toBe(1);
-        Evts.ignore(null, 'test');
-        Evts.trigger(g, 'test');
-        expect(counter).toBe(1);
-    });
-
-    it('can receive global/local gizmo events', ()=>{
-        let g = new Gizmo();
-        Evts.listen(null, 'test', () => counter++);
-        Evts.listen(g, 'test', () => counter++);
-        Evts.trigger(g, 'test');
-        expect(counter).toBe(2);
-        Evts.ignore(null, 'test');
-        Evts.ignore(g, 'test');
-        Evts.trigger(g, 'test');
-        expect(counter).toBe(2);
-    });
-
-    it('can auto-release listeners', ()=>{
-        let g = new Gizmo();
-        Evts.listen(g, 'test', () => counter++);
-        Evts.trigger(g, 'test');
-        g.destroy();
-        Evts.trigger(g, 'test');
-        expect(counter).toBe(1);
-    });
-
-    it('can adopt children during constructor', ()=>{
-        let c1 = new Gizmo();
-        let c2 = new Gizmo();
-        let g = new Gizmo( { children: [c1, c2]});
-        expect(g.children.includes(c1)).toBeTruthy();
-        expect(g.children.includes(c2)).toBeTruthy();
-        expect(c1.parent).toBe(g);
-        expect(c2.parent).toBe(g);
+        let o = new tgadget();
+        expect(o.access()).toEqual(42);
+        expect(o.access2()).toEqual(42);
+        expect(o.paccess).toEqual(42);
     });
 
 });
-*/
 
 describe('gadget arrays', () => {
 
