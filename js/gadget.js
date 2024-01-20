@@ -113,6 +113,10 @@ class $GadgetSchemas {
         return this[key];
     }
 
+    keys() {
+        return Array.from(this.$order);
+    }
+
     /**
      * assign class schema entry
      * @param {*} entry 
@@ -182,6 +186,15 @@ class $GadgetProxyHandler {
         }
         target[key] = value;
         return Reflect.set(target, key, value, proxy);
+    }
+
+    ownKeys(target) {
+        if (target.$schemas) {
+            return target.$schemas.keys();
+        } else {
+            let keys = Reflect.ownKeys(target);
+            return keys.filter((v) => v !== '$proxy');
+        }
     }
 
     deleteProperty(target, key) {
@@ -314,6 +327,10 @@ class GadgetArray extends Array {
                     };
                 }
                 return target[key];
+            },
+            ownKeys(target) {
+                let keys = Reflect.ownKeys(target);
+                return keys.filter((v) => v !== '$proxy');
             },
             set(target, key, value, receiver) {
                 return target.$set(key, value);

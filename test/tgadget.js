@@ -48,6 +48,21 @@ describe('gadgets', () => {
         expect(o.getp()).toEqual(42);
     });
 
+    it('object calls work', ()=>{
+        class tgadget extends Gadget {
+            static { this.$schema('key1', { dflt: 'hello'}); }
+            static { this.$schema('key2', { dflt: 'there'}); }
+        };
+        let o = new tgadget();
+        let keys = Object.keys(o);
+        expect(keys).toEqual(['key1','key2']);
+        let values = Object.values(o);
+        expect(values).toEqual(['hello','there']);
+        expect('key1' in o).toBeTruthy();
+        expect('key2' in o).toBeTruthy();
+        expect('key3' in o).toBeFalse();
+    });
+
     it('trigger destroyed events on destroy', ()=>{
         let cls = class tgadget extends Gadget {};
         gctx.at_destroyed.listen((evt) => tevt=evt);

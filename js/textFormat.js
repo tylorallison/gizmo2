@@ -20,12 +20,13 @@ class TextFormat extends Gadget {
         this.$schema('color', { dflt: 'black' });
         this.$schema('border', { dflt: 0 });
         this.$schema('borderColor', { dflt: 'white' });
+        this.$schema('fill', { dflt: true });
         this.$schema('highlight', { dflt: false });
         this.$schema('highlightColor', { dflt: 'yellow' });
     }
 
     static parse(str) {
-        let kvs = str.split(' ');
+        let kvs = str.split(',');
         let spec = {};
         for (var [k,v] of kvs.map((v) => v.split('=', 2))) {
             switch (k) {
@@ -97,7 +98,7 @@ class TextFormat extends Gadget {
     }
 
     toString() {
-        return Fmt.toString(this.constructor.name, Fmt.ofmt(this));
+        return Fmt.toString(this.constructor.name, ...Object.entries(this).map((v) => v.join('=', v)));
     }
 
 }
