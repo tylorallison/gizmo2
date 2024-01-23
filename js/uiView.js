@@ -1,5 +1,6 @@
 export { UiView };
 
+import { EvtEmitter } from './evt.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 //import { SfxSystem } from './sfxSystem.js';
@@ -25,16 +26,28 @@ class UiView extends Gizmo {
         this.$schema('alpha', { dflt: 1 });
         this.$schema('dbg', { dflt: false, eventable: false });
         this.$schema('mask', { dflt: false });
-        this.$schema('mouseOver', { dflt: false });
-        this.$schema('mousePressed', { dflt: false });
         this.$schema('mousePriority', { dflt: 0 });
-        this.$schema('mouseBlock', { dflt: false });
-        this.$schema('mouseClickedSound');
-        this.$schema('mouseEnteredSound');
-        this.$schema('mouseExitedSound');
+        this.$schema('hovered', { dflt: false });
+        this.$schema('pressed', { dflt: false });
+        this.$schema('blocking', { dflt: false });
+        this.$schema('clickedSound');
+        this.$schema('hoveredSound');
+        this.$schema('unhoveredSound');
+        this.$schema('at_clicked', { readonly:true, dflt: () => new EvtEmitter(this, 'clicked') });
+        this.$schema('at_hovered', { readonly:true, dflt: () => new EvtEmitter(this, 'hovered') });
+        this.$schema('at_unhovered', { readonly:true, dflt: () => new EvtEmitter(this, 'unhovered') });
+        this.$schema('at_pressed', { readonly:true, dflt: () => new EvtEmitter(this, 'pressed') });
+        this.$schema('at_unpressed', { readonly:true, dflt: () => new EvtEmitter(this, 'unpressed') });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
+    $cpost(spec) {
+        super.$cpost(spec);
+        // register view events
+        this.at_clicked.listen(this.$on_clicked, this);
+        this.at_hovered.listen(this.$on_hovered, this);
+        this.at_unhovered.listen(this.$on_unhovered, this);
+    }
 
     adopt(child) {
         super.adopt(child);
@@ -46,18 +59,16 @@ class UiView extends Gizmo {
     }
     
     // EVENT HANDLERS ------------------------------------------------------
-    /*
-    $onMouseClicked(evt) {
-        //if (this.mouseClickedSound) SfxSystem.playSfx(this, this.mouseClickedSound);
+    $on_clicked(evt) {
+        //if (this.clickedSound) SfxSystem.playSfx(this, this.mouseClickedSound);
     }
 
-    $onMouseEntered(evt) {
-        //if (this.mouseEnteredSound) SfxSystem.playSfx(this, this.mouseEnteredSound);
+    $on_hovered(evt) {
+        //if (this.hoveredSound) SfxSystem.playSfx(this, this.mouseEnteredSound);
     }
-    $onMouseExited(evt) {
-        //if (this.mouseExitedSound) SfxSystem.playSfx(this, this.mouseExitedSound);
+    $on_unhovered(evt) {
+        //if (this.unhoveredSound) SfxSystem.playSfx(this, this.mouseExitedSound);
     }
-    */
 
     // METHODS -------------------------------------------------------------
 
