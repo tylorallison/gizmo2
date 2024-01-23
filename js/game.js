@@ -2,7 +2,7 @@ export { Game };
 
 import { Gizmo } from './gizmo.js';
 //import { KeySystem } from './keySystem.js';
-//import { MouseSystem } from './mouseSystem.js';
+import { MouseSystem } from './mouseSystem.js';
 import { RenderSystem } from './renderSystem.js';
 //import { StateMgr } from './stateMgr.js';
 import { SystemMgr } from './systemMgr.js';
@@ -111,8 +111,8 @@ class Game extends Gizmo {
 
     $prepareSystems() {
         //new KeySystem({gctx: this.gctx});
-        //new MouseSystem({gctx: this.gctx, dbg: false});
-        new RenderSystem({dbg: true});
+        new MouseSystem({dbg: false});
+        new RenderSystem({dbg: false});
         //new SfxSystem({gctx: this.gctx, dbg: false});
     }
 

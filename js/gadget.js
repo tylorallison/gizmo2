@@ -58,8 +58,6 @@ class $GadgetSchemaEntry {
             if (this.getter) return this.getter(o,dflt);
             return dflt;
         });
-        // FIXME
-        //this.atUpdate = spec.atUpdate;
         // link - if the value is an object, setup Gadget links between the trunk and leaf.
         this.link = ('link' in spec) ? spec.link : false;
         // generated fields are not serializable

@@ -5,9 +5,8 @@ import { Text } from '../js/text.js';
 import { TextFormat } from '../js/textFormat.js';
 import { UiPanel } from '../js/uiPanel.js';
 import { UiButton } from '../js/uiButton.js';
-//import { UiText } from '../js/uiText.js';
+import { UiText } from '../js/uiText.js';
 //import { Timer } from '../js/timer.js';
-//import { UiButton } from '../js/uiButton.js';
 //import { Sfx } from '../js/sfx.js';
 //import { UiInput, UiInputText } from '../js/uiInput.js';
 //import { UiGrid } from '../js/uiGrid.js';
@@ -56,27 +55,11 @@ class UITest extends Game {
         this.placer(bgpanel, new UiPanel());
         this.placer(bgpanel, new UiButton({ 
             text:'hello', 
-            $text:new Text({}),
+            highlightFmt:new TextFormat({color:'yellow'}),
         }));
-
-        /*
-        let button = new UiButton({ 
-            mouseEnteredSound: 'test.sound',
-            mouseExitedSound: 'test.sound',
-            mouseClickedSound: 'test.sound',
-            text: 'press me', 
-            hltext: 'press me now', 
-            //dbg: { xform: true }, 
-            xform: new XForm({ 
-                grip: .5, 
-                x: 0, 
-                y: 0, 
-                fixedWidth: this.size, 
-                fixedHeight: this.size
-            }),
-        });
-        cvs.adopt(button)
-        */
+        this.placer(bgpanel, new UiText({ 
+            text:'hello <b,color=red>big</b> world', 
+        }));
 
         /*
         let input = new UiInput({ 

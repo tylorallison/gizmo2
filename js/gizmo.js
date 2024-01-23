@@ -5,14 +5,16 @@ import { Gadget } from './gadget.js';
 
 class Gizmo extends Gadget {
 
-    static $gid = 1;
+    static {
+        this.$gid = 1;
+    }
     static $getgid() {
         return this.$gid++;
     }
 
     // SCHEMA --------------------------------------------------------------
     /** @member {int} Gizmo#gid - unique gadget identifier*/
-    static { this.$schema('gid', { readonly: true, dflt: (o) => o.constructor.$getgid() }); }
+    static { this.$schema('gid', { readonly: true, dflt: (o) => Gizmo.$getgid() }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */
     static { this.$schema('tag', { order: 1, readonly: true, dflt: (o) => `${o.constructor.name}.${o.gid}` }); }
     static { this.$schema('parent', { link: false, serializable: false, parser: () => null }); }

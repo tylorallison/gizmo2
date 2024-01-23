@@ -14,7 +14,7 @@ import { XForm } from './xform.js';
 class UiView extends Gizmo {
 
     // STATIC VARIABLES ----------------------------------------------------
-    static { this.prototype.mousable = true; }
+    //static { this.prototype.mousable = true; }
     static { this.prototype.renderable = true; }
 
     // SCHEMA --------------------------------------------------------------
@@ -22,6 +22,7 @@ class UiView extends Gizmo {
         this.$schema('xform', { order: -1, link: true, dflt: () => new XForm() });
         this.$schema('active', { dflt: true });
         this.$schema('visible', { dflt: true });
+        this.$schema('mousable', { dflt: true });
         this.$schema('smoothing', { dflt: null });
         this.$schema('alpha', { dflt: 1 });
         this.$schema('dbg', { dflt: false, eventable: false });
