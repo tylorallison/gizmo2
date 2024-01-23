@@ -16,7 +16,7 @@ import { Shape } from '../js/shape.js';
 import { ImageMedia } from '../js/media.js';
 import { GadgetCtx } from '../js/gadget.js';
 import { UiView } from '../js/uiView.js';
-import { TextToken } from '../js/textToken.js';
+import { Text } from '../js/text.js';
 import { TextFormat } from '../js/textFormat.js';
 //import { Assets } from '../js/asset.js';
 
@@ -65,7 +65,7 @@ class AssetTest extends Game {
         let cvs = new UiCanvas({ canvasId: 'game.canvas'});
 
         let animator = GadgetCtx.assets.get('test.animator', { fitter: 'ratio'});
-        let text = new TextToken({text:'hello <color=blue,b,i>big</> there', fmt: new TextFormat({color:'red', size:50}), fitter: 'none'});
+        let text = new Text({text:'hello <color=orange,b>big</> world', wrap:true, wrapWidth:0, aligny:0, alignx:0, fmt: new TextFormat({color:'red', size:40, highlight:true}), fitter: 'none'});
 
         let view1 = new UiPanel({
             sketch: GadgetCtx.assets.get('test.rect', { fitter:'stretch' }),

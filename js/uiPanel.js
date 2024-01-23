@@ -17,7 +17,7 @@ class UiPanel extends UiView {
 
     // METHODS -------------------------------------------------------------
     $subrender(ctx) {
-        this.sketch.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
+        if (this.sketch) this.sketch.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
     }
 
 }

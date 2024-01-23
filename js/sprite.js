@@ -10,8 +10,8 @@ class Sprite extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
         this.$schema('media', {readonly: true});
-        this.$schema('width', {generator: ((o,ov) => ((o.media && o.media.data) ? o.media.data.width : 0))});
-        this.$schema('height', {generator: ((o,ov) => ((o.media && o.media.data) ? o.media.data.height : 0))});
+        this.$schema('width', {getter: ((o,ov) => ((o.media && o.media.data) ? o.media.data.width : 0))});
+        this.$schema('height', {getter: ((o,ov) => ((o.media && o.media.data) ? o.media.data.height : 0))});
     }
 
     static from(src, spec={}) {

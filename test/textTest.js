@@ -1,70 +1,138 @@
 import { Game } from '../js/game.js';
 import { UiCanvas } from '../js/uiCanvas.js';
-import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
-import { TextToken } from '../js/textToken.js';
 import { TextFormat } from '../js/textFormat.js';
 import { UiPanel } from '../js/uiPanel.js';
 import { UiText } from '../js/uiText.js';
 import { Timer } from '../js/timer.js';
-
+import { Text } from '../js/text.js';
 
 class TextTest extends Game {
 
-    testToken(cvs, tt, fitter='center', alignx=.5, aligny=.5) {
-        let x = (this.col-Math.round(this.maxCols/2)) * this.size;
-        let y = (this.row-Math.round(this.maxRows/2)) * this.size;
-        let panel = new UiPanel({ fitter: fitter, alignx: alignx, aligny: aligny, sketch: tt, dbg: { xform: true }, xform: new XForm({ grip: .5, x: x, y: y, fixedWidth: this.size, fixedHeight: this.size})});
-        Hierarchy.adopt(cvs, panel)
+    testText(panel, xtext, ui=false) {
+        let width = panel.xform.width/this.maxCols;
+        let height = panel.xform.height/this.maxRows;
+        let x = panel.xform.minx + this.col*width;
+        let y = panel.xform.miny + this.row*height;
+        let text = new Text(xtext);
+        let tpanel;
+        if (ui) {
+            tpanel = new UiText({ text:text.text, $text:text, dbg: { xform: true }, xform: new XForm({ grip: .5, orig:0, x: x, y: y, fixedWidth: width, fixedHeight: height})});
+        } else {
+            tpanel = new UiPanel({ sketch: text, dbg: { xform: true }, xform: new XForm({ grip: .5, orig:0, x: x, y: y, fixedWidth: width, fixedHeight: height})});
+        }
+        panel.adopt(tpanel);
         this.col++;
         if (this.col >= this.maxCols) {
             this.row++;
             this.col = 0;
         }
+        return tpanel;
     }
 
-    testUiText(cvs, text, fmt, fitter='center', alignx=.5, aligny=.5) {
-        let x = (this.col-Math.round(this.maxCols/2)) * this.size;
-        let y = (this.row-Math.round(this.maxRows/2)) * this.size;
-        console.log(`pos: ${x},${y}`)
-        if (!fmt) fmt = new TextFormat();
-        let panel = new UiText({ fitter: fitter, alignx: alignx, aligny: aligny, text: text, fmt: fmt, dbg: { xform: true }, xform: new XForm({ grip: .5, x: x, y: y, fixedWidth: this.size, fixedHeight: this.size})});
-        Hierarchy.adopt(cvs, panel)
-        this.col++;
-        if (this.col >= this.maxCols) {
-            this.row++;
-            this.col = 0;
-        }
-        return panel;
-    }
-
-    async prepare() {
-        this.size = 150;
-        this.maxCols = 6;
+    async $prepare() {
+        this.size = 600;
+        this.maxCols = 4;
         this.maxRows = 4;
         this.col = 0;
         this.row = 0;
+        this.fontsize = 16;
 
-        let cvs = new UiCanvas({ gctx: this.gctx });
-        let panel;
+        let cvs = new UiCanvas({ dbg: { xform:true }});
+        let bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
+        cvs.adopt(bgpanel);
 
-        /*
-        this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'none');
-        this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'none', .5, 0);
-        this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'none', .5, 1);
-        this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'stretch');
-        */
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            text: 'hello none',
+            fitter: 'none',
+        });
 
-        this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'wrap');
-        this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'wrap', 1);
-        this.testUiText(cvs, 'hello great <color=blue>big</> world', new TextFormat({color: 'red', size: 22 }), 'autowrap', .5, .5);
-        this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'wrap', .5, .5);
-        this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'stretch', .5, .5);
-        this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'autowrap', 1, .5);
-        this.testUiText(cvs, 'hello great <delta=20><b>big</b></> world', new TextFormat({color: 'red', size: 22 }), 'autowrap', .5, .5);
-        panel = this.testUiText(cvs, 'special announcement', new TextFormat({color: 'red', size: 22 }), 'autowrap', .5, .5);
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            text: 'hello ratio',
+            fitter: 'ratio',
+        });
 
-        new Timer({ ttl: 5000, cb: () => panel.text = 'regular programming'});
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            text: 'hello stretch',
+            fitter: 'stretch',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            text: 'hello tile',
+            fitter: 'tile',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            text: 'hello autotile',
+            fitter: 'autotile',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            text: 'hello with some nice wrapped words center aligned',
+            fitter: 'ratio',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            alignx:0,
+            aligny:0,
+            text: 'hello with some nice wrapped words top-left aligned',
+            fitter: 'ratio',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            alignx:1,
+            aligny:1,
+            text: 'hello with some nice wrapped words bottom-right aligned',
+            fitter: 'ratio',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            text: 'hello\nwith\nforced\nnewlines',
+            fitter: 'ratio',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            text: 'hello <i>with</i> <b>embedded</b> <color=orange>formatting</>',
+            fitter: 'ratio',
+        });
+
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            text: 'a test w/ ui panel',
+        }, true);
+
+        let flashPanel = this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            wrap: true,
+            text: 'hello with changeable text',
+            fitter: 'ratio',
+        });
+
+        new Timer({ ttl: 1000, loop: true, cb: 
+            () => {
+                if (flashPanel.sketch.text === 'hello with changeable text') {
+                    flashPanel.sketch.text = 'hello with <b,i,color=green>modifiable</> text';
+                } else {
+                    flashPanel.sketch.text = 'hello with changeable text';
+                }
+            }
+        });
 
 
     }

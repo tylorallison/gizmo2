@@ -23,13 +23,13 @@ class Animator extends Sketch {
     /** @member {Object} Animator#sketch - current animator sketch */
     static { this.$schema('sketch', { link: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
     /** @member {Object} Animator#width - width of current animator sketch*/
-    static { this.$schema('width', { readonly: true, generator: ((o,ov) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.$schema('width', { readonly: true, getter: ((o,ov) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {Object} Animator#height - height of current animator sketch*/
-    static { this.$schema('height', { readonly: true, generator: ((o,ov) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.$schema('height', { readonly: true, getter: ((o,ov) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animator sketch */
-    static { this.$schema('ttl', { readonly: true, generator: (o,ov) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
+    static { this.$schema('ttl', { readonly: true, getter: (o,ov) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
     /** @member {integer} Sketch#done - is current animator sketch marked as done */
-    static { this.$schema('done', { readonly: true, generator: (o,ov) => ( (o.sketch) ? o.sketch.done : false )}); }
+    static { this.$schema('done', { readonly: true, getter: (o,ov) => ( (o.sketch) ? o.sketch.done : false )}); }
 
     $cpost(spec) {
         super.$cpost(spec);

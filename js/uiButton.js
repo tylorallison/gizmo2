@@ -1,40 +1,40 @@
 export { UiButton };
 
 import { Rect } from './rect.js';
+import { Text } from './text.js';
 import { UiPanel } from './uiPanel.js';
 import { UiText } from './uiText.js';
+import { XForm } from './xform.js';
 
 class UiButton extends UiPanel {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema('unpressed', { link: true, dflt: (o) => o.constructor.dfltUnpressed });
-        this.schema('highlight', { link: true, dflt: (o) => o.constructor.dfltHighlight });
-        this.schema('pressed', { link: true, dflt: (o) => o.constructor.dfltPressed });
-        this.schema('inactive', { link: true, dflt: (o) => o.constructor.dfltInactive });
-        this.schema('text', { link: true, dflt: 'default text', atUpdate: (o,k,ov,nv) => o._text.text = nv });
-        this.schema('hltext', { link: true });
-        this.schema('highlighted', { dflt: false });
-        this.schema('textSpec', { eventable: false, dflt: (o) => ({}), onset: (o,k,v) => Object.assign(o._text, v)});
-        this.schema('hlTextSpec', { eventable: false, dflt: (o) => ({}) });
-        this.schema('_text', { link: true, readonly: true, serializable: false, parser: (o,x) => {
-            let spec = Object.assign({}, o.textSpec || {}, { text: o.text });
-            return new UiText(spec);
-        }});
+        // button sketches
+        this.$schema('unpressed', { link: true, dflt: (o) => new Rect({ borderColor:'blue', border:3, color:'rgba(255,255,255,.25)' }) });
+        this.$schema('highlight', { link: true, dflt: (o) => new Rect({ borderColor:'yellow', border:3, fill:false }) });
+        this.$schema('pressed', { link: true, dflt: (o) => new Rect({ borderColor:'blue', border:3, color: 'rgba(255,255,255,.75)' }) });
+        this.$schema('inactive', { link: true, dflt: (o) => new Rect({ borderColor:'rgba(55,55,55,.5)', border:3, color: 'rgba(127,127,127,.25)' }) });
+        // button text
+        this.$schema('$text', { order:-1, link:true, dflt: () => new Text({text: 'default text'}) });
+        this.$schema('$textXForm', { dflt: () => new XForm({grip:.1}) });
+        this.$schema('text', { dflt: 'default text', setter: (o,v) => { o.$text.text = v; return v } });
+        this.$schema('highlightFmt', { eventable:false });
+        this.$schema('highlighted', { dflt:false });
     }
 
-    // STATIC PROPERTIES ---------------------------------------------------
-    static get dfltUnpressed() { return new Rect({ color: 'rgba(255,255,255,.25)' }); }
-    static get dfltHighlight() { return new Rect({ borderColor: 'yellow', border: 3, fill: false }); }
-    static get dfltPressed() { return new Rect({ color: 'rgba(255,255,255,.75)' }); }
-    static get dfltInactive() { return new Rect({ color: 'rgba(127,127,127,.25)' }); }
-
-    // CONSTRUCTOR ---------------------------------------------------------
-    cpost(spec) {
-        super.cpost(spec);
-        Hierarchy.adopt(this, this._text);
+    $cpost(spec) {
+        super.$cpost(spec);
+        this.adopt(new UiText({
+            dbg: {xform:true},
+            xform:this.$textXForm,
+            text:this.text,
+            $text:this.$text,
+        }));
     }
 
     // EVENT HANDLERS ------------------------------------------------------
+    /*
+    // FIXME
     $onMouseEntered(evt) {
         super.$onMouseEntered(evt);
         if (this.hltext) {
@@ -53,24 +53,26 @@ class UiButton extends UiPanel {
             Object.assign(this._text, this.textSpec);
         }
     }
+    */
 
     // METHODS -------------------------------------------------------------
-    subrender(ctx) {
+    $subrender(ctx) {
         // render inactive
         if (!this.active) {
-            this.renderSketch(ctx, this.inactive);
+            this.inactive.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
         } else {
             // render pressed/unpressed sketch
             if (this.mouseOver && this.mousePressed) {
-                this.renderSketch(ctx, this.pressed);
+                this.pressed.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
             } else {
-                this.renderSketch(ctx, this.unpressed);
+                this.unpressed.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
             }
             // render highlight
             if (this.highlighted || (this.mouseOver && !this.mousePressed)) {
-                this.renderSketch(ctx, this.highlight);
+                this.highligted.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
             }
         }
+        //this.$text.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
     }
 
 }

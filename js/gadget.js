@@ -47,13 +47,15 @@ class $GadgetSchemaEntry {
         this.xkey = spec.xkey || this.key;
         this.dflt = spec.dflt;
         this.eventable = ('eventable' in spec) ? spec.eventable : true;
-        // generator function of format (object, value) => { <function returning final value> };
-        this.generator = spec.generator;
-        this.readonly = (this.generator) ? true : ('readonly' in spec) ? spec.readonly : false;
+        // getter function of format (object, value) => { <function returning final value> };
+        this.getter = spec.getter;
+        // setter function of format (object, value) => { <function returning final value> };
+        this.setter = spec.setter;
+        this.readonly = (this.getter) ? true : ('readonly' in spec) ? spec.readonly : false;
         this.parser = spec.parser || ((o, x) => {
             if (this.xkey in x) return x[this.xkey];
             const dflt = this.getDefault(o);
-            if (this.generator) return this.generator(o,dflt);
+            if (this.getter) return this.getter(o,dflt);
             return dflt;
         });
         // FIXME
@@ -61,7 +63,7 @@ class $GadgetSchemaEntry {
         // link - if the value is an object, setup Gadget links between the trunk and leaf.
         this.link = ('link' in spec) ? spec.link : false;
         // generated fields are not serializable
-        this.serializable = (this.generator) ? false : ('serializable' in spec) ? spec.serializable : true;
+        this.serializable = (this.getter) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializer = spec.serializer;
         this.order = spec.order || 0;
     }
@@ -154,8 +156,8 @@ class $GadgetProxyHandler {
     get(target, key, proxy) {
         if (key === '$target') return target;
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
-        if (sentry && sentry.generator) {
-            target[key] = sentry.generator(proxy, target[key]);
+        if (sentry && sentry.getter) {
+            target[key] = sentry.getter(proxy, target[key]);
         }
         return Reflect.get(target, key, proxy);
     }
@@ -165,8 +167,12 @@ class $GadgetProxyHandler {
         if (sentry) {
             if (target.$ready && sentry.readonly) return false;
 
+            // allow value to be updated or acted upon by schema specific setter
+            if (sentry.setter) value = sentry.setter(proxy, value);
+
             let storedValue = target[key];
             if (Object.is(storedValue, value)) return true;
+
 
             if (target.$ready && sentry.link && storedValue) {
                 this.$unlink(proxy, storedValue);
@@ -256,7 +262,7 @@ class Gadget {
         const schemas = this.$schemas;
         if (schemas) {
             for (const sentry of schemas.$entries) {
-                if (sentry.generator) {
+                if (sentry.getter) {
                     this[sentry.key]  = sentry.getDefault(this);
                 } else {
                     this[sentry.key]  = sentry.parser(this, spec);

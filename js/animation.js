@@ -25,11 +25,11 @@ class Animation extends Sketch {
     /** @member {boolean} Animation#sketch - the current animation frame/sketch */
     static { this.$schema('sketch', { link: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
     /** @member {boolean} Animation#width - width of current animation frame */
-    static { this.$schema('width', { generator: ((o,ov) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.$schema('width', { getter: ((o,ov) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {boolean} Animation#height - height of current animation frame */
-    static { this.$schema('height', { generator: ((o,ov) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.$schema('height', { getter: ((o,ov) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animation frame */
-    static { this.$schema('ttl', { generator: (o,ov) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
+    static { this.$schema('ttl', { getter: (o,ov) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
 
     static from(srcs, spec={}) {
         let sketches = [];

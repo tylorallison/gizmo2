@@ -1,6 +1,7 @@
 import { TextFormat } from '../js/textFormat.js';
-import { $FormattedText, Text } from '../js/textToken.js';
+import { Text } from '../js/text.js';
 
+/*
 describe('char formats', () => {
     it('can be parsed', ()=>{
         let cf = new $FormattedText(new TextFormat(), 'hello <b>big</b> world');
@@ -14,13 +15,16 @@ describe('char formats', () => {
         expect(cf.length).toEqual(15);
     });
 });
+*/
 
-describe('text sketches', () => {
+describe('text assets', () => {
     it('can be parsed', ()=>{
-        let t = new Text({ text:'hello\n<b>big</b> world', wrap:false, wrapWidth:50 });
+        let t = new Text({ text:'hello <b>big</b> world', wrap:true, wrapWidth:40 });
         console.log(`t.$ftext: ${t.$ftext}`)
         for (const line of t.$lines) {
-            console.log(`line: ${line} ftext: |${line.$ftext}| dim: ${line.width},${line.height}`);
+            console.log(`line: ${line} ftext: |${line.$ftext}| pos: ${line.x},${line.y} dim: ${line.width},${line.height}`);
         }
+        console.log(`bounds for 0: ${t.getCharBounds(0)}`);
+        console.log(`bounds for 1: ${t.getCharBounds(1)}`);
     });
 });

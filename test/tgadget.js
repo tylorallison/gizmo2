@@ -23,9 +23,9 @@ describe('gadgets', () => {
         expect(tevt.actor).toEqual(o);
     });
 
-    it('generators work', ()=>{
+    it('getters work', ()=>{
         class tgadget extends Gadget {
-            static { this.$schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
+            static { this.$schema('g', { dflt: 1, getter: (o,ov) => ov*2}); }
             getg() {
                 return this.g;
             }

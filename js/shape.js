@@ -23,11 +23,11 @@ class Shape extends Sketch {
         this.$schema('$xverts', {dflt: (o) => o.verts});
         this.$schema('$scalex', {dflt:1});
         this.$schema('$scaley', {dflt:1});
-        this.$schema('$path', { generator: (o, ov) => o.constructor.toPath(o.$xverts)});
-        this.$schema('$min', { generator: (o, ov) => Vect.min(...o.verts) });
-        this.$schema('$max', { generator: (o, ov) => Vect.max(...o.verts) });
-        this.$schema('width', { generator: (o, ov) => (o.$max.x-o.$min.x) });
-        this.$schema('height', { generator: (o, ov) => (o.$max.y-o.$min.y) });
+        this.$schema('$path', { getter: (o, ov) => o.constructor.toPath(o.$xverts)});
+        this.$schema('$min', { getter: (o, ov) => Vect.min(...o.verts) });
+        this.$schema('$max', { getter: (o, ov) => Vect.max(...o.verts) });
+        this.$schema('width', { getter: (o, ov) => (o.$max.x-o.$min.x) });
+        this.$schema('height', { getter: (o, ov) => (o.$max.y-o.$min.y) });
     }
 
     static toPath(verts) {
