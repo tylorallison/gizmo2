@@ -163,7 +163,7 @@ class $GadgetProxyHandler {
     set(target, key, value, proxy) {
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
         if (sentry) {
-            if (target.$ready && sentry.readonly) return false;
+            if (target.$gadgetReady && sentry.readonly) return false;
 
             // allow value to be updated or acted upon by schema specific setter
             if (sentry.setter) value = sentry.setter(proxy, value);
@@ -172,7 +172,7 @@ class $GadgetProxyHandler {
             if (Object.is(storedValue, value)) return true;
 
 
-            if (target.$ready && sentry.link && storedValue) {
+            if (target.$gadgetReady && sentry.link && storedValue) {
                 this.$unlink(proxy, storedValue);
             }
             if (sentry.link && value) {
@@ -182,7 +182,7 @@ class $GadgetProxyHandler {
                 this.$link(proxy, key, value);
             }
             target[key] = value;
-            if (target.$ready && target.$at_modified && sentry && sentry.eventable) {
+            if (target.$gadgetReady && target.$at_modified && sentry && sentry.eventable) {
                 target.$at_modified.trigger({key:key, value:value});
             }
             return true;
@@ -204,11 +204,11 @@ class $GadgetProxyHandler {
     deleteProperty(target, key) {
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
         if (sentry) {
-            if (target.$ready && sentry.readonly) return false;
+            if (target.$gadgetReady && sentry.readonly) return false;
             const storedValue = target[key];
             if (sentry.link && storedValue) this.$unlink(proxy, storedValue);
         }
-        if (target.$ready && target.$at_modified && sentry && sentry.eventable) {
+        if (target.$gadgetReady && target.$at_modified && sentry && sentry.eventable) {
             target.$at_modified.trigger({key:key, value:undefined, deleted:true});
         }
         delete target[key];
@@ -219,6 +219,7 @@ class $GadgetProxyHandler {
 
 class Gadget {
 
+    static { this.prototype.gadgetable = true; }
     static $registry = new Map();
     static $register() {
         if (!Object.hasOwn(this.prototype, '$registered')) {
@@ -287,7 +288,7 @@ class Gadget {
         this.$proxy.$cpre(...args);
         this.$proxy.$cparse(...args);
         this.$proxy.$cpost(...args);
-        this.$ready = true;
+        this.$gadgetReady = true;
         GadgetCtx.at_created.trigger({actor:this.$proxy});
         return this.$proxy;
     }
@@ -343,7 +344,7 @@ class GadgetArray extends Array {
                 return target.$delete(key);
             }
         });
-        this.$ready = true;
+        this.$gadgetReady = true;
         return this.$proxy;
     }
 
@@ -409,7 +410,7 @@ class GadgetArray extends Array {
         if (storedValue) this.$unlink(key, storedValue);
         if (value) this.$link(key, value);
         this[key] = value;
-        if (this.$ready) {
+        if (this.$gadgetReady) {
             if (this.$at_modified) this.$at_modified.trigger({key:key, value:value});
         }
         return true;
@@ -569,6 +570,7 @@ class GadgetAssets {
 
 class GadgetCtx {
 
+    static { this.prototype.gadgetable = true; }
     static current = new GadgetCtx();
 
     // static properties that allow unique inheritance
@@ -581,30 +583,17 @@ class GadgetCtx {
         return this.$$gid = value;
     }
 
-    static get dflts() {
-        return this.current.dflts;
-    }
-    static get at_tocked() {
-        return this.current.at_tocked;
-    }
-    static get at_created() {
-        return this.current.at_created;
-    }
-    static get at_destroyed() {
-        return this.current.at_destroyed;
-    }
-    static get interacted() {
-        return this.current.interacted;
-    }
-    static get media() {
-        return this.current.media;
-    }
-    static get assets() {
-        return this.current.assets;
-    }
-    static set interacted(v) {
-        return this.current.interacted = v;
-    }
+    static get dflts() { return this.current.dflts; }
+    static get at_tocked() { return this.current.at_tocked; }
+    static get at_keyed() { return this.current.at_keyed; }
+    static get at_moused() { return this.current.at_moused; }
+    static get at_created() { return this.current.at_created; }
+    static get at_destroyed() { return this.current.at_destroyed; }
+    static get at_sfxed() { return this.current.at_sfxed; }
+    static get interacted() { return this.current.interacted; }
+    static get media() { return this.current.media; }
+    static get assets() { return this.current.assets; }
+    static set interacted(v) { return this.current.interacted = v; }
     static generate(spec) {
         return this.current.generator.generate(spec);
     }
@@ -617,8 +606,11 @@ class GadgetCtx {
         this.assets = ('assets' in spec) ? spec.assets: new GadgetAssets();
         this.interacted = false;
         this.at_tocked = new EvtEmitter(this, 'tocked');
+        this.at_keyed = new EvtEmitter(this, 'keyed');
+        this.at_moused = new EvtEmitter(this, 'moused');
         this.at_created = new EvtEmitter(this, 'created');
         this.at_destroyed = new EvtEmitter(this, 'destroyed');
+        this.at_sfxed = new EvtEmitter(this, 'sfxed');
         // the raw media cache
         this.media = {};
     }

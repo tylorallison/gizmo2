@@ -1,20 +1,15 @@
 export { Game };
 
 import { Gizmo } from './gizmo.js';
-//import { KeySystem } from './keySystem.js';
+import { KeySystem } from './keySystem.js';
 import { MouseSystem } from './mouseSystem.js';
 import { RenderSystem } from './renderSystem.js';
 //import { StateMgr } from './stateMgr.js';
 import { SystemMgr } from './systemMgr.js';
-//import { Generator } from './generator.js';
-import { UiCanvas } from './uiCanvas.js';
-//import { SfxSystem } from './sfxSystem.js';
+import { SfxSystem } from './sfxSystem.js';
 //import { Configs } from './config.js';
-//import { Assets } from './asset.js';
-//import { Global } from './global.js';
 import { Fmt } from './fmt.js';
 import { GadgetCtx } from './gadget.js';
-//import { Assets } from './assets.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -47,8 +42,6 @@ class Game extends Gizmo {
     static { this.$schema('systems', { readonly: true, parser: (o,x) => new SystemMgr()}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
     //static { this.$schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
-    /** @member {Generator} Game#generator - generator for gizmos in game */
-    //static { this.$schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx })}); }
     static { this.$schema('xcfgs', {dflt: (o) => o.constructor.xcfgs}); }
     static { this.$schema('xassets', {dflt: (o) => o.constructor.xassets}); }
     /** @member {bool} Game#ticksPerMS - game clock runs on ticks per ms */
@@ -61,21 +54,14 @@ class Game extends Gizmo {
         this.$loop = this.$loop.bind(this);
         //Global.game = this;
     }
-    $cpost(spec) {
-        super.$cpost(spec);
-        // -- build out game state
-        //Generator.dflt = this.generator;
-    }
 
     // METHODS -------------------------------------------------------------
     async $doinit() {
         if (this.dbg) console.log(`${this.name} starting initialization`);
-        //Evts.listen(null, 'KeyDown', () => this.userActive = true, this, {once: true});
         // init contexts
         // -- config
         //if (this.xcfgs) Configs.setValues(this.xcfgs);
         // -- assets
-        //if (this.xassets) Assets.add(this.xassets);
         GadgetCtx.assets.push(this.xassets);
         // game init
         await this.$init();
@@ -110,10 +96,10 @@ class Game extends Gizmo {
     }
 
     $prepareSystems() {
-        //new KeySystem({gctx: this.gctx});
-        new MouseSystem({dbg: false});
-        new RenderSystem({dbg: false});
-        //new SfxSystem({gctx: this.gctx, dbg: false});
+        new KeySystem({ dbg:false });
+        new MouseSystem({ dbg:false });
+        new RenderSystem({ dbg:false });
+        new SfxSystem({ dbg:false });
     }
 
     async $doprepare() {

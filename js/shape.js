@@ -58,7 +58,7 @@ class Shape extends Sketch {
                 this.$scaley = scaley;
                 let delta = Vect.min(...this.verts);
                 // translate verts
-                this.$xverts = this.verts.map((v) => Vect.mult(Vect.add(v, delta), {x:scalex,y:scaley}));
+                this.$xverts = this.verts.map((v) => Vect.mult(Vect.sub(v, delta), {x:scalex,y:scaley}));
             }
         }
         if (this.fill) {

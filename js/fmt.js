@@ -14,7 +14,7 @@ class Fmt {
         if (!obj) return '';
         if (seen.has(obj)) return '<circular data>';
         if (typeof obj === 'object') seen.add(obj);
-        if (obj.$schemas) {
+        if (obj.gadgetable) {
             return `${obj}`;
         }
         if (obj instanceof Map) {

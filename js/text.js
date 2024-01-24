@@ -311,11 +311,11 @@ class Text extends Sketch {
         if (idx < 0) idx = 0;
         if (idx > this.$ftext.length) idx = this.$ftext.length;
         for (const line of this.$lines) {
-            if (idx <= line.idx) {
+            if (idx-line.idx < line.length) {
                 return line.boundsAt(idx);
             }
         }
-        return Bounds.zero();
+        return new Bounds();
     }
 
     toString() {

@@ -6,6 +6,12 @@ import { TextFormat } from '../js/textFormat.js';
 import { UiPanel } from '../js/uiPanel.js';
 import { UiButton } from '../js/uiButton.js';
 import { UiText } from '../js/uiText.js';
+import { Sfx } from '../js/sfx.js';
+import { UiHorizontalSpacer, UiVerticalSpacer } from '../js/uiSpacer.js';
+import { Rect } from '../js/rect.js';
+import { Timer } from '../js/timer.js';
+import { UiToggle } from '../js/uiToggle.js';
+import { UiInput } from '../js/uiInput.js';
 //import { Timer } from '../js/timer.js';
 //import { Sfx } from '../js/sfx.js';
 //import { UiInput, UiInputText } from '../js/uiInput.js';
@@ -17,11 +23,9 @@ import { UiText } from '../js/uiText.js';
 //import { Media } from '../js/media.js';
 
 class UITest extends Game {
-    /*
     static xassets = [
-        Sfx.xspec({ tag: 'test.sound', media: Media.from('../media/test.mp3') }),
+        Sfx.from('../media/sound.mp3', { tag:'test.sound' }),
     ];
-    */
 
     placer(parent, node) {
         let width = parent.xform.width/this.maxCols;
@@ -52,13 +56,62 @@ class UITest extends Game {
         let bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         cvs.adopt(bgpanel);
 
+        /*
         this.placer(bgpanel, new UiPanel());
         this.placer(bgpanel, new UiButton({ 
             text:'hello', 
+            hoveredSound:'test.sound',
+            unhoveredSound:'test.sound',
             highlightFmt:new TextFormat({color:'yellow'}),
         }));
         this.placer(bgpanel, new UiText({ 
             text:'hello <b,color=red>big</b> world', 
+        }));
+
+        this.placer(bgpanel, new UiVerticalSpacer({ 
+            tag:'vspacer',
+            children: [
+                new UiPanel({ sketch:new Rect({ color:'green' }), }),
+                new UiPanel({ sketch:new Rect({ color:'red' }), }),
+            ],
+        }));
+        let vspacer = bgpanel.find((v) => v.tag === 'vspacer');
+        new Timer({ loop:true, ttl: 2000, cb: () => { 
+            if (vspacer.children.length === 2) {
+                let panel = new UiPanel({ sketch:new Rect({ color:'blue' }) });
+                vspacer.adopt(panel);
+            } else {
+                vspacer.children[2].destroy();
+            }
+        }})
+
+        this.placer(bgpanel, new UiHorizontalSpacer({ 
+            tag:'hspacer',
+            size:.2, 
+            spacer:.1,
+            children: [
+                new UiPanel({ sketch:new Rect({ color:'green' }), }),
+                new UiPanel({ sketch:new Rect({ color:'red' }), }),
+            ],
+        }));
+        let hspacer = bgpanel.find((v) => v.tag === 'hspacer');
+        new Timer({ loop:true, ttl: 2000, cb: () => { 
+            if (hspacer.children.length === 2) {
+                let panel = new UiPanel({ sketch:new Rect({ color:'blue' }) });
+                hspacer.adopt(panel);
+            } else {
+                hspacer.children[2].destroy();
+            }
+        }})
+
+        this.placer(bgpanel, new UiToggle({
+            dbg: { xform:false },
+            hoveredSound:'test.sound',
+        }));
+        */
+
+        this.placer(bgpanel, new UiInput({
+            dbg: { xform:false },
         }));
 
         /*
@@ -82,19 +135,6 @@ class UITest extends Game {
             })
         });
         Hierarchy.adopt(cvs, input)
-        */
-
-        /*
-        let toggle = new UiToggle({ 
-            xform: new XForm({ 
-                grip: .5, 
-                x: 300, 
-                y: 0, 
-                fixedWidth: this.size, 
-                fixedHeight: this.size,
-            }),
-        });
-        Hierarchy.adopt(cvs, toggle)
         */
 
         /*

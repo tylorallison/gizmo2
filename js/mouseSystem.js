@@ -6,6 +6,7 @@ import { Vect } from './vect.js';
 import { Contains } from './intersect.js';
 import { Fmt } from './fmt.js';
 import { EvtEmitter } from '../../gizmo2/js/evt.js';
+import { GadgetCtx } from './gadget.js';
 
 class MouseSystem extends System {
     // STATIC VARIABLES ----------------------------------------------------
@@ -17,8 +18,6 @@ class MouseSystem extends System {
     static { this.$schema('pressed', { dflt:false }) };
     static { this.$schema('clicked', { dflt:false }) };
     static { this.$schema('position', { readonly:true, dflt: () => new Vect() }) };
-    static { this.$schema('at_clicked', { readonly:true, dflt: () => new EvtEmitter(this, 'clicked') }); }
-    static { this.$schema('at_moved', { readonly:true, dflt: () => new EvtEmitter(this, 'moved') }); }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     $cpost(spec={}) {
@@ -44,25 +43,25 @@ class MouseSystem extends System {
     // EVENT HANDLERS ------------------------------------------------------
     $on_clicked(sevt) {
         // capture event data...
-        let data = { old_x: this.position.x, old_y: this.position.y, x: sevt.offsetX, y: sevt.offsetY, }
+        let data = { tag:'mouseclicked', old_x: this.position.x, old_y: this.position.y, x: sevt.offsetX, y: sevt.offsetY, }
         // update mouse state
         this.position.x = sevt.offsetX;
         this.position.y = sevt.offsetY;
         this.active = true;
         this.clicked = true;
         // trigger event
-        this.at_clicked.trigger(data);
+        GadgetCtx.at_moused.trigger(data);
     }
 
     $on_moved(sevt) {
         // capture event data...
-        let data = { old_x: this.position.x, old_y: this.position.y, x: sevt.offsetX, y: sevt.offsetY, }
+        let data = { tag:'mousemoved', old_x: this.position.x, old_y: this.position.y, x: sevt.offsetX, y: sevt.offsetY, }
         // update mouse state
         this.position.x = sevt.offsetX;
         this.position.y = sevt.offsetY;
         this.active = true;
         // trigger event
-        this.at_moved.trigger(data);
+        GadgetCtx.at_moused.trigger(data);
     }
 
     $on_pressed(sevt) {

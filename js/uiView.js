@@ -1,9 +1,8 @@
 export { UiView };
 
 import { EvtEmitter } from './evt.js';
-import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
-//import { SfxSystem } from './sfxSystem.js';
+import { SfxSystem } from './sfxSystem.js';
 import { XForm } from './xform.js';
 
 /** ========================================================================
@@ -61,18 +60,17 @@ class UiView extends Gizmo {
     
     // EVENT HANDLERS ------------------------------------------------------
     $on_clicked(evt) {
-        //if (this.clickedSound) SfxSystem.playSfx(this, this.mouseClickedSound);
+        if (this.clickedSound) SfxSystem.play(this, this.clickedSound);
     }
 
     $on_hovered(evt) {
-        //if (this.hoveredSound) SfxSystem.playSfx(this, this.mouseEnteredSound);
+        if (this.hoveredSound) SfxSystem.play(this, this.hoveredSound);
     }
     $on_unhovered(evt) {
-        //if (this.unhoveredSound) SfxSystem.playSfx(this, this.mouseExitedSound);
+        if (this.unhoveredSound) SfxSystem.play(this, this.unhoveredSound);
     }
 
     // METHODS -------------------------------------------------------------
-
     $prerender(ctx) {
     }
     $subrender(ctx) {
