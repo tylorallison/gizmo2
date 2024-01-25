@@ -44,6 +44,13 @@ class TextTest extends Game {
 
         this.testText(bgpanel, {
             fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
+            text: 'default',
+            fitter: 'ratio',
+        });
+
+        /*
+        this.testText(bgpanel, {
+            fmt: new TextFormat({color: 'red', highlight: false, size: this.fontsize}),
             text: 'hello none',
             fitter: 'none',
         });
@@ -133,6 +140,7 @@ class TextTest extends Game {
                 }
             }
         });
+        */
 
 
     }

@@ -43,6 +43,7 @@ class $TextLine extends Gadget {
         if (lchar) {
             let csize = fmt.measure(lchar+char);
             let lsize = fmt.measure(lchar);
+            console.log(`l[${lchar}]:${lsize.x} c[${char}]:${size.x} combo[${lchar+char}]:${csize.x} kerning: ${csize.x-(lsize.x+size.x)}`);
             lkerning = Math.max(0, csize.x-(lsize.x+size.x))*.5;
         }
         // right kerning
@@ -121,6 +122,9 @@ class $TextLine extends Gadget {
             if (f.fill) {
                 ctx.fillStyle = f.color;
                 ctx.fillText(this.$ftext[i], cx, cy);
+                // FIXME
+                ctx.fillStyle = 'rgba(255,255,255,.3)';
+                if (i === 0) ctx.fillText(this.$ftext, cx, cy);
             }
             if (f.border) {
                 ctx.lineWidth = f.border;
