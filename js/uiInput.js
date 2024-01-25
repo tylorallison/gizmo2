@@ -75,18 +75,23 @@ class UiInput extends UiPanel {
     // SCHEMA --------------------------------------------------------------
     static {
         this.$schema('textFmt', { order:-2, dflt:() => new TextFormat(), eventable:false });
-        this.$schema('$text', { order:-1, eventable:false, link:true, dflt: (o) => new Text({parsable:false, text: 'default text', fmt:o.textFmt}) });
+        this.$schema('text', { order:-1, dflt:'default text' });
+        this.$schema('$text', { eventable:false, link:true, dflt: (o) => new Text({
+            fitter: 'none',
+            parsable:false, 
+            text:o.text, 
+            fmt:o.textFmt, 
+            cursorIdx:o.text.length,
+            cursorOn:true,
+        }) });
         this.$schema('backgroundSketch', { link: true, dflt: () => new Rect({ color: 'rgba(255,255,255,.25)' }) });
         this.$schema('selectedSketch', { link: true, dflt: () => new Rect({ borderColor: 'yellow', border: 3, fill: false }) });
-        this.$schema('text', { dflt:'default text', setter: (o,v) => { o.$text.text = v; return v } });
         this.$schema('textXForm', { readonly:true, dflt: () => new XForm({grip:.1}) });
         this.$schema('emptyText', { readonly: true, dflt: 'enter value' }),
         this.$schema('selectedFmt', { eventable:false });
         this.$schema('emptyFmt', { eventable:false, dflt:() => new TextFormat({ color:'gray', style:'italic' })});
         this.$schema('charset', { dflt: this.dfltCharset });
         this.$schema('$selected', { serializable:false, dflt:false });
-        this.$schema('$cursorIdx', { serializable:false, parser: (o) => o.text.length });
-        this.$schema('$cursor', { eventable:false });
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
@@ -94,17 +99,11 @@ class UiInput extends UiPanel {
         super.$cpost(spec);
         GadgetCtx.at_keyed.listen(this.$on_keyed, this, false, (evt) => evt.tag === 'keydowned');
         GadgetCtx.at_moused.listen(this.$on_otherClicked, this, false, (evt) => evt.tag === 'mouseclicked');
-        this.$cursor = new UiPanel({
-            xform: new XForm({grip:.5, fixedWidth:50,fixedHeight:50}),
-        });
         let uitext = new UiText({
             xform:this.textXForm,
             text:this.text,
             $text:this.$text,
             mousable:false,
-            children: [
-                this.$cursor,
-            ]
         });
         this.adopt(uitext);
     }
@@ -114,14 +113,14 @@ class UiInput extends UiPanel {
         console.log(`on_clicked`);
         if (!this.active) return;
         // activate/deactivate
-        this.$updateSelected(!this.$selected);
+        this.$selected = (!this.$selected);
         super.$on_clicked(evt);
     }
 
     $on_otherClicked(evt) {
         console.log(`on_otherClicked`);
         if ((!this.hovered) && this.$selected) {
-            this.$updateSelected(false);
+            this.$selected = false;
         }
     }
 
@@ -132,46 +131,46 @@ class UiInput extends UiPanel {
         if (!this.$selected) return;
         // handle escape
         if (evt.key === 'Escape') {
-            this.$updateSelected(false);
+            this.$selected = false;
             return;
         }
         // handle backspace
         if (evt.key === 'Backspace') {
-            if (this.$cursorIdx > 0) {
-                this.$cursorIdx = this.$cursorIdx-1;
-                this.text = Util.spliceStr(this.text, this.$cursorIdx, 1);
+            if (this.$text.cursorIdx > 0) {
+                this.$text.cursorIdx = this.$text.cursorIdx-1;
+                this.text = Util.spliceStr(this.text, this.$text.cursorIdx, 1);
             }
             return;
         }
         // handle arrows
         if (evt.key === 'ArrowLeft') {
-            if (this.$cursorIdx > 0) {
-                this.$cursorIdx = this.$cursorIdx-1;
+            if (this.$text.cursorIdx > 0) {
+                this.$text.cursorIdx = this.$text.cursorIdx-1;
             }
             return;
         }
         if (evt.key === 'ArrowRight') {
-            if (this.$cursorIdx < this.text.length) {
-                this.$cursorIdx = this.$cursorIdx+1;
+            if (this.$text.cursorIdx < this.text.length) {
+                this.$text.cursorIdx = this.$text.cursorIdx+1;
             }
             return;
         }
         if (evt.key === 'ArrowUp') {
-            if (this.$cursorIdx !== 0) {
-                this.$cursorIdx = 0;
+            if (this.$text.cursorIdx !== 0) {
+                this.$text.cursorIdx = 0;
             }
             return;
         }
         if (evt.key === 'ArrowDown') {
-            if (this.$cursorIdx !== this.text.length) {
-                this.$cursorIdx = this.text.length;
+            if (this.$text.cursorIdx !== this.text.length) {
+                this.$text.cursorIdx = this.text.length;
             }
             return;
         }
         // handle delete
         if (evt.key === 'Delete') {
-            if (this.$cursorIdx < this.text.length) {
-                this.text = Util.spliceStr(this.text, this.$cursorIdx, 1);
+            if (this.$text.cursorIdx < this.text.length) {
+                this.text = Util.spliceStr(this.text, this.$text.cursorIdx, 1);
             }
             return;
         }
@@ -181,10 +180,10 @@ class UiInput extends UiPanel {
         // check charset
         if (!this.charset.includes(key)) return;
         // good to go...
-        let left = this.text.slice(0, this.$cursorIdx);
-        let right = this.text.slice(this.$cursorIdx);
+        let left = this.text.slice(0, this.$text.cursorIdx);
+        let right = this.text.slice(this.$text.cursorIdx);
         this.text = left + key + right;
-        this.$cursorIdx = this.$cursorIdx+1;
+        this.$text.cursorIdx = this.$text.cursorIdx+1;
     }
 
     // METHODS -------------------------------------------------------------
@@ -213,6 +212,7 @@ class UiInput extends UiPanel {
     }
     */
 
+    /*
     $updateSelected(value) {
         this.$selected = value;
         // handle selected
@@ -220,7 +220,7 @@ class UiInput extends UiPanel {
             // upon selecting empty input, replace placeholder text w/ empty string
             if (!this.text.length) this.ttext.token.text = '';
             this.$text.text = this.text;
-            this.$text.fmt = this.selectedTextFmt;
+            if (this.selectedFmt) this.$text.fmt = this.selectedFmt;
         // handle deselected
         } else {
             if (!this.text.length) {
@@ -231,6 +231,7 @@ class UiInput extends UiPanel {
             }
         }
     }
+    */
 
     $subrender(ctx) {
         // render sketch
@@ -238,6 +239,13 @@ class UiInput extends UiPanel {
         // render selected highlight
         if (this.$selected) {
             if (this.selectedSketch) this.selectedSketch.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
+            this.$text.text = this.text;
+            if (this.selectedFmt) {
+                this.$text.fmt = this.selectedFmt;
+            } else {
+                this.$text.fmt = this.textFmt;
+            }
+            /*
             // update cursor position
             let bounds;
             if (this.$cursorIdx < this.text.length) {
@@ -250,6 +258,14 @@ class UiInput extends UiPanel {
             //this.$cursor.xform.fixedWidth = bounds.width;
             //this.$cursor.xform.fixedHeight = bounds.height;
             console.log(`cursor idx: ${this.$cursorIdx} bounds: ${bounds}`);
+            */
+        } else {
+            if (!this.text.length) {
+                this.$text.text = this.emptyText;
+                if (this.emptyFmt) this.$text.fmt = this.emptyFmt;
+            } else {
+                this.$text.fmt = this.textFmt;
+            }
         }
     }
 

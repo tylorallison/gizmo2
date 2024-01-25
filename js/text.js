@@ -4,6 +4,7 @@ import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
 import { Gadget } from './gadget.js';
 import { Mathf } from './math.js';
+import { Rect } from './rect.js';
 import { Sketch } from './sketch.js';
 import { TextFormat } from './textFormat.js';
 import { Vect } from './vect.js';
@@ -144,9 +145,9 @@ class $TextLine extends Gadget {
 class Text extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.$schema('parsable', { readonly:true, order:-1, dflt:true });
+        this.$schema('parsable', { order:-1, readonly:true, dflt:true });
+        this.$schema('fmt', { order:-1, dflt: () => new TextFormat()});
         this.$schema('text', { dflt: 'default text' });
-        this.$schema('fmt', { dflt: () => new TextFormat()});
         this.$schema('delimiter', { readonly:true, dflt:' ' });
         this.$schema('leadingPct', { readonly:true, dflt:.1 });
         this.$schema('fitter', { dflt: 'ratio' });
@@ -159,6 +160,15 @@ class Text extends Sketch {
         this.$schema('$lines', { eventable:false, parser: () => [] });
         this.$schema('width', { eventable:false, dflt:0 });
         this.$schema('height', { eventable:false, dflt:0 });
+
+        this.$schema('cursorOn', { dflt:false });
+        this.$schema('cursorSketch', { link:true, dflt:() => new Rect({ fitter:'stretch', width:1, height:2, alignx:.5, color:'rgba(255,255,255,.5)' })});
+        this.$schema('cursorBlinkRate', { dflt:500 });
+        this.$schema('cursorIdx', { dflt:0 });
+        this.$schema('$cursorDim', { dflt:false, readonly:true, parser:(o) => o.fmt.measure('X') });
+        this.$schema('$cursorVisible', { dflt:true });
+        this.$schema('$cursorTimer', { eventable:false, serializable:false });
+
     }
 
     $cpost(spec) {
@@ -303,6 +313,22 @@ class Text extends Sketch {
         }
         for (const line of this.$lines) {
             line.render(ctx, 0, 0);
+        }
+        // cursor
+        if (this.cursorSketch && this.cursorOn && this.$cursorVisible) {
+            let bounds;
+            if (this.cursorIdx < this.$ftext.length) {
+                bounds = this.getCharBounds(this.cursorIdx);
+            } else {
+                bounds = this.getCharBounds(this.$ftext.length-1);
+                bounds.x += bounds.width;
+                bounds.width = 0;
+            }
+            // cursor position and dimensions
+            let xoff = (bounds.width-this.$cursorDim.x) * this.cursorSketch.alignx;
+            let yoff = (bounds.height-this.$cursorDim.y) * this.cursorSketch.aligny;
+            //this.cursorSketch.render(ctx, bounds.x+xoff, bounds.y.yoff, this.$cursorDim.x, this.$cursorDim.y);
+            this.cursorSketch.render(ctx, bounds.x, bounds.y, bounds.width, bounds.height);
         }
         if (ctxXform) ctx.setTransform(ctxXform);
     }
