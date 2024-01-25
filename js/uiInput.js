@@ -77,7 +77,7 @@ class UiInput extends UiPanel {
         this.$schema('textFmt', { order:-2, dflt:() => new TextFormat(), eventable:false });
         this.$schema('text', { order:-1, dflt:'default text' });
         this.$schema('$text', { eventable:false, link:true, dflt: (o) => new Text({
-            fitter: 'none',
+            //fitter: 'none',
             parsable:false, 
             text:o.text, 
             fmt:o.textFmt, 

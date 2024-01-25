@@ -327,8 +327,8 @@ class Text extends Sketch {
             // cursor position and dimensions
             let xoff = (bounds.width-this.$cursorDim.x) * this.cursorSketch.alignx;
             let yoff = (bounds.height-this.$cursorDim.y) * this.cursorSketch.aligny;
-            //this.cursorSketch.render(ctx, bounds.x+xoff, bounds.y.yoff, this.$cursorDim.x, this.$cursorDim.y);
-            this.cursorSketch.render(ctx, bounds.x, bounds.y, bounds.width, bounds.height);
+            this.cursorSketch.render(ctx, bounds.x+xoff, bounds.y.yoff, this.$cursorDim.x, this.$cursorDim.y);
+            //this.cursorSketch.render(ctx, bounds.x, bounds.y, bounds.width, bounds.height);
         }
         if (ctxXform) ctx.setTransform(ctxXform);
     }
