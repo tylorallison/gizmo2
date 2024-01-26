@@ -7,7 +7,8 @@ import { Mathf } from './math.js';
 import { Rect } from './rect.js';
 import { Sketch } from './sketch.js';
 import { TextFormat } from './textFormat.js';
-import { Vect } from './vect.js';
+import { Timer } from './timer.js';
+import { Vect3 } from './vect3.js';
 
 class $TextLine extends Gadget {
     static {
@@ -15,6 +16,7 @@ class $TextLine extends Gadget {
         this.$schema('$ftext', { eventable:false, dflt:'' });
         this.$schema('$fmts', { eventable:false, dflt:() => [] });
         this.$schema('$bounds', { eventable:false, dflt:() => [] });
+        this.$schema('$bases', { eventable:false, dflt:() => [] });
         this.$schema('x', { eventable:false, dflt:0 });
         this.$schema('y', { eventable:false, dflt:0 });
         this.$schema('idx', { eventable:false, dflt:0 });
@@ -35,29 +37,22 @@ class $TextLine extends Gadget {
     $measureAt(idx) {
         let char = this.$ftext[idx];
         let fmt = this.$fmts[idx]
-        let lchar = this.$ftext[idx-1];
         let rchar = this.$ftext[idx+1];
         let size = fmt.measure(char);
-        let lkerning=0, rkerning=0;
-        // left kerning ... 
-        if (lchar) {
-            let csize = fmt.measure(lchar+char);
-            let lsize = fmt.measure(lchar);
-            console.log(`l[${lchar}]:${lsize.x} c[${char}]:${size.x} combo[${lchar+char}]:${csize.x} kerning: ${csize.x-(lsize.x+size.x)}`);
-            lkerning = Math.max(0, csize.x-(lsize.x+size.x))*.5;
-        }
-        // right kerning
+        let kerning = 0;
+        // measure kerning (space between this char and next)... 
         if (rchar) {
             let csize = fmt.measure(char+rchar);
             let rsize = fmt.measure(rchar);
-            rkerning = Math.max(0, csize.x-(rsize.x+size.x))*.5;
+            kerning = Math.max(0, csize.x-(rsize.x+size.x));
         }
-        let width = size.x+lkerning+rkerning;
+        let width = size.x+kerning;
         // special case space at end of line... set width to zero
         if (char === ' ' && !rchar) width = 0;
         // special case ... newline
         if (char === '\n') width = 0;
-        return new Vect({ x:width, y:size.y });
+        // z: baseline delta
+        return new Vect3({ x:width, y:size.y, z:size.z });
     }
 
     push(char, fmt) {
@@ -65,7 +60,7 @@ class $TextLine extends Gadget {
         let idx = this.$ftext.length;
         this.$ftext += char;
         this.$fmts[idx] = fmt;
-        // update bounds of last char (recomputes last char's right kerning)
+        // update bounds of last char (recomputes last char's kerning)
         if (idx > 0) {
             let p = this.$measureAt(idx-1);
             let lastWidth = this.$bounds[idx-1].width;
@@ -77,6 +72,7 @@ class $TextLine extends Gadget {
         let p = this.$measureAt(idx);
         if (p.y > this.height) this.height = p.y;
         this.$bounds[idx] = new Bounds({ x:this.width, y:0, width:p.x, height:p.y });
+        this.$bases[idx] = p.z;
         this.width += p.x;
     }
 
@@ -108,10 +104,11 @@ class $TextLine extends Gadget {
 
     render(ctx, x, y) {
         ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = 'alphabetic';
         for (let i=0; i<this.$ftext.length; i++) {
             let b = this.$bounds[i];
             let f = this.$fmts[i];
+            let by = this.$bases[i];
             let cx = x+this.x+b.x;
             let cy = y+this.y+b.y;
             if (f.highlight) {
@@ -121,15 +118,12 @@ class $TextLine extends Gadget {
             ctx.font = f.font;
             if (f.fill) {
                 ctx.fillStyle = f.color;
-                ctx.fillText(this.$ftext[i], cx, cy);
-                // FIXME
-                ctx.fillStyle = 'rgba(255,255,255,.3)';
-                if (i === 0) ctx.fillText(this.$ftext, cx, cy);
+                ctx.fillText(this.$ftext[i], cx, cy+by);
             }
             if (f.border) {
                 ctx.lineWidth = f.border;
                 ctx.strokeStyle = f.borderColor;
-                ctx.strokeText(this.$ftext[i], cx, cy);
+                ctx.strokeText(this.$ftext[i], cx, cy+by);
             }
         }
     }
@@ -166,7 +160,7 @@ class Text extends Sketch {
         this.$schema('height', { eventable:false, dflt:0 });
 
         this.$schema('cursorOn', { dflt:false });
-        this.$schema('cursorSketch', { link:true, dflt:() => new Rect({ fitter:'stretch', width:1, height:2, alignx:.5, color:'rgba(255,255,255,.5)' })});
+        this.$schema('cursorSketch', { link:true, dflt:() => new Rect({ fitter:'stretch', width:2, color:'rgba(255,255,255,.5)' })});
         this.$schema('cursorBlinkRate', { dflt:500 });
         this.$schema('cursorIdx', { dflt:0 });
         this.$schema('$cursorDim', { dflt:false, readonly:true, parser:(o) => o.fmt.measure('X') });
@@ -319,6 +313,13 @@ class Text extends Sketch {
             line.render(ctx, 0, 0);
         }
         // cursor
+        if (this.cursorSketch && this.cursorOn && this.cursorBlinkRate && !(this.$cursorTimer)) {
+            this.$cursorTimer = new Timer({ttl:this.cursorBlinkRate, loop:true, cb:() => this.$cursorVisible = !this.$cursorVisible});
+        }
+        if (!this.cursorOn && this.$cursorTimer) {
+            this.$cursorTimer.destroy();
+            this.$cursorTimer = null;
+        }
         if (this.cursorSketch && this.cursorOn && this.$cursorVisible) {
             let bounds;
             if (this.cursorIdx < this.$ftext.length) {
@@ -331,8 +332,8 @@ class Text extends Sketch {
             // cursor position and dimensions
             let xoff = (bounds.width-this.$cursorDim.x) * this.cursorSketch.alignx;
             let yoff = (bounds.height-this.$cursorDim.y) * this.cursorSketch.aligny;
-            this.cursorSketch.render(ctx, bounds.x+xoff, bounds.y.yoff, this.$cursorDim.x, this.$cursorDim.y);
-            //this.cursorSketch.render(ctx, bounds.x, bounds.y, bounds.width, bounds.height);
+            //this.cursorSketch.render(ctx, bounds.x+xoff, bounds.y.yoff, this.$cursorDim.x, this.$cursorDim.y);
+            this.cursorSketch.render(ctx, bounds.x, bounds.y, bounds.width, bounds.height);
         }
         if (ctxXform) ctx.setTransform(ctxXform);
     }

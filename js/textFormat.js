@@ -2,7 +2,7 @@ export { TextFormat };
 
 import { Fmt } from './fmt.js';
 import { Gadget } from './gadget.js';
-import { Vect } from './vect.js';
+import { Vect3 } from './vect3.js';
 
 class TextFormat extends Gadget {
     static {
@@ -90,7 +90,8 @@ class TextFormat extends Gadget {
             let m2w = Math.max(0, m2.actualBoundingBoxLeft) + Math.max(0, m2.actualBoundingBoxRight);
             w = m1w-m2w;
         }
-        return new Vect({x:w, y:h});
+        // z is the delta between baseline (where text is rendered) and top of bounds
+        return new Vect3({x:w, y:h, z:Math.max(0, metrics.fontBoundingBoxAscent)});
     }
 
     copy(overrides={}) {

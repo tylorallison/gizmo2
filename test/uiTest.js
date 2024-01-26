@@ -56,7 +56,6 @@ class UITest extends Game {
         let bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         cvs.adopt(bgpanel);
 
-        /*
         this.placer(bgpanel, new UiPanel());
         this.placer(bgpanel, new UiButton({ 
             text:'hello', 
@@ -108,34 +107,10 @@ class UITest extends Game {
             dbg: { xform:false },
             hoveredSound:'test.sound',
         }));
-        */
 
         this.placer(bgpanel, new UiInput({
             dbg: { xform:false },
         }));
-
-        /*
-        let input = new UiInput({ 
-            text: '', 
-            xform: new XForm({ 
-                grip: .5, 
-                x: 150, 
-                y: 0, 
-                fixedWidth: this.size, 
-                fixedHeight: this.size,
-            }),
-            textFmt: new TextFormat({ color: 'green' }),
-            selectedTextFmt: new TextFormat({ color: 'blue' }),
-            ttext: new UiInputText({
-                xform: new XForm({ top: .35, bottom: .35, left: .1, right: .1 }),
-                token: new TextToken({
-                    alignx: 0,
-                    aligny: .5,
-                }),
-            })
-        });
-        Hierarchy.adopt(cvs, input)
-        */
 
         /*
         let grid = new UiGrid({
@@ -158,21 +133,6 @@ class UITest extends Game {
         */
 
         //let panel = new UiPanel({sketch: new Rect({color: 'green'}), tag: 'grid', xform: new XForm({ x: 32, y: 32, fixedWidth: 16, fixedHeight: 16})});
-
-        /*
-        new Timer({ ttl: 2000, cb: () => { 
-            panel.xform.x = 64; 
-            new Timer({ ttl: 2000, cb: () => { 
-                panel.xform.x = 128; 
-                panel.xform.y = 48; 
-                new Timer({ ttl: 2000, cb: () => { 
-                    grid.xform.x = 32;
-                    grid.rerender = true;
-                    //console.log(`setting bounds width => ${grid.bounds.width}`);
-                }});
-            }});
-        }});
-        */
 
     }
 }
