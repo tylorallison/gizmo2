@@ -18,6 +18,7 @@ import { GadgetCtx } from '../js/gadget.js';
 import { UiView } from '../js/uiView.js';
 import { Text } from '../js/text.js';
 import { TextFormat } from '../js/textFormat.js';
+import { Tiler } from '../js/tiler.js';
 //import { Assets } from '../js/asset.js';
 
 /*
@@ -81,6 +82,19 @@ class AssetTest extends Game {
             xform: new XForm({ left:.6, right:.4, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 400}),
         });
         cvs.adopt(view2);
+
+        let tiler = new Tiler({
+            gridSize: {x:8,y:8},
+        });
+        let view3 = new UiPanel({
+            sketch: tiler,
+            dbg: { xform: true },
+            xform: new XForm({ left:.8, right:.2, top:.5, bottom:.5, x: 0, y: 0, fixedWidth: 200, fixedHeight: 200}),
+        });
+        cvs.adopt(view3);
+        tiler.setidx(0, 'test.rect');
+        tiler.setidx(11, 'test.rect');
+        tiler._setij(2, 2, 'test.rect');
 
         /*
         // FIXME: needs to be refactored
