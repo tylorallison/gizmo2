@@ -86,17 +86,11 @@ class Tiler extends Sketch {
 
     _setij(i, j, v) {
         let idx = this.$grid._idxFromIJ(i, j);
-        if (idx !== -1) {
-            this.$modifiedIdxs.add(idx);
-            this.$grid.setidx(idx, v);
-        }
+        this.setidx(idx, v);
     }
     setij(ij, v) {
         let idx = this.$grid.idxFromIJ(ij);
-        if (idx !== -1) {
-            this.$modifiedIdxs.add(idx);
-            this.$grid.setidx(idx, v);
-        }
+        this.setidx(idx, v);
     }
     setidx(idx, v) {
         if (idx !== -1 && idx<this.$grid.length) {

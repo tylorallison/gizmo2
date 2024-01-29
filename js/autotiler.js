@@ -77,9 +77,10 @@ const SOUTHEAST_SOUTH_EAST =    20;
 
 class $TileOverlay extends Gadget {
     static {
-        this.$schema('idx');
-        this.$schema('grid');
-        this.$schema('priorityMap', { dflt:() => { return ({}); } });
+        this.$schema('idx', {readonly:true });
+        this.$schema('grid', { readonly:true });
+        this.$schema('priorityMap', { readonly:true, dflt:() => { return ({}); } });
+        this.$schema('assetMap', { readonly:true });
         this.$schema('halfSize', { readonly:true, dflt: () => new Vect({x:16, y:16}) });
 
         this.$schema('$tl_mask', { eventable:false });
@@ -87,21 +88,21 @@ class $TileOverlay extends Gadget {
         this.$schema('$bl_mask', { eventable:false });
         this.$schema('$br_mask', { eventable:false });
 
-        this.$schema('$tl_west', { eventable:false });
-        this.$schema('$tl_northWest', { eventable:false });
-        this.$schema('$tl_north', { eventable:false });
+        this.$schema('$tl_west', { eventable:false, link:true });
+        this.$schema('$tl_northWest', { eventable:false, link:true });
+        this.$schema('$tl_north', { eventable:false, link:true });
 
-        this.$schema('$tr_north', { eventable:false });
-        this.$schema('$tr_northEast', { eventable:false });
-        this.$schema('$tr_east', { eventable:false });
+        this.$schema('$tr_north', { eventable:false, link:true });
+        this.$schema('$tr_northEast', { eventable:false, link:true });
+        this.$schema('$tr_east', { eventable:false, link:true });
 
-        this.$schema('$br_east', { eventable:false });
-        this.$schema('$br_southEast', { eventable:false });
-        this.$schema('$br_south', { eventable:false });
+        this.$schema('$br_east', { eventable:false, link:true });
+        this.$schema('$br_southEast', { eventable:false, link:true });
+        this.$schema('$br_south', { eventable:false, link:true });
 
-        this.$schema('$bl_south', { eventable:false });
-        this.$schema('$bl_southWest', { eventable:false });
-        this.$schema('$bl_west', { eventable:false });
+        this.$schema('$bl_south', { eventable:false, link:true });
+        this.$schema('$bl_southWest', { eventable:false, link:true });
+        this.$schema('$bl_west', { eventable:false, link:true });
     }
 
     $cpost(spec) {
@@ -127,11 +128,14 @@ class $TileOverlay extends Gadget {
     $computeTopLeft(priority) {
         // lookup neighbor info
         let t_west = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.west));
-        let p_west = this.priorityMap[t_west];
+        let p_west = this.priorityMap[t_west] || 0;
         let t_north = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.north));
-        let p_north = this.priorityMap[t_north];
+        let p_north = this.priorityMap[t_north] || 0;
         let t_northWest = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.northWest));
-        let p_northWest = this.priorityMap[t_northWest];
+        let p_northWest = this.priorityMap[t_northWest] || 0;
+        if (this.assetMap) t_west = this.assetMap[t_west];
+        if (this.assetMap) t_north = this.assetMap[t_north];
+        if (this.assetMap) t_northWest = this.assetMap[t_northWest];
         // -- west overlap
         if (p_west > priority) {
             let side;
@@ -234,11 +238,14 @@ class $TileOverlay extends Gadget {
     $computeTopRight(priority) {
         // lookup neighbor info
         let t_east = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.east));
-        let p_east = this.priorityMap[t_east];
+        let p_east = this.priorityMap[t_east] || 0;
         let t_north = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.north));
-        let p_north = this.priorityMap[t_north];
+        let p_north = this.priorityMap[t_north] || 0;
         let t_northEast = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.northEast));
-        let p_northEast = this.priorityMap[t_northEast];
+        let p_northEast = this.priorityMap[t_northEast] || 0;
+        if (this.assetMap) t_east = this.assetMap[t_east];
+        if (this.assetMap) t_north = this.assetMap[t_north];
+        if (this.assetMap) t_northEast = this.assetMap[t_northEast];
         //console.log(`north:${t_north}|${p_north} northEast:${t_northEast}|${p_northEast} east:${t_east}|${p_east}`);
         // -- east overlap
         if (p_east > priority) {
@@ -342,11 +349,14 @@ class $TileOverlay extends Gadget {
     $computeBottomLeft(priority) {
         // lookup neighbor info
         let t_west = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.west));
-        let p_west = this.priorityMap[t_west];
+        let p_west = this.priorityMap[t_west] || 0;
         let t_south = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.south));
-        let p_south = this.priorityMap[t_south];
+        let p_south = this.priorityMap[t_south] || 0;
         let t_southWest = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.southWest));
-        let p_southWest = this.priorityMap[t_southWest];
+        let p_southWest = this.priorityMap[t_southWest] || 0;
+        if (this.assetMap) t_west = this.assetMap[t_west];
+        if (this.assetMap) t_south = this.assetMap[t_south];
+        if (this.assetMap) t_southWest = this.assetMap[t_southWest];
         //console.log(`south:${t_south}|${p_south} southWest:${t_southWest}|${p_southWest} west:${t_west}|${p_west}`);
         // -- west overlap
         if (p_west > priority) {
@@ -450,12 +460,15 @@ class $TileOverlay extends Gadget {
     $computeBottomRight(priority) {
         // lookup neighbor info
         let t_east = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.east));
-        let p_east = this.priorityMap[t_east];
+        let p_east = this.priorityMap[t_east] || 0;
         let t_south = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.south));
-        let p_south = this.priorityMap[t_south];
+        let p_south = this.priorityMap[t_south] || 0;
         let t_southEast = this.grid.getidx(this.grid.idxFromDir(this.idx, Direction.southEast));
-        let p_southEast = this.priorityMap[t_southEast];
-        //console.log(`south:${t_south}|${p_south} southEast:${t_southEast}|${p_southEast} east:${t_east}|${p_east}`);
+        let p_southEast = this.priorityMap[t_southEast] || 0;
+        if (this.assetMap) t_east = this.assetMap[t_east];
+        if (this.assetMap) t_south = this.assetMap[t_south];
+        if (this.assetMap) t_southEast = this.assetMap[t_southEast];
+        if (this.idx === 0) console.log(`south:${t_south}|${p_south} southEast:${t_southEast}|${p_southEast} east:${t_east}|${p_east}`);
         // -- east overlap
         if (p_east > priority) {
             let side;
@@ -550,7 +563,7 @@ class $TileOverlay extends Gadget {
 
     $compute() {
         let tag = this.grid.getidx(this.idx);
-        let priority = this.priorityMap[tag];
+        let priority = this.priorityMap[tag] || 0;
         this.$computeTopLeft(priority);
         this.$computeTopRight(priority);
         this.$computeBottomLeft(priority);
@@ -558,6 +571,7 @@ class $TileOverlay extends Gadget {
     }
 
     render(ctx, x=0, y=0, width=0, height=0) {
+        console.log(`render[${this.idx}]: ${x},${y} ${width},${height} ${this.$tl_mask},${this.$tr_mask},${this.$bl_mask},${this.$br_mask}`);
         let hwidth = width/2;
         let hheight = height/2;
         // top left
@@ -840,8 +854,23 @@ class $TileOverlay extends Gadget {
 }
 
 class Autotiler extends Tiler {
+    static {
+        this.$schema('priorityMap', { dflt:() => { return ({}); } });
+        this.$schema('$overlays', { readonly:true, parser:() => [] });
+    }
+
+    setidx(idx, v) {
+        if (idx !== -1 && idx<this.$grid.length) {
+            this.$modifiedIdxs.add(idx);
+            for (const nidx of this.$grid.neighborIdxs(idx)) {
+                this.$modifiedIdxs.add(nidx);
+            }
+            this.$grid.setidx(idx, v);
+        }
+    }
 
     $renderIdx(idx) {
+        console.log(`render: ${idx}`);
         let ij = this.$grid.ijFromIdx(idx);
         let x = ij.x*this.tileSize.x;
         let y = ij.y*this.tileSize.y;
@@ -849,26 +878,35 @@ class Autotiler extends Tiler {
         this.$gridCtx.clearRect(x, y, this.tileSize.x, this.tileSize.y);
         // pull asset
         let tag = this.$grid.getidx(idx);
-        if (this.assetMap) tag = this.assetMap(tag);
-        if (!tag) return;
-        let asset = this.$assetCache.get(idx);
-        // cache hit
-        if (asset) {
-            // validate cache asset still matches grid asset
-            if (asset.tag !== tag) asset = null;
+        if (this.assetMap) tag = this.assetMap[tag];
+        if (tag) {
+            let asset = this.$assetCache.get(idx);
+            // cache hit
+            if (asset) {
+                // validate cache asset still matches grid asset
+                if (asset.tag !== tag) asset = null;
+            }
+            // handle cache miss or invalidated cache
+            if (!asset) {
+                asset = GadgetCtx.assets.get(tag);
+                if (asset) this.$assetCache.set(idx, asset);
+            }
+            // render asset to grid
+            asset.render(this.$gridCtx, x,y, this.tileSize.x, this.tileSize.y);
         }
-        // handle cache miss or invalidated cache
-        if (!asset) {
-            asset = GadgetCtx.assets.get(tag);
-            if (asset) this.$assetCache.set(idx, asset);
+        // render overlay
+        if (!this.$overlays[idx]) {
+            this.$overlays[idx] = new $TileOverlay({
+                idx:idx,
+                grid:this.$grid,
+                assetMap:this.assetMap,
+                priorityMap:this.priorityMap,
+                halfSize:Vect.smult(this.tileSize, .5),
+            });
+        } else {
+            this.$overlays[idx].$compute();
         }
-        // render asset to grid
-        asset.render(this.$gridCtx, x,y, this.tileSize.x, this.tileSize.y);
-        // render overlays
-        // -- top left
-        // -- top right
-        // -- bottom left
-        // -- bottom right
+        this.$overlays[idx].render(this.$gridCtx, x, y, this.tileSize.x, this.tileSize.y);
     }
 
 }

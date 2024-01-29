@@ -16,6 +16,7 @@ import { Text } from '../js/text.js';
 import { TextFormat } from '../js/textFormat.js';
 import { Tiler } from '../js/tiler.js';
 import { SketchMixer } from '../js/randomSketch.js';
+import { Autotiler } from '../js/autotiler.js';
 
 class AssetTest extends Game {
 
@@ -52,6 +53,34 @@ class AssetTest extends Game {
         }),
 
         Rect.xspec({ tag:'test.br', color:'blue', borderColor:'red', border:3, width:16, height:16, fitter:'none', alignx:1, aligny:1 }),
+
+        Rect.xspec({ tag:'one', color:'blue', width:32, height:32, fitter:'none' }),
+        Rect.xspec({ tag:'one.ctl', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
+        Rect.xspec({ tag:'one.t', color:'blue', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
+        Rect.xspec({ tag:'one.ctr', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.r', color:'blue', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
+        Rect.xspec({ tag:'one.l', color:'blue', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
+        Shape.xspec({ tag:'one.jtr', color:'blue', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Shape.xspec({ tag:'one.jtl', color:'blue', border:3, borderColor:'red', verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.cbr', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
+        Rect.xspec({ tag:'one.b', color:'blue', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
+        Shape.xspec({ tag:'one.jbr', color:'blue', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.cbl', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
+        Shape.xspec({ tag:'one.jbl', color:'blue', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
+
+        Rect.xspec({ tag:'two', color:'green', width:32, height:32, fitter:'none' }),
+        Rect.xspec({ tag:'two.ctl', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
+        Rect.xspec({ tag:'two.t', color:'green', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
+        Rect.xspec({ tag:'two.ctr', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.r', color:'green', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
+        Rect.xspec({ tag:'two.l', color:'green', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
+        Shape.xspec({ tag:'two.jtr', color:'green', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Shape.xspec({ tag:'two.jtl', color:'green', border:3, borderColor:'red', verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.cbr', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
+        Rect.xspec({ tag:'two.b', color:'green', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
+        Shape.xspec({ tag:'two.jbr', color:'green', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.cbl', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
+        Shape.xspec({ tag:'two.jbl', color:'green', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
 
     ];
 
@@ -114,16 +143,65 @@ class AssetTest extends Game {
             dbg: { xform: true },
         });
         this.placer(this.bgpanel, view);
-
         new Timer({ttl: 1000, loop: true, cb: () => { 
             if (animator.state === 'on') {
-                //console.log(`animator: ${animator.state}->off`);
                 animator.state = 'off';
             } else {
-                //console.log(`animator: ${animator.state}->off`);
                 animator.state = 'on';
             }
         }});
+    }
+
+    test5() {
+        let tiler = new Tiler({
+            tileSize: {x:16,y:16},
+            gridSize: {x:8,y:8},
+            priorityMap: { one:1, two:2 },
+        });
+        let view = new UiPanel({
+            sketch: tiler,
+            dbg: { xform: true },
+        });
+        this.placer(this.bgpanel, view);
+        tiler._setij(0, 2, 'one.ctl');
+        tiler._setij(1, 2, 'one.t');
+        tiler._setij(2, 2, 'one.jtl');
+        tiler._setij(2, 1, 'one.l');
+        tiler._setij(2, 0, 'one.ctl');
+        tiler._setij(3, 0, 'one.t');
+        tiler._setij(4, 0, 'one.ctr');
+        tiler._setij(4, 1, 'one.r');
+        tiler._setij(4, 2, 'one.jtr');
+        tiler._setij(5, 2, 'one.t');
+        tiler._setij(6, 2, 'one.ctr');
+        tiler._setij(6, 3, 'one.r');
+        tiler._setij(6, 4, 'one.cbr');
+        tiler._setij(5, 4, 'one.b');
+        tiler._setij(4, 4, 'one.jbr');
+        tiler._setij(4, 5, 'one.r');
+        tiler._setij(4, 6, 'one.cbr');
+        tiler._setij(3, 6, 'one.b');
+        tiler._setij(2, 6, 'one.cbl');
+        tiler._setij(2, 5, 'one.l');
+        tiler._setij(2, 4, 'one.jbl');
+        tiler._setij(1, 4, 'one.b');
+        tiler._setij(0, 4, 'one.cbl');
+        tiler._setij(0, 3, 'one.l');
+    }
+
+    test6() {
+        let tiler = new Autotiler({
+            tileSize: {x:32,y:32},
+            gridSize: {x:4,y:4},
+            priorityMap: { one:1, two:2 },
+        });
+        let view = new UiPanel({
+            sketch: tiler,
+            dbg: { xform: true },
+        });
+        this.placer(this.bgpanel, view);
+        tiler._setij(1, 1, 'one');
+        tiler._setij(2, 2, 'two');
     }
 
     async $prepare() {
@@ -137,10 +215,12 @@ class AssetTest extends Game {
         this.bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         this.cvs.adopt(this.bgpanel);
 
-        this.test1();
-        this.test2();
-        this.test3();
-        this.test4();
+        //this.test1();
+        //this.test2();
+        //this.test3();
+        //this.test4();
+        //this.test5();
+        this.test6();
 
         /*
 
