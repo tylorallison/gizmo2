@@ -60,6 +60,7 @@ class UiHorizontalSlider extends UiView {
         let lmouse = this.xform.getLocal(evt.mouse);
         let v = this.$translateMouse(lmouse.x);
         this.value = v;
+        //console.log(`value: ${v} at_modified.listeners ${this.at_modified.$listeners} mark: ${this.at_modified.$listeners.$mark}`);
     }
 
     // METHODS -------------------------------------------------------------
@@ -140,6 +141,7 @@ class UiVerticalSlider extends UiView {
         let lmouse = this.xform.getLocal(evt.mouse);
         let v = this.$translateMouse(lmouse.y);
         this.value = v;
+        //console.log(`value: ${v} at_modified.listeners ${this.at_modified.$listeners}`);
     }
 
     // METHODS -------------------------------------------------------------

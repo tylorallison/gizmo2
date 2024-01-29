@@ -17,12 +17,20 @@ import { UiScroller } from '../js/uiScroller.js';
 import { ImageMedia } from '../js/media.js';
 import { GadgetCtx } from '../js/gadget.js';
 import { Sprite } from '../js/sprite.js';
+import { Tiler } from '../js/tiler.js';
+import { SketchMixer } from '../js/randomSketch.js';
 
 class UITest extends Game {
     static xassets = [
         Sfx.from('../media/sound.mp3', { tag:'test.sound' }),
         //Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, smoothing: false}), }),
+        Rect.xspec({ tag: 'test.rect', joint:'round', color: 'blue', borderColor:'red', border: 3, width: 40, height: 40 }),
         Sprite.xspec({tag: 'test.sprite', smoothing:false, media:ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0}), }),
+        SketchMixer.xspec({ tag:'test.mixer', variations: [
+            Rect.xspec({ joint:'round', color: 'blue', borderColor:'red', border: 3, width: 40, height: 40 }),
+            Rect.xspec({ joint:'round', color: 'green', borderColor:'red', border: 3, width: 40, height: 40 }),
+            Rect.xspec({ joint:'round', color: 'orange', borderColor:'red', border: 3, width: 40, height: 40 }),
+        ]}),
     ];
 
     placer(parent, node) {
@@ -163,12 +171,21 @@ class UITest extends Game {
     }
 
     test11() {
+        let tiler = new Tiler({
+            gridSize: {x:8,y:8},
+        });
+        for (let i=0; i<tiler.$grid.cols; i++) {
+            for (let j=0; j<tiler.$grid.rows; j++) {
+                tiler._setij(i, j, 'test.mixer');
+            }
+        }
         this.placer(this.bgpanel, new UiScroller({
             dbg: { xform:false },
+            mask: true,
             scrollable: new UiPanel({
                 tag: 'panel.11',
-                sketch: GadgetCtx.assets.get('test.sprite', { fitter:'stretch' }),
-                xform: new XForm({ fixedWidth:300, fixedHeight:300 }),
+                sketch: tiler,
+                xform: new XForm({ origx:.5, fixedWidth:200, fixedHeight:200 }),
 
             }),
         }));

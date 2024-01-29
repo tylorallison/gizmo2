@@ -1,7 +1,7 @@
 export { UiScroller };
 
-    import { Asset } from './asset.js';
-    import { Rect } from './rect.js';
+import { Asset } from './asset.js';
+import { Rect } from './rect.js';
 import { UiPanel } from './uiPanel.js';
 import { UiHorizontalSlider, UiVerticalSlider } from './uiSlider.js';
 import { UiView } from './uiView.js';
@@ -50,6 +50,32 @@ class UiScroller extends UiView {
         this.$verticalSliderPanel.adopt(this.$verticalSlider);
         this.adopt(this.$horizontalSliderPanel);
         this.$horizontalSliderPanel.adopt(this.$horizontalSlider);
+
+        this.$verticalSlider.at_modified.listen(this.$on_verticalSlider_modified, this, false, (evt) => (evt.key === 'value'));
+        this.$horizontalSlider.at_modified.listen(this.$on_horizontalSlider_modified, this, false, (evt) => (evt.key === 'value'));
+
+    }
+
+    $on_verticalSlider_modified(evt) {
+        //console.log(`on v modified: ${evt} evt.key === 'value': ${evt.key === 'value'}`);
+        if (this.scrollable instanceof UiView) {
+            let overlap = (this.scrollable.xform.height - this.xform.height);
+            if (overlap > 0) {
+                let y = (.5 - this.$verticalSlider.value) * overlap;
+                this.scrollable.xform.y = y;
+            }
+        }
+    }
+
+    $on_horizontalSlider_modified(evt) {
+        //console.log(`on h modified: ${evt} scrollable: ${this.scrollable} view: ${this.scrollable instanceof UiView}`);
+        if (this.scrollable instanceof UiView) {
+            let overlap = (this.scrollable.xform.width - this.xform.width);
+            if (overlap > 0) {
+                let x = (.5 - this.$horizontalSlider.value) * overlap;
+                this.scrollable.xform.x = x;
+            }
+        }
     }
 
     $subrender(ctx) {
