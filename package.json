@@ -1,0 +1,13 @@
+{
+  "name": "gizmo",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "rollup js/index.js --format iife --name gizmo -o dist/gizmo.js",
+    "mbuild": "rollup js/index.js --format es --name gizmo -o dist/gizmo.mjs",
+    "index": "node indexer.js"
+  },
+  "devDependencies": {
+    "glob": "^8.1.0",
+    "rollup": "^3.15.0"
+  }
+}
