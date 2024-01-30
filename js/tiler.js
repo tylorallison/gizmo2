@@ -8,10 +8,15 @@ import { Vect } from './vect.js';
 class Tiler extends Sketch {
     static {
         this.$schema('gridSize', { order:-1, readonly:true, dflt: () => new Vect({x:10, y:10}) });
-        this.$schema('tileSize', { readonly:true, dflt: () => new Vect({x:32, y:32}) });
+        this.$schema('tileSize', { order:-1, readonly:true, dflt: () => new Vect({x:32, y:32}) });
         this.$schema('assetMap', { readonly:true });
         this.$schema('$grid', { parser: (o) => new GridArray({ cols:o.gridSize.x, rows:o.gridSize.y }) });
-        this.$schema('$gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
+        this.$schema('$gridCanvas', { readonly: true, parser: (o,x) => {
+            let canvas = document.createElement('canvas');
+            canvas.width = o.gridSize.x*o.tileSize.x;
+            canvas.height = o.gridSize.y*o.tileSize.y;
+            return canvas;
+        }});
         this.$schema('$gridCtx', { readonly: true, parser: (o,x) => o.$gridCanvas.getContext('2d') });
         this.$schema('$assetCache', { readonly: true, parser: () => new Map()});
         this.$schema('$modifiedIdxs', { readonly: true, parser: () => new Set()});
