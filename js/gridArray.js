@@ -19,7 +19,7 @@ class GridArray extends Gadget {
     /** @member {string} GridArray#length - length of flat array */
     static { this.$schema('length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
     /** @member {string} GridArray#entries - array storage */
-    static { this.$schema('entries', { readonly: true, parser: (o,x) => x.entries || [] }); }
+    static { this.$schema('entries', { readonly: true, dflt: () => [] }); }
 
     // STATIC METHODS ------------------------------------------------------
 
