@@ -49,6 +49,7 @@ class $GadgetSchemaEntry {
         this.eventable = ('eventable' in spec) ? spec.eventable : true;
         // getter function of format (object, value) => { <function returning final value> };
         this.getter = spec.getter;
+        this.getterStore = ('getterStore' in spec) ? spec.getterStore : true;
         // setter function of format (object, value) => { <function returning final value> };
         this.setter = spec.setter;
         this.readonly = (this.getter) ? true : ('readonly' in spec) ? spec.readonly : false;
@@ -155,7 +156,9 @@ class $GadgetProxyHandler {
         if (key === '$target') return target;
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
         if (sentry && sentry.getter) {
-            target[key] = sentry.getter(proxy, target[key]);
+            let value = sentry.getter(proxy, target[key]);
+            if (sentry.getterStore) target[key] = value;
+            return value;
         }
         return Reflect.get(target, key, proxy);
     }

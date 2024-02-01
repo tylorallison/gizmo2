@@ -17,6 +17,10 @@ import { TextFormat } from '../js/textFormat.js';
 import { Tiler } from '../js/tiler.js';
 import { SketchMixer } from '../js/randomSketch.js';
 import { Autotiler } from '../js/autotiler.js';
+import { Prng } from '../js/prng.js';
+
+const atb = 0;
+const atc = 'red';
 
 class AssetTest extends Game {
 
@@ -52,35 +56,61 @@ class AssetTest extends Game {
             },
         }),
 
-        Rect.xspec({ tag:'test.br', color:'blue', borderColor:'red', border:3, width:16, height:16, fitter:'none', alignx:1, aligny:1 }),
-
         Rect.xspec({ tag:'one', color:'blue', width:32, height:32, fitter:'none' }),
-        Rect.xspec({ tag:'one.ctl', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
-        Rect.xspec({ tag:'one.t', color:'blue', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
-        Rect.xspec({ tag:'one.ctr', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
-        Rect.xspec({ tag:'one.r', color:'blue', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
-        Rect.xspec({ tag:'one.l', color:'blue', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
-        Shape.xspec({ tag:'one.jtr', color:'blue', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
-        Shape.xspec({ tag:'one.jtl', color:'blue', border:3, borderColor:'red', verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
-        Rect.xspec({ tag:'one.cbr', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
-        Rect.xspec({ tag:'one.b', color:'blue', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
-        Shape.xspec({ tag:'one.jbr', color:'blue', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
-        Rect.xspec({ tag:'one.cbl', color:'blue', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
-        Shape.xspec({ tag:'one.jbl', color:'blue', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.ctl', color:'blue', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
+        Rect.xspec({ tag:'one.t', color:'blue', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
+        Rect.xspec({ tag:'one.ctr', color:'blue', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.r', color:'blue', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
+        Rect.xspec({ tag:'one.l', color:'blue', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
+        Shape.xspec({ tag:'one.jtr', color:'blue', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Shape.xspec({ tag:'one.jtl', color:'blue', border:atb, borderColor:atc, verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.cbr', color:'blue', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
+        Rect.xspec({ tag:'one.b', color:'blue', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
+        Shape.xspec({ tag:'one.jbr', color:'blue', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'one.cbl', color:'blue', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
+        Shape.xspec({ tag:'one.jbl', color:'blue', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
 
         Rect.xspec({ tag:'two', color:'green', width:32, height:32, fitter:'none' }),
-        Rect.xspec({ tag:'two.ctl', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
-        Rect.xspec({ tag:'two.t', color:'green', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
-        Rect.xspec({ tag:'two.ctr', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
-        Rect.xspec({ tag:'two.r', color:'green', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
-        Rect.xspec({ tag:'two.l', color:'green', border:3, borderColor:'red', width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
-        Shape.xspec({ tag:'two.jtr', color:'green', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
-        Shape.xspec({ tag:'two.jtl', color:'green', border:3, borderColor:'red', verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
-        Rect.xspec({ tag:'two.cbr', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
-        Rect.xspec({ tag:'two.b', color:'green', border:3, borderColor:'red', width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
-        Shape.xspec({ tag:'two.jbr', color:'green', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
-        Rect.xspec({ tag:'two.cbl', color:'green', border:3, borderColor:'red', width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
-        Shape.xspec({ tag:'two.jbl', color:'green', border:3, borderColor:'red', verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.ctl', color:'green', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
+        Rect.xspec({ tag:'two.t', color:'green', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
+        Rect.xspec({ tag:'two.ctr', color:'green', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.r', color:'green', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
+        Rect.xspec({ tag:'two.l', color:'green', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
+        Shape.xspec({ tag:'two.jtr', color:'green', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Shape.xspec({ tag:'two.jtl', color:'green', border:atb, borderColor:atc, verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.cbr', color:'green', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
+        Rect.xspec({ tag:'two.b', color:'green', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
+        Shape.xspec({ tag:'two.jbr', color:'green', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'two.cbl', color:'green', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
+        Shape.xspec({ tag:'two.jbl', color:'green', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
+
+        Rect.xspec({ tag:'three', color:'purple', width:32, height:32, fitter:'none' }),
+        Rect.xspec({ tag:'three.ctl', color:'purple', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
+        Rect.xspec({ tag:'three.t', color:'purple', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
+        Rect.xspec({ tag:'three.ctr', color:'purple', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'three.r', color:'purple', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
+        Rect.xspec({ tag:'three.l', color:'purple', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
+        Shape.xspec({ tag:'three.jtr', color:'purple', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Shape.xspec({ tag:'three.jtl', color:'purple', border:atb, borderColor:atc, verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'three.cbr', color:'purple', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
+        Rect.xspec({ tag:'three.b', color:'purple', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
+        Shape.xspec({ tag:'three.jbr', color:'purple', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'three.cbl', color:'purple', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
+        Shape.xspec({ tag:'three.jbl', color:'purple', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
+
+        Rect.xspec({ tag:'four', color:'orange', width:32, height:32, fitter:'none' }),
+        Rect.xspec({ tag:'four.ctl', color:'orange', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:1 }),
+        Rect.xspec({ tag:'four.t', color:'orange', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:1 }),
+        Rect.xspec({ tag:'four.ctr', color:'orange', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'four.r', color:'orange', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:0, aligny:.5 }),
+        Rect.xspec({ tag:'four.l', color:'orange', border:atb, borderColor:atc, width:8, height:16, fitter:'none', alignx:1, aligny:.5 }),
+        Shape.xspec({ tag:'four.jtr', color:'orange', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:8,y:0}, {x:8,y:8}, {x:16, y:8}, {x:16, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Shape.xspec({ tag:'four.jtl', color:'orange', border:atb, borderColor:atc, verts: [{x:8,y:0}, {x:16,y:0}, {x:16,y:16}, {x:0, y:16}, {x:0, y:8}, {x:8,y:8}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'four.cbr', color:'orange', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:0, aligny:0 }),
+        Rect.xspec({ tag:'four.b', color:'orange', border:atb, borderColor:atc, width:16, height:8, fitter:'none', alignx:.5, aligny:0 }),
+        Shape.xspec({ tag:'four.jbr', color:'orange', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:8}, {x:8, y:8}, {x:8, y:16}, {x:0,y:16}], fitter:'none', alignx:0, aligny:1 }),
+        Rect.xspec({ tag:'four.cbl', color:'orange', border:atb, borderColor:atc, width:8, height:8, fitter:'none', alignx:1, aligny:0 }),
+        Shape.xspec({ tag:'four.jbl', color:'orange', border:atb, borderColor:atc, verts: [{x:0,y:0}, {x:16,y:0}, {x:16,y:16}, {x:8, y:16}, {x:8, y:8}, {x:0,y:8}], fitter:'none', alignx:0, aligny:1 }),
 
     ];
 
@@ -133,7 +163,6 @@ class AssetTest extends Game {
                 tiler._setij(i, j, 'test.mixer');
             }
         }
-        tiler._setij(7, 7, 'test.br');
     }
 
     test4() {
@@ -156,7 +185,6 @@ class AssetTest extends Game {
         let tiler = new Tiler({
             tileSize: {x:16,y:16},
             gridSize: {x:8,y:8},
-            priorityMap: { one:1, two:2 },
         });
         let view = new UiPanel({
             sketch: tiler,
@@ -192,20 +220,37 @@ class AssetTest extends Game {
     test6() {
         let tiler = new Autotiler({
             tileSize: {x:32,y:32},
-            gridSize: {x:4,y:4},
-            priorityMap: { one:1, two:2 },
+            gridSize: {x:8,y:8},
+            priorityMap: { one:1, two:2, three:3, four:4 },
         });
         let view = new UiPanel({
             sketch: tiler,
             dbg: { xform: true },
         });
         this.placer(this.bgpanel, view);
-        tiler._setij(1, 1, 'one');
-        tiler._setij(2, 2, 'two');
+        for (let i=0; i<tiler.gridSize.x; i++) {
+            for (let j=0; j<tiler.gridSize.y; j++) {
+                tiler._setij(i, j, Prng.choose(['one','two','three']));
+            }
+        }
+        //tiler.at_modified.listen((evt) => console.log(`tiler modified: ${Fmt.ofmt(evt)}`));
+        let last = -1;
+        let lastIdx = -1;
+        new Timer({ttl: 1000, loop: true, cb: () => { 
+            if (lastIdx !== -1) {
+                //console.log(`restore ${lastIdx} => ${last}`);
+                tiler.setidx(lastIdx, last);
+            }
+            let idx = Prng.rangeInt(0, tiler.$grid.length-1);
+            last = tiler.getidx(idx);
+            lastIdx = idx;
+            //console.log(`set ${idx} => four`);
+            tiler.setidx(idx, 'four');
+        }});
     }
 
     async $prepare() {
-        this.size = 600;
+        this.size = 800;
         this.maxCols = 4;
         this.maxRows = 4;
         this.col = 0;
@@ -215,11 +260,11 @@ class AssetTest extends Game {
         this.bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         this.cvs.adopt(this.bgpanel);
 
-        //this.test1();
-        //this.test2();
-        //this.test3();
-        //this.test4();
-        //this.test5();
+        this.test1();
+        this.test2();
+        this.test3();
+        this.test4();
+        this.test5();
         this.test6();
 
         /*

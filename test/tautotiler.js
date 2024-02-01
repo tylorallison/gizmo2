@@ -84,26 +84,35 @@ describe('an autotiler overlay tile', () => {
         return sketch.tag;
     }
 
+    // xx ^^    xx ..
+    // xx ^^    xx ..
+    //   
+    // XX oo    .. /.
+    // XX oo    .. ..
+
     // XXX|XXX    |    XXX|       |XXX XXX|    XXX|XXX    |XXX XXX|XXX
     // ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+---
     // XXX|??? XXX|#r#    |cbr    |#b# XXX|#r#    |#b# XXX|jbr XXX|jbr
     for (const test of [
-        { data:[undefined,undefined,undefined,'one'], x_mask:0, x_west:null, x_northWest:null, x_north:null },
-        { data:[undefined,undefined,'four','one'], x_mask:WEST, x_west:'four.r', x_northWest:null, x_north:null },
-        { data:['four',undefined,undefined,'one'], x_mask:NORTHWEST, x_west:null, x_northWest:'four.cbr', x_north:null },
-        { data:[undefined,'four',undefined,'one'], x_mask:NORTH, x_west:null, x_northWest:null, x_north:'four.b' },
-        { data:['two',undefined,'four','one'], x_mask:NORTHWEST_WEST, x_west:'four.r', x_northWest:'two.cbr', x_north:null },
-        { data:['four',undefined,'two','one'], x_mask:WEST_NORTHWEST, x_west:'two.r', x_northWest:'four.r', x_north:null },
-        { data:['two','four',undefined,'one'], x_mask:NORTHWEST_NORTH, x_west:null, x_northWest:'two.cbr', x_north:'four.b' },
-        { data:['four','two',undefined,'one'], x_mask:NORTH_NORTHWEST, x_west:null, x_northWest:'four.b', x_north:'two.b' },
-        { data:[null,'two','four','one'], x_mask:NORTH_WEST, x_west:'four.jbr', x_northWest:null, x_north:'two.b' },
-        { data:[null,'four','two','one'], x_mask:WEST_NORTH, x_west:'two.r', x_northWest:null, x_north:'four.jbr' },
-        { data:['two','three','four','one'], x_mask:NORTHWEST_NORTH_WEST, x_west:'four.jbr', x_northWest:'two.cbr', x_north:'three.b' },
-        { data:['two','four','three','one'], x_mask:NORTHWEST_WEST_NORTH, x_west:'three.r', x_northWest:'two.cbr', x_north:'four.jbr' },
-        { data:['three','four','two','one'], x_mask:WEST_NORTHWEST_NORTH, x_west:'two.r', x_northWest:'three.r', x_north:'four.jbr' },
-        { data:['four','three','two','one'], x_mask:WEST_NORTH_NORTHWEST, x_west:'two.r', x_northWest:'four.jbr', x_north:'three.jbr' },
-        { data:['four','two','three','one'], x_mask:NORTH_WEST_NORTHWEST, x_west:'three.jbr', x_northWest:'four.jbr', x_north:'two.b' },
-        { data:['three','two','four','one'], x_mask:NORTH_NORTHWEST_WEST, x_west:'four.jbr', x_northWest:'three.b', x_north:'two.b' },
+        { data:[null,null,null,'one'], x_mask:0, x_west:null, x_northWest:null, x_north:null },
+        { data:[null,null,'four','one'], x_mask:WEST, x_west:'four.r', x_northWest:null, x_north:null },
+        { data:['four',null,null,'one'], x_mask:NORTHWEST, x_west:null, x_northWest:'four.cbr', x_north:null },
+        { data:[null,'four',null,'one'], x_mask:NORTH, x_west:null, x_northWest:null, x_north:'four.b' },
+        { data:['two',null,'four','one'], x_mask:NORTHWEST_WEST, x_west:'four.r', x_northWest:'two.cbr', x_north:null },
+        { data:['four',null,'two','one'], x_mask:WEST_NORTHWEST, x_west:'two.r', x_northWest:'four.cbr', x_north:null },
+        { data:['four',null,'four','one'], x_mask:NORTHWEST_WEST, x_west:'four.r', x_northWest:'four.r', x_north:null },
+        { data:['two','four',null,'one'], x_mask:NORTHWEST_NORTH, x_west:null, x_northWest:'two.cbr', x_north:'four.b' },
+        { data:['four','two',null,'one'], x_mask:NORTH_NORTHWEST, x_west:null, x_northWest:'four.cbr', x_north:'two.b' },
+        { data:['four','four',null,'one'], x_mask:NORTH_NORTHWEST, x_west:null, x_northWest:'four.b', x_north:'four.b' },
+        { data:[null,'two','four','one'], x_mask:NORTH_WEST, x_west:'four.r', x_northWest:null, x_north:'two.b' },
+        { data:[null,'four','two','one'], x_mask:WEST_NORTH, x_west:'two.r', x_northWest:null, x_north:'four.b' },
+        { data:[null,'four','four','one'], x_mask:NORTH_WEST, x_west:'four.jbr', x_northWest:null, x_north:'four.jbr' },
+        { data:['two','three','four','one'], x_mask:NORTHWEST_NORTH_WEST, x_west:'four.r', x_northWest:'two.cbr', x_north:'three.b' },
+        { data:['two','four','three','one'], x_mask:NORTHWEST_WEST_NORTH, x_west:'three.r', x_northWest:'two.cbr', x_north:'four.b' },
+        { data:['three','four','two','one'], x_mask:WEST_NORTHWEST_NORTH, x_west:'two.r', x_northWest:'three.cbr', x_north:'four.b' },
+        { data:['four','three','two','one'], x_mask:WEST_NORTH_NORTHWEST, x_west:'two.r', x_northWest:'four.cbr', x_north:'three.b' },
+        { data:['four','two','three','one'], x_mask:NORTH_WEST_NORTHWEST, x_west:'three.r', x_northWest:'four.cbr', x_north:'two.b' },
+        { data:['three','two','four','one'], x_mask:NORTH_NORTHWEST_WEST, x_west:'four.r', x_northWest:'three.cbr', x_north:'two.b' },
     ]) {
         it(`top left test for ${test.data}`, ()=>{
             let grid = new GridArray({rows:2,cols:2,entries:test.data});
@@ -119,22 +128,25 @@ describe('an autotiler overlay tile', () => {
     // ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+---
     // ???|XXX #l#|XXX cbl|    #b#|    #l#|XXX #b#|    jbl|XXX jbl|XXX
     for (const test of [
-        { data:[undefined,undefined,'one',undefined], x_mask:0, x_east:null, x_northEast:null, x_north:null },
-        { data:[undefined,undefined,'one','four'], x_mask:EAST, x_east:'four.l', x_northEast:null, x_north:null },
-        { data:[undefined,'four','one',undefined], x_mask:NORTHEAST, x_east:null, x_northEast:'four.cbl', x_north:null },
-        { data:['four',undefined,'one',undefined], x_mask:NORTH, x_east:null, x_northEast:null, x_north:'four.b' },
-        { data:[undefined,'two','one','four'], x_mask:NORTHEAST_EAST, x_east:'four.l', x_northEast:'two.cbl', x_north:null },
-        { data:[undefined,'four','one','two'], x_mask:EAST_NORTHEAST, x_east:'two.l', x_northEast:'four.l', x_north:null },
-        { data:['four','two','one',undefined], x_mask:NORTHEAST_NORTH, x_east:null, x_northEast:'two.cbl', x_north:'four.b' },
-        { data:['two','four','one',undefined], x_mask:NORTH_NORTHEAST, x_east:null, x_northEast:'four.b', x_north:'two.b' },
-        { data:['two',undefined,'one','four'], x_mask:NORTH_EAST, x_east:'four.jbl', x_northEast:null, x_north:'two.b' },
-        { data:['four',undefined,'one','two'], x_mask:EAST_NORTH, x_east:'two.l', x_northEast:null, x_north:'four.jbl' },
-        { data:['three','two','one','four'], x_mask:NORTHEAST_NORTH_EAST, x_east:'four.jbl', x_northEast:'two.cbl', x_north:'three.b' },
-        { data:['four','two','one','three'], x_mask:NORTHEAST_EAST_NORTH, x_east:'three.l', x_northEast:'two.cbl', x_north:'four.jbl' },
-        { data:['four','three','one','two'], x_mask:EAST_NORTHEAST_NORTH, x_east:'two.l', x_northEast:'three.l', x_north:'four.jbl' },
-        { data:['three','four','one','two'], x_mask:EAST_NORTH_NORTHEAST, x_east:'two.l', x_northEast:'four.jbl', x_north:'three.jbl' },
-        { data:['two','four','one','three'], x_mask:NORTH_EAST_NORTHEAST, x_east:'three.jbl', x_northEast:'four.jbl', x_north:'two.b' },
-        { data:['two','three','one','four'], x_mask:NORTH_NORTHEAST_EAST, x_east:'four.jbl', x_northEast:'three.b', x_north:'two.b' },
+        { data:[null,null,'one',null], x_mask:0, x_east:null, x_northEast:null, x_north:null },
+        { data:[null,null,'one','four'], x_mask:EAST, x_east:'four.l', x_northEast:null, x_north:null },
+        { data:[null,'four','one',null], x_mask:NORTHEAST, x_east:null, x_northEast:'four.cbl', x_north:null },
+        { data:['four',null,'one',null], x_mask:NORTH, x_east:null, x_northEast:null, x_north:'four.b' },
+        { data:[null,'two','one','four'], x_mask:NORTHEAST_EAST, x_east:'four.l', x_northEast:'two.cbl', x_north:null },
+        { data:[null,'four','one','two'], x_mask:EAST_NORTHEAST, x_east:'two.l', x_northEast:'four.cbl', x_north:null },
+        { data:[null,'four','one','four'], x_mask:NORTHEAST_EAST, x_east:'four.l', x_northEast:'four.l', x_north:null },
+        { data:['four','two','one',null], x_mask:NORTHEAST_NORTH, x_east:null, x_northEast:'two.cbl', x_north:'four.b' },
+        { data:['two','four','one',null], x_mask:NORTH_NORTHEAST, x_east:null, x_northEast:'four.cbl', x_north:'two.b' },
+        { data:['four','four','one',null], x_mask:NORTH_NORTHEAST, x_east:null, x_northEast:'four.b', x_north:'four.b' },
+        { data:['two',null,'one','four'], x_mask:NORTH_EAST, x_east:'four.l', x_northEast:null, x_north:'two.b' },
+        { data:['four',null,'one','two'], x_mask:EAST_NORTH, x_east:'two.l', x_northEast:null, x_north:'four.b' },
+        { data:['four',null,'one','four'], x_mask:NORTH_EAST, x_east:'four.jbl', x_northEast:null, x_north:'four.jbl' },
+        { data:['three','two','one','four'], x_mask:NORTHEAST_NORTH_EAST, x_east:'four.l', x_northEast:'two.cbl', x_north:'three.b' },
+        { data:['four','two','one','three'], x_mask:NORTHEAST_EAST_NORTH, x_east:'three.l', x_northEast:'two.cbl', x_north:'four.b' },
+        { data:['four','three','one','two'], x_mask:EAST_NORTHEAST_NORTH, x_east:'two.l', x_northEast:'three.cbl', x_north:'four.b' },
+        { data:['three','four','one','two'], x_mask:EAST_NORTH_NORTHEAST, x_east:'two.l', x_northEast:'four.cbl', x_north:'three.b' },
+        { data:['two','four','one','three'], x_mask:NORTH_EAST_NORTHEAST, x_east:'three.l', x_northEast:'four.cbl', x_north:'two.b' },
+        { data:['two','three','one','four'], x_mask:NORTH_NORTHEAST_EAST, x_east:'four.l', x_northEast:'three.cbl', x_north:'two.b' },
     ]) {
         it(`top right test for ${test.data}`, ()=>{
             let grid = new GridArray({rows:2,cols:2,entries:test.data});
@@ -150,22 +162,27 @@ describe('an autotiler overlay tile', () => {
     // ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+---
     // XXX|??? XXX|#r#    |cbr    |#b# XXX|#r#    |#b# XXX|jbr XXX|jbr
     for (const test of [
-        { data:[undefined,undefined,undefined,'one'], x_mask:0, x_west:null, x_southWest:null, x_south:null },
-        { data:['four','one',undefined,undefined], x_mask:WEST, x_west:'four.r', x_southWest:null, x_south:null },
-        { data:[undefined,'one','four',undefined], x_mask:SOUTHWEST, x_west:null, x_southWest:'four.ctr', x_south:null },
-        { data:[undefined,'one',undefined,'four'], x_mask:SOUTH, x_west:null, x_southWest:null, x_south:'four.t' },
-        { data:['four','one','two',undefined], x_mask:SOUTHWEST_WEST, x_west:'four.r', x_southWest:'two.ctr', x_south:null },
-        { data:['two','one','four',undefined], x_mask:WEST_SOUTHWEST, x_west:'two.r', x_southWest:'four.r', x_south:null },
-        { data:[undefined,'one','two','four'], x_mask:SOUTHWEST_SOUTH, x_west:null, x_southWest:'two.ctr', x_south:'four.t' },
-        { data:[undefined,'one','four','two'], x_mask:SOUTH_SOUTHWEST, x_west:null, x_southWest:'four.t', x_south:'two.t' },
-        { data:['four','one',undefined,'two'], x_mask:SOUTH_WEST, x_west:'four.jtr', x_southWest:null, x_south:'two.t' },
-        { data:['two','one',undefined,'four'], x_mask:WEST_SOUTH, x_west:'two.r', x_southWest:null, x_south:'four.jtr' },
-        { data:['four','one','two','three'], x_mask:SOUTHWEST_SOUTH_WEST, x_west:'four.jtr', x_southWest:'two.ctr', x_south:'three.t' },
-        { data:['three','one','two','four'], x_mask:SOUTHWEST_WEST_SOUTH, x_west:'three.r', x_southWest:'two.ctr', x_south:'four.jtr' },
-        { data:['two','one','three','four'], x_mask:WEST_SOUTHWEST_SOUTH, x_west:'two.r', x_southWest:'three.r', x_south:'four.jtr' },
-        { data:['two','one','four','three'], x_mask:WEST_SOUTH_SOUTHWEST, x_west:'two.r', x_southWest:'four.jtr', x_south:'three.jtr' },
-        { data:['three','one','four','two'], x_mask:SOUTH_WEST_SOUTHWEST, x_west:'three.jtr', x_southWest:'four.jtr', x_south:'two.t' },
-        { data:['four','one','three','two'], x_mask:SOUTH_SOUTHWEST_WEST, x_west:'four.jtr', x_southWest:'three.t', x_south:'two.t' },
+        { data:[null,'one',null,null], x_mask:0, x_west:null, x_southWest:null, x_south:null },
+        { data:['four','one',null,null], x_mask:WEST, x_west:'four.r', x_southWest:null, x_south:null },
+        { data:[null,'one','four',null], x_mask:SOUTHWEST, x_west:null, x_southWest:'four.ctr', x_south:null },
+        { data:[null,'one',null,'four'], x_mask:SOUTH, x_west:null, x_southWest:null, x_south:'four.t' },
+        { data:['four','one','two',null], x_mask:SOUTHWEST_WEST, x_west:'four.r', x_southWest:'two.ctr', x_south:null },
+        { data:['two','one','four',null], x_mask:WEST_SOUTHWEST, x_west:'two.r', x_southWest:'four.ctr', x_south:null },
+        { data:['four','one','four',null], x_mask:SOUTHWEST_WEST, x_west:'four.r', x_southWest:'four.r', x_south:null },
+        { data:[null,'one','two','four'], x_mask:SOUTHWEST_SOUTH, x_west:null, x_southWest:'two.ctr', x_south:'four.t' },
+        { data:[null,'one','four','two'], x_mask:SOUTH_SOUTHWEST, x_west:null, x_southWest:'four.ctr', x_south:'two.t' },
+        { data:[null,'one','four','four'], x_mask:SOUTH_SOUTHWEST, x_west:null, x_southWest:'four.t', x_south:'four.t' },
+        { data:['four','one',null,'two'], x_mask:SOUTH_WEST, x_west:'four.r', x_southWest:null, x_south:'two.t' },
+        { data:['two','one',null,'four'], x_mask:WEST_SOUTH, x_west:'two.r', x_southWest:null, x_south:'four.t' },
+        { data:['four','one',null,'four'], x_mask:SOUTH_WEST, x_west:'four.jtr', x_southWest:null, x_south:'four.jtr' },
+        { data:['four','one','two','three'], x_mask:SOUTHWEST_SOUTH_WEST, x_west:'four.r', x_southWest:'two.ctr', x_south:'three.t' },
+        { data:['three','one','two','four'], x_mask:SOUTHWEST_WEST_SOUTH, x_west:'three.r', x_southWest:'two.ctr', x_south:'four.t' },
+        { data:['two','one','three','four'], x_mask:WEST_SOUTHWEST_SOUTH, x_west:'two.r', x_southWest:'three.ctr', x_south:'four.t' },
+        { data:['two','one','four','three'], x_mask:WEST_SOUTH_SOUTHWEST, x_west:'two.r', x_southWest:'four.ctr', x_south:'three.t' },
+        { data:['three','one','four','two'], x_mask:SOUTH_WEST_SOUTHWEST, x_west:'three.r', x_southWest:'four.ctr', x_south:'two.t' },
+        { data:['four','one','three','two'], x_mask:SOUTH_SOUTHWEST_WEST, x_west:'four.r', x_southWest:'three.ctr', x_south:'two.t' },
+        // extra test
+        { data:['two','one','four','two'], x_mask:SOUTH_WEST_SOUTHWEST, x_west:'two.jtr', x_southWest:'four.ctr', x_south:'two.jtr' },
     ]) {
         it(`bottom left test for ${test.data}`, ()=>{
             let grid = new GridArray({rows:2,cols:2,entries:test.data});
@@ -181,22 +198,24 @@ describe('an autotiler overlay tile', () => {
     // ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+--- ---+---
     // XXX|XXX    |       |XXX XXX|       |XXX XXX|XXX XXX|    XXX|XXX
     for (const test of [
-        { data:['one',undefined,undefined,undefined], x_mask:0, x_east:null, x_southEast:null, x_south:null },
-        { data:['one','four',undefined,undefined], x_mask:EAST, x_east:'four.l', x_southEast:null, x_south:null },
-        { data:['one',undefined,undefined,'four'], x_mask:SOUTHEAST, x_east:null, x_southEast:'four.ctl', x_south:null },
-        { data:['one',undefined,'four',undefined], x_mask:SOUTH, x_east:null, x_southEast:null, x_south:'four.t' },
-        { data:['one','four',undefined,'two'], x_mask:SOUTHEAST_EAST, x_east:'four.l', x_southEast:'two.ctl', x_south:null },
-        { data:['one','two',undefined,'four'], x_mask:EAST_SOUTHEAST, x_east:'two.l', x_southEast:'four.l', x_south:null },
-        { data:['one',undefined,'four','two'], x_mask:SOUTHEAST_SOUTH, x_east:null, x_southEast:'two.ctl', x_south:'four.t' },
-        { data:['one',undefined,'two','four'], x_mask:SOUTH_SOUTHEAST, x_east:null, x_southEast:'four.t', x_south:'two.t' },
-        { data:['one','four','two',undefined], x_mask:SOUTH_EAST, x_east:'four.jtl', x_southEast:null, x_south:'two.t' },
-        { data:['one','two','four',undefined], x_mask:EAST_SOUTH, x_east:'two.l', x_southEast:null, x_south:'four.jtl' },
-        { data:['one','four','three','two'], x_mask:SOUTHEAST_SOUTH_EAST, x_east:'four.jtl', x_southEast:'two.ctl', x_south:'three.t' },
-        { data:['one','three','four','two'], x_mask:SOUTHEAST_EAST_SOUTH, x_east:'three.l', x_southEast:'two.ctl', x_south:'four.jtl' },
-        { data:['one','two','four','three'], x_mask:EAST_SOUTHEAST_SOUTH, x_east:'two.l', x_southEast:'three.l', x_south:'four.jtl' },
-        { data:['one','two','three','four'], x_mask:EAST_SOUTH_SOUTHEAST, x_east:'two.l', x_southEast:'four.jtl', x_south:'three.jtl' },
-        { data:['one','three','two','four'], x_mask:SOUTH_EAST_SOUTHEAST, x_east:'three.jtl', x_southEast:'four.jtl', x_south:'two.t' },
-        { data:['one','four','two','three'], x_mask:SOUTH_SOUTHEAST_EAST, x_east:'four.jtl', x_southEast:'three.t', x_south:'two.t' },
+        { data:['one',null,null,null], x_mask:0, x_east:null, x_southEast:null, x_south:null },
+        { data:['one','four',null,null], x_mask:EAST, x_east:'four.l', x_southEast:null, x_south:null },
+        { data:['one',null,null,'four'], x_mask:SOUTHEAST, x_east:null, x_southEast:'four.ctl', x_south:null },
+        { data:['one',null,'four',null], x_mask:SOUTH, x_east:null, x_southEast:null, x_south:'four.t' },
+        { data:['one','four',null,'two'], x_mask:SOUTHEAST_EAST, x_east:'four.l', x_southEast:'two.ctl', x_south:null },
+        { data:['one','two',null,'four'], x_mask:EAST_SOUTHEAST, x_east:'two.l', x_southEast:'four.ctl', x_south:null },
+        { data:['one','four',null,'four'], x_mask:SOUTHEAST_EAST, x_east:'four.l', x_southEast:'four.l', x_south:null },
+        { data:['one',null,'four','two'], x_mask:SOUTHEAST_SOUTH, x_east:null, x_southEast:'two.ctl', x_south:'four.t' },
+        { data:['one',null,'two','four'], x_mask:SOUTH_SOUTHEAST, x_east:null, x_southEast:'four.ctl', x_south:'two.t' },
+        { data:['one','four','two',null], x_mask:SOUTH_EAST, x_east:'four.l', x_southEast:null, x_south:'two.t' },
+        { data:['one','two','four',null], x_mask:EAST_SOUTH, x_east:'two.l', x_southEast:null, x_south:'four.t' },
+        { data:['one','four','four',null], x_mask:SOUTH_EAST, x_east:'four.jtl', x_southEast:null, x_south:'four.jtl' },
+        { data:['one','four','three','two'], x_mask:SOUTHEAST_SOUTH_EAST, x_east:'four.l', x_southEast:'two.ctl', x_south:'three.t' },
+        { data:['one','three','four','two'], x_mask:SOUTHEAST_EAST_SOUTH, x_east:'three.l', x_southEast:'two.ctl', x_south:'four.t' },
+        { data:['one','two','four','three'], x_mask:EAST_SOUTHEAST_SOUTH, x_east:'two.l', x_southEast:'three.ctl', x_south:'four.t' },
+        { data:['one','two','three','four'], x_mask:EAST_SOUTH_SOUTHEAST, x_east:'two.l', x_southEast:'four.ctl', x_south:'three.t' },
+        { data:['one','three','two','four'], x_mask:SOUTH_EAST_SOUTHEAST, x_east:'three.l', x_southEast:'four.ctl', x_south:'two.t' },
+        { data:['one','four','two','three'], x_mask:SOUTH_SOUTHEAST_EAST, x_east:'four.l', x_southEast:'three.ctl', x_south:'two.t' },
     ]) {
         it(`bottom right test for ${test.data}`, ()=>{
             let grid = new GridArray({rows:2,cols:2,entries:test.data});

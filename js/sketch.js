@@ -98,6 +98,7 @@ class Sketch extends Asset {
 
     // METHODS -------------------------------------------------------------
     $fitSketch(ctx, x, y, width, height) {
+        if (this.tag === 'knob') console.log(`fit[${this.fitter}]: ${x},${y} ${width},${height}`);
         switch (this.fitter) {
             case 'none': {
                 let xo = Math.round((width - this.width)*this.alignx);
@@ -118,6 +119,14 @@ class Sketch extends Asset {
                         adjustedHeight = width / desiredRatio;
                         y += Math.round((height-adjustedHeight)*this.aligny);
                     }
+                } else if (width) {
+                    let desiredRatio = (this.width && this.height) ? this.width/this.height : 1;
+                    adjustedHeight = width / desiredRatio;
+                    y += Math.round((height-adjustedHeight)*this.aligny);
+                } else if (height) {
+                    let desiredRatio = (this.width && this.height) ? this.width/this.height : 1;
+                    adjustedWidth = height * desiredRatio;
+                    x += Math.round((width-adjustedWidth)*this.alignx);
                 }
                 this.$render(ctx, x, y, adjustedWidth, adjustedHeight);
                 break;

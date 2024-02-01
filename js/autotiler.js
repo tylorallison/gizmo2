@@ -136,10 +136,11 @@ class $TileOverlay extends Gadget {
         if (this.assetMap) t_west = this.assetMap[t_west];
         if (this.assetMap) t_north = this.assetMap[t_north];
         if (this.assetMap) t_northWest = this.assetMap[t_northWest];
+        //console.log(`north:${t_north}|${p_north} northWest:${t_northWest}|${p_northWest} west:${t_west}|${p_west}`);
         // -- west overlap
         if (p_west > priority) {
             let side;
-            if (p_west >= p_north) {
+            if (p_west === p_north) {
                 side = 'jbr';
             } else {
                 side = 'r';
@@ -151,11 +152,11 @@ class $TileOverlay extends Gadget {
         // -- northWest overlap
         if (p_northWest > priority) {
             let side;
-            if ((p_northWest >= p_west) && (p_northWest >= p_north)) {
+            if ((p_northWest === p_west) && (p_northWest === p_north)) {
                 side = 'jbr';
-            } else if (p_northWest >= p_north) {
+            } else if (p_northWest === p_north) {
                 side = 'b';
-            } else if (p_northWest >= p_west) {
+            } else if (p_northWest === p_west) {
                 side = 'r';
             } else {
                 side = 'cbr'
@@ -167,7 +168,7 @@ class $TileOverlay extends Gadget {
         // -- north overlap
         if (p_north > priority) {
             let side;
-            if (p_north >= p_west) {
+            if (p_north === p_west) {
                 side = 'jbr';
             } else {
                 side = 'b';
@@ -178,41 +179,39 @@ class $TileOverlay extends Gadget {
         }
         // compute order
         if (this.$tl_north && this.$tl_northWest && this.$tl_west) {
-            if ((p_north < p_northWest) &&
-                (p_north < p_west)) {
-                if (p_northWest < p_west) {
+            if ((p_north <= p_northWest) && (p_north <= p_west)) {
+                if (p_northWest <= p_west) {
                     this.$tl_mask = NORTH_NORTHWEST_WEST;
                 } else {
                     this.$tl_mask = NORTH_WEST_NORTHWEST;
                 }
-            } else if ((p_west < p_northWest) &&
-                       (p_west < p_north)) {
-                if (p_northWest < p_north) {
+            } else if ((p_west <= p_northWest) && (p_west <= p_north)) {
+                if (p_northWest <= p_north) {
                     this.$tl_mask = WEST_NORTHWEST_NORTH;
                 } else {
                     this.$tl_mask = WEST_NORTH_NORTHWEST;
                 }
             } else {
-                if (p_west < p_north) {
+                if (p_west <= p_north) {
                     this.$tl_mask = NORTHWEST_WEST_NORTH;
                 } else {
                     this.$tl_mask = NORTHWEST_NORTH_WEST;
                 }
             }
         } else if (this.$tl_north && this.$tl_northWest) {
-            if (p_north < p_northWest) {
+            if (p_north <= p_northWest) {
                 this.$tl_mask = NORTH_NORTHWEST;
             } else {
                 this.$tl_mask = NORTHWEST_NORTH;
             }
         } else if (this.$tl_northWest && this.$tl_west) {
-            if (p_northWest < p_west) {
+            if (p_northWest <= p_west) {
                 this.$tl_mask = NORTHWEST_WEST;
             } else {
                 this.$tl_mask = WEST_NORTHWEST;
             }
         } else if (this.$tl_north && this.$tl_west) {
-            if (p_north < p_west) {
+            if (p_north <= p_west) {
                 this.$tl_mask = NORTH_WEST;
             } else {
                 this.$tl_mask = WEST_NORTH;
@@ -250,7 +249,7 @@ class $TileOverlay extends Gadget {
         // -- east overlap
         if (p_east > priority) {
             let side;
-            if (p_east >= p_north) {
+            if (p_east === p_north) {
                 side = 'jbl';
             } else {
                 side = 'l';
@@ -262,11 +261,11 @@ class $TileOverlay extends Gadget {
         // -- northEast overlap
         if (p_northEast > priority) {
             let side;
-            if ((p_northEast >= p_east) && (p_northEast >= p_north)) {
+            if ((p_northEast === p_east) && (p_northEast === p_north)) {
                 side = 'jbl';
-            } else if (p_northEast >= p_north) {
+            } else if (p_northEast === p_north) {
                 side = 'b';
-            } else if (p_northEast >= p_east) {
+            } else if (p_northEast === p_east) {
                 side = 'l';
             } else {
                 side = 'cbl'
@@ -278,7 +277,7 @@ class $TileOverlay extends Gadget {
         // -- north overlap
         if (p_north > priority) {
             let side;
-            if (p_north >= p_east) {
+            if (p_north === p_east) {
                 side = 'jbl';
             } else {
                 side = 'b';
@@ -289,41 +288,39 @@ class $TileOverlay extends Gadget {
         }
         // compute order
         if (this.$tr_north && this.$tr_northEast && this.$tr_east) {
-            if ((p_north < p_northEast) &&
-                (p_north < p_east)) {
-                if (p_northEast < p_east) {
+            if ((p_north <= p_northEast) && (p_north <= p_east)) {
+                if (p_northEast <= p_east) {
                     this.$tr_mask = NORTH_NORTHEAST_EAST;
                 } else {
                     this.$tr_mask = NORTH_EAST_NORTHEAST;
                 }
-            } else if ((p_east < p_northEast) &&
-                       (p_east < p_north)) {
-                if (p_northEast < p_north) {
+            } else if ((p_east <= p_northEast) && (p_east <= p_north)) {
+                if (p_northEast <= p_north) {
                     this.$tr_mask = EAST_NORTHEAST_NORTH;
                 } else {
                     this.$tr_mask = EAST_NORTH_NORTHEAST;
                 }
             } else {
-                if (p_east < p_north) {
+                if (p_east <= p_north) {
                     this.$tr_mask = NORTHEAST_EAST_NORTH;
                 } else {
                     this.$tr_mask = NORTHEAST_NORTH_EAST;
                 }
             }
         } else if (this.$tr_north && this.$tr_northEast) {
-            if (p_north < p_northEast) {
+            if (p_north <= p_northEast) {
                 this.$tr_mask = NORTH_NORTHEAST;
             } else {
                 this.$tr_mask = NORTHEAST_NORTH;
             }
         } else if (this.$tr_northEast && this.$tr_east) {
-            if (p_northEast < p_east) {
+            if (p_northEast <= p_east) {
                 this.$tr_mask = NORTHEAST_EAST;
             } else {
                 this.$tr_mask = EAST_NORTHEAST;
             }
         } else if (this.$tr_north && this.$tr_east) {
-            if (p_north < p_east) {
+            if (p_north <= p_east) {
                 this.$tr_mask = NORTH_EAST;
             } else {
                 this.$tr_mask = EAST_NORTH;
@@ -361,7 +358,7 @@ class $TileOverlay extends Gadget {
         // -- west overlap
         if (p_west > priority) {
             let side;
-            if (p_west >= p_south) {
+            if (p_west === p_south) {
                 side = 'jtr';
             } else {
                 side = 'r';
@@ -373,11 +370,11 @@ class $TileOverlay extends Gadget {
         // -- southWest overlap
         if (p_southWest > priority) {
             let side;
-            if ((p_southWest >= p_west) && (p_southWest >= p_south)) {
+            if ((p_southWest === p_west) && (p_southWest === p_south)) {
                 side = 'jtr';
-            } else if (p_southWest >= p_south) {
+            } else if (p_southWest === p_south) {
                 side = 't';
-            } else if (p_southWest >= p_west) {
+            } else if (p_southWest === p_west) {
                 side = 'r';
             } else {
                 side = 'ctr'
@@ -389,7 +386,7 @@ class $TileOverlay extends Gadget {
         // -- south overlap
         if (p_south > priority) {
             let side;
-            if (p_south >= p_west) {
+            if (p_south === p_west) {
                 side = 'jtr';
             } else {
                 side = 't';
@@ -400,41 +397,39 @@ class $TileOverlay extends Gadget {
         }
         // compute order
         if (this.$bl_south && this.$bl_southWest && this.$bl_west) {
-            if ((p_south < p_southWest) &&
-                (p_south < p_west)) {
-                if (p_southWest < p_west) {
+            if ((p_south <= p_southWest) && (p_south <= p_west)) {
+                if (p_southWest <= p_west) {
                     this.$bl_mask = SOUTH_SOUTHWEST_WEST;
                 } else {
                     this.$bl_mask = SOUTH_WEST_SOUTHWEST;
                 }
-            } else if ((p_west < p_southWest) &&
-                       (p_west < p_south)) {
-                if (p_southWest < p_south) {
+            } else if ((p_west <= p_southWest) && (p_west <= p_south)) {
+                if (p_southWest <= p_south) {
                     this.$bl_mask = WEST_SOUTHWEST_SOUTH;
                 } else {
                     this.$bl_mask = WEST_SOUTH_SOUTHWEST;
                 }
             } else {
-                if (p_west < p_south) {
+                if (p_west <= p_south) {
                     this.$bl_mask = SOUTHWEST_WEST_SOUTH;
                 } else {
                     this.$bl_mask = SOUTHWEST_SOUTH_WEST;
                 }
             }
         } else if (this.$bl_south && this.$bl_southWest) {
-            if (p_south < p_southWest) {
+            if (p_south <= p_southWest) {
                 this.$bl_mask = SOUTH_SOUTHWEST;
             } else {
                 this.$bl_mask = SOUTHWEST_SOUTH;
             }
         } else if (this.$bl_southWest && this.$bl_west) {
-            if (p_southWest < p_west) {
+            if (p_southWest <= p_west) {
                 this.$bl_mask = SOUTHWEST_WEST;
             } else {
                 this.$bl_mask = WEST_SOUTHWEST;
             }
         } else if (this.$bl_south && this.$bl_west) {
-            if (p_south < p_west) {
+            if (p_south <= p_west) {
                 this.$bl_mask = SOUTH_WEST;
             } else {
                 this.$bl_mask = WEST_SOUTH;
@@ -468,11 +463,11 @@ class $TileOverlay extends Gadget {
         if (this.assetMap) t_east = this.assetMap[t_east];
         if (this.assetMap) t_south = this.assetMap[t_south];
         if (this.assetMap) t_southEast = this.assetMap[t_southEast];
-        if (this.idx === 0) console.log(`south:${t_south}|${p_south} southEast:${t_southEast}|${p_southEast} east:${t_east}|${p_east}`);
+        // console.log(`south:${t_south}|${p_south} southEast:${t_southEast}|${p_southEast} east:${t_east}|${p_east}`);
         // -- east overlap
         if (p_east > priority) {
             let side;
-            if (p_east >= p_south) {
+            if (p_east === p_south) {
                 side = 'jtl';
             } else {
                 side = 'l';
@@ -484,11 +479,11 @@ class $TileOverlay extends Gadget {
         // -- southEast overlap
         if (p_southEast > priority) {
             let side;
-            if ((p_southEast >= p_east) && (p_southEast >= p_south)) {
+            if ((p_southEast === p_east) && (p_southEast === p_south)) {
                 side = 'jtl';
-            } else if (p_southEast >= p_south) {
+            } else if (p_southEast === p_south) {
                 side = 't';
-            } else if (p_southEast >= p_east) {
+            } else if (p_southEast === p_east) {
                 side = 'l';
             } else {
                 side = 'ctl'
@@ -500,7 +495,7 @@ class $TileOverlay extends Gadget {
         // -- south overlap
         if (p_south > priority) {
             let side;
-            if (p_south >= p_east) {
+            if (p_south === p_east) {
                 side = 'jtl';
             } else {
                 side = 't';
@@ -511,41 +506,39 @@ class $TileOverlay extends Gadget {
         }
         // compute order
         if (this.$br_south && this.$br_southEast && this.$br_east) {
-            if ((p_south < p_southEast) &&
-                (p_south < p_east)) {
-                if (p_southEast < p_east) {
+            if ((p_south <= p_southEast) && (p_south <= p_east)) {
+                if (p_southEast <= p_east) {
                     this.$br_mask = SOUTH_SOUTHEAST_EAST;
                 } else {
                     this.$br_mask = SOUTH_EAST_SOUTHEAST;
                 }
-            } else if ((p_east < p_southEast) &&
-                       (p_east < p_south)) {
-                if (p_southEast < p_south) {
+            } else if ((p_east <= p_southEast) && (p_east <= p_south)) {
+                if (p_southEast <= p_south) {
                     this.$br_mask = EAST_SOUTHEAST_SOUTH;
                 } else {
                     this.$br_mask = EAST_SOUTH_SOUTHEAST;
                 }
             } else {
-                if (p_east < p_south) {
+                if (p_east <= p_south) {
                     this.$br_mask = SOUTHEAST_EAST_SOUTH;
                 } else {
                     this.$br_mask = SOUTHEAST_SOUTH_EAST;
                 }
             }
         } else if (this.$br_south && this.$br_southEast) {
-            if (p_south < p_southEast) {
+            if (p_south <= p_southEast) {
                 this.$br_mask = SOUTH_SOUTHEAST;
             } else {
                 this.$br_mask = SOUTHEAST_SOUTH;
             }
         } else if (this.$br_southEast && this.$br_east) {
-            if (p_southEast < p_east) {
+            if (p_southEast <= p_east) {
                 this.$br_mask = SOUTHEAST_EAST;
             } else {
                 this.$br_mask = EAST_SOUTHEAST;
             }
         } else if (this.$br_south && this.$br_east) {
-            if (p_south < p_east) {
+            if (p_south <= p_east) {
                 this.$br_mask = SOUTH_EAST;
             } else {
                 this.$br_mask = EAST_SOUTH;
@@ -571,7 +564,7 @@ class $TileOverlay extends Gadget {
     }
 
     render(ctx, x=0, y=0, width=0, height=0) {
-        console.log(`render[${this.idx}]: ${x},${y} ${width},${height} ${this.$tl_mask},${this.$tr_mask},${this.$bl_mask},${this.$br_mask}`);
+        //console.log(`render[${this.idx}]: ${x},${y} ${width},${height} ${this.$tl_mask},${this.$tr_mask},${this.$bl_mask},${this.$br_mask}`);
         let hwidth = width/2;
         let hheight = height/2;
         // top left
@@ -856,11 +849,13 @@ class $TileOverlay extends Gadget {
 class Autotiler extends Tiler {
     static {
         this.$schema('priorityMap', { dflt:() => { return ({}); } });
-        this.$schema('$overlays', { readonly:true, parser:() => [] });
+        this.$schema('$overlays', { readonly:true, link:true, parser:() => [] });
     }
 
     setidx(idx, v) {
         if (idx !== -1 && idx<this.$grid.length) {
+            if (this.$grid.getidx(idx) === v) return;
+            this.$modified = true;
             this.$modifiedIdxs.add(idx);
             for (const nidx of this.$grid.neighborIdxs(idx)) {
                 this.$modifiedIdxs.add(nidx);
@@ -870,7 +865,7 @@ class Autotiler extends Tiler {
     }
 
     $renderIdx(idx) {
-        console.log(`render: ${idx}`);
+        //console.log(`render: ${idx}`);
         let ij = this.$grid.ijFromIdx(idx);
         let x = ij.x*this.tileSize.x;
         let y = ij.y*this.tileSize.y;

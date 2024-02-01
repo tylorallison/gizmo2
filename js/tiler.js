@@ -20,6 +20,7 @@ class Tiler extends Sketch {
         this.$schema('$gridCtx', { readonly: true, parser: (o,x) => o.$gridCanvas.getContext('2d') });
         this.$schema('$assetCache', { readonly: true, parser: () => new Map()});
         this.$schema('$modifiedIdxs', { readonly: true, parser: () => new Set()});
+        this.$schema('$modified', { dflt:false });
         this.$schema('width', { getter: (o) => o.tileSize.x*o.gridSize.x });
         this.$schema('height', { getter: (o) => o.tileSize.y*o.gridSize.y });
     }
@@ -52,6 +53,7 @@ class Tiler extends Sketch {
     $renderModified() {
         let modified = Array.from(this.$modifiedIdxs);
         this.$modifiedIdxs.clear();
+        this.$modified = false;
         for (const idx of modified) {
             this.$renderIdx(idx);
         }
@@ -59,7 +61,7 @@ class Tiler extends Sketch {
 
     $subrender(ctx, x=0, y=0, width=0, height=0) {
         // render modified indices
-        this.$renderModified();
+        if (this.$modified) this.$renderModified();
         // translate/scale
         let ctxXform = ctx.getTransform();
         if (x || y) ctx.translate(x, y);
@@ -94,6 +96,8 @@ class Tiler extends Sketch {
     }
     setidx(idx, v) {
         if (idx !== -1 && idx<this.$grid.length) {
+            if (this.$grid.getidx(idx) === v) return;
+            this.$modified = true;
             this.$modifiedIdxs.add(idx);
             this.$grid.setidx(idx, v);
         }
