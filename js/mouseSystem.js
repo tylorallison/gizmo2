@@ -43,7 +43,7 @@ class MouseSystem extends System {
     // EVENT HANDLERS ------------------------------------------------------
     $on_clicked(sevt) {
         // capture event data...
-        let data = { tag:'mouseclicked', old_x: this.position.x, old_y: this.position.y, x: sevt.offsetX, y: sevt.offsetY, }
+        let data = { tag:'mouseclicked', old: this.position.copy(), mouse: new Vect({x:sevt.offsetX, y:sevt.offsetY}) };
         // update mouse state
         this.position.x = sevt.offsetX;
         this.position.y = sevt.offsetY;
@@ -55,7 +55,7 @@ class MouseSystem extends System {
 
     $on_moved(sevt) {
         // capture event data...
-        let data = { tag:'mousemoved', old_x: this.position.x, old_y: this.position.y, x: sevt.offsetX, y: sevt.offsetY, }
+        let data = { tag:'mousemoved', old: this.position.copy(), mouse: new Vect({x:sevt.offsetX, y:sevt.offsetY}) };
         // update mouse state
         this.position.x = sevt.offsetX;
         this.position.y = sevt.offsetY;
@@ -93,7 +93,9 @@ class MouseSystem extends System {
             if (e.at_unhovered) e.at_unhovered.trigger({ mouse:this.position });
             if (this.dbg) console.log(`${this} mouse unhovered: ${e}`);
         }
-        if (e.pressed && (!contains || !this.pressed)) {
+        // FIXME
+        //if (e.pressed && (!contains || !this.pressed)) {
+        if (e.pressed && (!this.pressed)) {
             e.pressed = false;
             if (e.at_unpressed) e.at_unpressed.trigger({ mouse:this.position });
             if (this.dbg) console.log(`${this} mouse unpressed: ${e}`);

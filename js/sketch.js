@@ -98,7 +98,6 @@ class Sketch extends Asset {
 
     // METHODS -------------------------------------------------------------
     $fitSketch(ctx, x, y, width, height) {
-        if (this.tag === 'knob') console.log(`fit[${this.fitter}]: ${x},${y} ${width},${height}`);
         switch (this.fitter) {
             case 'none': {
                 let xo = Math.round((width - this.width)*this.alignx);

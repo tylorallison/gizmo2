@@ -39,7 +39,7 @@ class XForm extends Gadget {
         this.$schema('bottom', {dflt: 0});
         // origin
         // -- origin or pivot point of local transform, in percent of current grip dimensions
-        // -- applicable when borders are not overlapping
+        // -- applicable when grips are not overlapping
         this.$schema('origx', { dflt: .5 });
         this.$schema('origy', { dflt: .5 });
         // -- scale to apply for this transform relative to parent
