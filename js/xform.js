@@ -3,6 +3,7 @@ export { XForm };
 import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
 import { Gadget } from './gadget.js';
+import { Mathf } from './math.js';
 import { Vect } from './vect.js';
 
 class XForm extends Gadget {
@@ -92,35 +93,41 @@ class XForm extends Gadget {
     // grip positions relative to parent bounds/rect
     get gripLeft() {
         let p = this.parent;
-        if (p) return Math.round(p.minx + (p.width*this.left));
+        //if (p) return Math.round(p.minx + (p.width*this.left));
+        if (p) return p.minx + (p.width*this.left);
         return 0;
     }
 
     get gripRight() {
         let p = this.parent;
-        if (p) return Math.round(p.maxx - (p.width*this.right));
+        //if (p) return Math.round(p.maxx - (p.width*this.right));
+        if (p) return p.maxx - (p.width*this.right);
         return 0;
     }
     get gripTop() {
         let p = this.parent;
-        if (p) return Math.round(p.miny + (p.height*this.top));
+        //if (p) return Math.round(p.miny + (p.height*this.top));
+        if (p) return p.miny + (p.height*this.top);
         return 0;
     }
     get gripBottom() {
         let p = this.parent;
-        if (p) return Math.round(p.maxy - (p.height*this.bottom));
+        //if (p) return Math.round(p.maxy - (p.height*this.bottom));
+        if (p) return p.maxy - (p.height*this.bottom);
         return 0;
     }
 
     // grip dimensions in pixels
     get gripWidth() {
         let p = this.parent;
-        if (p) return Math.round(p.maxx - (p.width*this.right)) - Math.round(p.minx + (p.width*this.left));
+        //if (p) return Math.round(p.maxx - (p.width*this.right)) - Math.round(p.minx + (p.width*this.left));
+        if (p) return (p.maxx - (p.width*this.right)) - (p.minx + (p.width*this.left));
         return 0;
     }
     get gripHeight() {
         let p = this.parent;
-        if (p) return Math.round(p.maxy - (p.height*this.bottom)) - Math.round(p.miny + (p.height*this.top));
+        //if (p) return Math.round(p.maxy - (p.height*this.bottom)) - Math.round(p.miny + (p.height*this.top));
+        if (p) return (p.maxy - (p.height*this.bottom)) - (p.miny + (p.height*this.top));
         return 0;
     }
 
@@ -128,23 +135,27 @@ class XForm extends Gadget {
     get deltax() {
         let gl = this.gripLeft;
         let gr = this.gripRight;
-        if (gl === gr) {
+        //if (gl === gr) {
+        if (Mathf.approx(gl, gr)) {
             return gl + this.x;
         } else {
             let left = gl + this.gripOffsetLeft;
             let right = gr - this.gripOffsetRight;
-            return left + Math.round((right-left)*this.origx);
+            //return left + Math.round((right-left)*this.origx);
+            return left + ((right-left)*this.origx);
         }
     }
     get deltay() {
         let gt = this.gripTop;
         let gb = this.gripBottom;
-        if (gt === gb) {
+        //if (gt === gb) {
+        if (Mathf.approx(gt, gb)) {
             return gt + this.y;
         } else {
             let top = gt + this.gripOffsetTop;
             let bottom = gb - this.gripOffsetBottom;
-            return top + Math.round((bottom-top)*this.origy);
+            //return top + Math.round((bottom-top)*this.origy);
+            return top + ((bottom-top)*this.origy);
         }
     }
 
@@ -183,8 +194,10 @@ class XForm extends Gadget {
 
     computeBounds() {
         let minx=0, miny=0, width=0, height=0;
-        if (this.gripLeft === this.gripRight) {
-            minx = Math.round(-this.fixedWidth*this.origx);
+        //if (this.gripLeft === this.gripRight) {
+        if (Mathf.approx(this.gripLeft, this.gripRight)) {
+            //minx = Math.round(-this.fixedWidth*this.origx);
+            minx = (-this.fixedWidth*this.origx);
             width = this.fixedWidth;
         } else {
             let left = this.gripLeft + this.gripOffsetLeft;
@@ -192,8 +205,10 @@ class XForm extends Gadget {
             let right = this.gripRight - this.gripOffsetRight;
             width = right - left;
         }
-        if (this.gripTop === this.gripBottom) {
-            miny = Math.round(-this.fixedHeight*this.origy);
+        //if (this.gripTop === this.gripBottom) {
+        if (Mathf.approx(this.gripTop, this.gripBottom)) {
+            //miny = Math.round(-this.fixedHeight*this.origy);
+            miny = (-this.fixedHeight*this.origy);
             height = this.fixedHeight;
         } else {
             let top = this.gripTop + this.gripOffsetTop;
@@ -211,7 +226,8 @@ class XForm extends Gadget {
                 if (width && height) {
                     if (currentRatio>desiredRatio) {
                         let adjustedWidth = height * desiredRatio;
-                        minx += Math.round((width-adjustedWidth)*this.origx);
+                        //minx += Math.round((width-adjustedWidth)*this.origx);
+                        minx += ((width-adjustedWidth)*this.origx);
                         width = adjustedWidth;
                     }
                 }
@@ -220,7 +236,8 @@ class XForm extends Gadget {
                 if (width && height) {
                     if (currentRatio<desiredRatio) {
                         let adjustedHeight = width / desiredRatio;
-                        miny += Math.round((height-adjustedHeight)*this.origy);
+                        //miny += Math.round((height-adjustedHeight)*this.origy);
+                        miny += ((height-adjustedHeight)*this.origy);
                         height = adjustedHeight;
                     }
                 }
@@ -265,7 +282,8 @@ class XForm extends Gadget {
         if (deltax||deltay) localPos.sub({x:deltax, y:deltay});
         if (this.angle) localPos.rotate(-this.angle, true);
         if (this.scalex !== 1|| this.scaley !== 1) localPos.div({x:this.scalex, y:this.scaley});
-        return localPos.round();
+        //return localPos.round();
+        return localPos;
     }
 
     /**
@@ -282,7 +300,8 @@ class XForm extends Gadget {
         if (deltax || deltay) worldPos.add({x:deltax, y:deltay});
         // apply parent transform (if any)
         if (chain && this.parent) worldPos = this.parent.getWorld(worldPos);
-        return worldPos.round();
+        //return worldPos.round();
+        return worldPos;
     }
 
     renderGrip(ctx, x, y, which='tl', opts={}) {

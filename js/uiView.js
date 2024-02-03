@@ -13,7 +13,6 @@ import { XForm } from './xform.js';
 class UiView extends Gizmo {
 
     // STATIC VARIABLES ----------------------------------------------------
-    //static { this.prototype.mousable = true; }
     static { this.prototype.renderable = true; }
 
     // SCHEMA --------------------------------------------------------------
