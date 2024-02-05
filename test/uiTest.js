@@ -136,35 +136,29 @@ class UITest extends Game {
     }
 
     test10() {
-        this.placer(this.bgpanel, new UiPanel({
-            tag: 'panel.10',
-            //mask: true,
-            children: [
-                new UiText({
-                    tag: 'text.10',
-                    text: UiText.rword,
-                    xform: new XForm({right:.1}),
-                    $text: new Text({fitter:'none', alignx:0, aligny:0, wrap:true, fmt: new TextFormat({color:'red', size:20})}),
-                    dbg: { xform:false },
-                }),
-                new UiVerticalSlider({
-                    tag: 'slider.10',
-                    xform: new XForm({left:.9}),
-                }),
-            ],
+        let text = new Text({
+            text:UiText.rword, 
+            fitter:'none', 
+            alignx:0, 
+            aligny:0, 
+            wrap:true, 
+            wrapWidth:150,
+            fmt: new TextFormat({color:'red', size:20})
+        });
+        this.placer(this.bgpanel, new UiScroller({
+            dbg: { xform:false },
+            mask: true,
+            scrollY: 1,
+            fitToSketchHeight:true,
+            scrollable: text,
         }));
-        let uitext = this.bgpanel.find((v) => v.tag === 'text.10');
-        let uislider = this.bgpanel.find((v) => v.tag === 'slider.10');
-        uislider.at_modified.listen((evt) => {
-            uitext.$text.aligny = uislider.value;
-        }, this, false, (evt) => (evt.key === 'value') );
         let words = 1;
         new Timer({ loop:true, ttl: 500, cb: () => { 
             if (words > 20) {
-                uitext.text = UiText.rword;
+                text.text = UiText.rword;
                 words = 1;
             } else {
-                uitext.text = `${uitext.text} ` + UiText.rword;
+                text.text = `${text.text} ` + UiText.rword;
                 words += 1;
             }
         }});
@@ -182,19 +176,29 @@ class UITest extends Game {
         this.placer(this.bgpanel, new UiScroller({
             dbg: { xform:false },
             mask: true,
+            width:200,
+            height:200,
             scrollable: new UiPanel({
                 tag: 'panel.11',
                 sketch: tiler,
-                xform: new XForm({ origx:.5, fixedWidth:200, fixedHeight:200 }),
-
             }),
         }));
     }
 
     test12() {
+        let tiler = new Tiler({
+            gridSize: {x:8,y:8},
+        });
+        for (let i=0; i<tiler.$grid.cols; i++) {
+            for (let j=0; j<tiler.$grid.rows; j++) {
+                tiler._setij(i, j, 'test.mixer');
+            }
+        }
         this.placer(this.bgpanel, new UiScroller({
             dbg: { xform:false },
-            scrollable: new Text({ text:UiText.rword, fitter:'none', alignx:0, aligny:0, wrap:true, fmt: new TextFormat({color:'red', size:20})}),
+            mask: true,
+            fitToSketch:true,
+            scrollable: tiler,
         }));
     }
 
@@ -211,8 +215,8 @@ class UITest extends Game {
 
         //this.test8();
         //this.test9();
-        //this.test10();
-        this.test11();
+        this.test10();
+        //this.test11();
         //this.test12();
 
         /*

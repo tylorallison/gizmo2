@@ -31,6 +31,7 @@ class MouseSystem extends System {
         this.canvas.addEventListener('click', this.$on_clicked);
         this.canvas.addEventListener('mousedown', this.$on_pressed);
         this.canvas.addEventListener('mouseup', this.$on_unpressed);
+        this.canvas.addEventListener('wheel', this.$on_wheeled);
     }
     destroy() {
         this.canvas.removeEventListener('mousemove', this.$on_moved);
@@ -41,6 +42,11 @@ class MouseSystem extends System {
     }
 
     // EVENT HANDLERS ------------------------------------------------------
+    $on_wheeled(sevt) {
+        console.log(`on wheeled: ${Fmt.ofmt(sevt)}`);
+        sevt.preventDefault();
+    }
+
     $on_clicked(sevt) {
         // capture event data...
         let data = { tag:'mouseclicked', old: this.position.copy(), mouse: new Vect({x:sevt.offsetX, y:sevt.offsetY}) };

@@ -143,6 +143,7 @@ class $TextLine extends Gadget {
 class Text extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
+        this.$schema('wrapWidth', { order:-1, dflt:0 });
         this.$schema('parsable', { order:-1, readonly:true, dflt:true });
         this.$schema('fmt', { order:-1, dflt: () => new TextFormat()});
         this.$schema('text', { dflt: 'default text' });
@@ -150,13 +151,12 @@ class Text extends Sketch {
         this.$schema('leadingPct', { readonly:true, dflt:.1 });
         this.$schema('fitter', { dflt: 'ratio' });
         this.$schema('wrap', { readonly:true, dflt:false });
-        this.$schema('wrapWidth', { dflt:0 });
         this.$schema('$savedWidth', { eventable:false, dflt:0 });
         this.$schema('$ftext', { eventable:false, parser: () => '' });
         this.$schema('$fmts', { eventable:false, parser: () => [] });
         this.$schema('$bounds', { eventable:false, parser: () => [] });
         this.$schema('$lines', { eventable:false, parser: () => [] });
-        this.$schema('width', { eventable:false, dflt:0 });
+        this.$schema('width', { eventable:false, dflt:(o,x) => o.wrapWidth });
         this.$schema('height', { eventable:false, dflt:0 });
 
         this.$schema('cursorOn', { dflt:false });

@@ -1,6 +1,7 @@
 export { UiScroller };
 
 import { Asset } from './asset.js';
+import { Mathf } from './math.js';
 import { Rect } from './rect.js';
 import { UiPanel } from './uiPanel.js';
 import { UiHorizontalSlider, UiVerticalSlider } from './uiSlider.js';
@@ -14,11 +15,50 @@ class UiScroller extends UiView {
             xform.parent = o.xform;
             return xform;
         }});
+
         this.$schema('horizontalSliderXForm', { order:-2, readonly:true, parser: (o,x) => {
             let xform = (x.horizontalSliderXForm) ? x.horizontalSliderXForm : new XForm({ top:.9, right:.1 });
             xform.parent = o.xform;
             return xform;
         }});
+
+        // modifiable internal scrollable xform properties
+        this.$schema('width', { order:-1, dflt:0, setter: (o,v) => {
+            if (o.$scrollable) {
+                if (v) {
+                    o.$scrollable.xform.fixedWidth = v;
+                } else {
+                    o.$scrollable.xform.fixedWidth = o.xform.width;
+                }
+            }
+            return v;
+        }});
+        this.$schema('height', { order:-1, dflt:0, setter: (o,v) => {
+            if (o.$scrollable) {
+                if (v) {
+                    o.$scrollable.xform.fixedHeight = v;
+                } else {
+                    o.$scrollable.xform.fixedHeight = o.xform.height;
+                }
+            }
+            return v;
+        }});
+        this.$schema('origx', { order:-1, dflt:.5, setter: (o,v) => {
+            if (o.$scrollable) o.$scrollable.xform.origx = v;
+            return v;
+        }});
+        this.$schema('origy', { order:-1, dflt:.5, setter: (o,v) => {
+            if (o.$scrollable) o.$scrollable.xform.origy = v;
+            return v;
+        }});
+        this.$schema('scrollX', { order:-1, readonly:true, dflt: .5 });
+        this.$schema('scrollY', { order:-1, readonly:true, dflt: .5 });
+
+        this.$schema('minScroll', { readonly:true, dflt: .1 });
+        this.$schema('maxScroll', { readonly:true, dflt: .9 });
+        this.$schema('fitToSketchWidth', { readonly:true, dflt: false });
+        this.$schema('fitToSketchHeight', { readonly:true, dflt: false });
+
         this.$schema('$verticalSliderPanel', { order:-1, readonly:true, parser: (o,x) => {
             let view = new UiPanel({
                 xform:o.verticalSliderXForm,
@@ -27,7 +67,7 @@ class UiScroller extends UiView {
             });
             return view;
         }});
-        this.$schema('$verticalSlider', { readonly:true, parser: (o,x) => new UiVerticalSlider({}) });
+        this.$schema('$verticalSlider', { readonly:true, parser: (o,x) => new UiVerticalSlider({ value:o.scrollY }) });
         this.$schema('$horizontalSliderPanel', { order:-1, readonly:true, parser: (o,x) => {
             let view = new UiPanel({
                 xform:o.horizontalSliderXForm,
@@ -36,55 +76,117 @@ class UiScroller extends UiView {
             });
             return view;
         }});
-        this.$schema('$horizontalSlider', { readonly:true, parser: (o,x) => new UiHorizontalSlider({}) });
+        this.$schema('$horizontalSlider', { readonly:true, parser: (o,x) => new UiHorizontalSlider({value:o.scrollY}) });
 
         this.$schema('autohide', { dflt:true });
-        this.$schema('scrollable', { link:true, dflt: (o,x) => new Rect({ color:'rgba(127,127,127,.5', width:100, height:100, fitter:'none'}) });
+        // the internal scrollable panel
+        this.$schema('$scrollable', { readonly:true, parser: (o,x) => new UiPanel({
+            sketch: null,
+            xform: new XForm({
+                grip:.5, 
+                origx:o.origx, 
+                origy:o.origy, 
+                fixedWidth:o.width||o.xform.width, 
+                fixedHeight:o.height||o.xform.height
+            }),
+        })});
+        // a sketch or a view that will act as the scrollable area.  
+        // -- A view will be made a child of an internal scrollable panel, a
+        // -- A sketch will override the default internal panel's sketch
+        this.$schema('scrollable', { readonly:true, dflt: (o,x) => new Rect({ color:'rgba(127,127,127,.5', width:100, height:100, fitter:'none'}) });
 
     }
 
     $cpost(spec) {
         super.$cpost(spec);
-        console.log(`panel: ${this.$verticalSliderPanel}`);
+        // "adopt" scrollable region
+        this.adopt(this.$scrollable);
+        if (this.scrollable) {
+            if (this.scrollable instanceof UiView) {
+                this.$scrollable.adopt(this.scrollable);
+            } else if (this.scrollable instanceof Asset) {
+                this.$scrollable.sketch = this.scrollable;
+            }
+        }
+        // adopt sliders
         this.adopt(this.$verticalSliderPanel);
         this.$verticalSliderPanel.adopt(this.$verticalSlider);
         this.adopt(this.$horizontalSliderPanel);
         this.$horizontalSliderPanel.adopt(this.$horizontalSlider);
-
+        // setup event handlers
         this.$verticalSlider.at_modified.listen(this.$on_verticalSlider_modified, this, false, (evt) => (evt.key === 'value'));
         this.$horizontalSlider.at_modified.listen(this.$on_horizontalSlider_modified, this, false, (evt) => (evt.key === 'value'));
+    }
 
+    $on_linkModified(evt, key) {
+        super.$on_linkModified(evt, key);
+        if (key.toString().startsWith('xform')) {
+            if (!this.width) this.$scrollable.xform.fixedWidth = this.xform.width;
+            if (!this.height) this.$scrollable.xform.fixedHeight = this.xform.height;
+        }
     }
 
     $on_verticalSlider_modified(evt) {
         //console.log(`on v modified: ${evt} evt.key === 'value': ${evt.key === 'value'}`);
-        if (this.scrollable instanceof UiView) {
-            let overlap = (this.scrollable.xform.height - this.xform.height);
-            if (overlap > 0) {
-                let y = (.5 - this.$verticalSlider.value) * overlap;
-                this.scrollable.xform.y = y;
-            }
+        let overlap = (this.$scrollable.xform.height - this.xform.height);
+        if (overlap > 0) {
+            let y = (.5 - this.$verticalSlider.value) * overlap;
+            this.$scrollable.xform.y = y;
         }
     }
 
     $on_horizontalSlider_modified(evt) {
         //console.log(`on h modified: ${evt} scrollable: ${this.scrollable} view: ${this.scrollable instanceof UiView}`);
-        if (this.scrollable instanceof UiView) {
-            let overlap = (this.scrollable.xform.width - this.xform.width);
-            if (overlap > 0) {
-                let x = (.5 - this.$horizontalSlider.value) * overlap;
-                this.scrollable.xform.x = x;
-            }
+        let overlap = (this.$scrollable.xform.width - this.xform.width);
+        if (overlap > 0) {
+            let x = (.5 - this.$horizontalSlider.value) * overlap;
+            this.$scrollable.xform.x = x;
         }
     }
 
-    $subrender(ctx) {
-        if (this.scrollable) {
-            if (this.scrollable instanceof Asset) {
-                this.scrollable.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
-            } else if (this.scrollable instanceof UiView) {
-                this.scrollable.render(ctx);
+    $compute_scrollsize() {
+        // width
+        let sizex = this.xform.width/this.$scrollable.xform.width;
+        sizex = Mathf.clamp(sizex, this.minScroll, this.maxScroll);
+        this.$horizontalSlider.knobPct = sizex;
+        if (this.xform.width >= this.$scrollable.xform.width) {
+            if (this.autohide) {
+                this.$horizontalSlider.active = false;
+                this.$horizontalSlider.visible = false;
             }
+            this.$scrollable.xform.x = 0;
+        } else {
+            this.$horizontalSlider.active = true;
+            this.$horizontalSlider.visible = true;
+            let overlap = (this.$scrollable.xform.width - this.xform.width);
+            let x = (.5 - this.$horizontalSlider.value) * overlap;
+            this.$scrollable.xform.x = x;
+        }
+        // height
+        let sizey = this.xform.height/this.$scrollable.xform.height;
+        sizey = Mathf.clamp(sizey, this.minScroll, this.maxScroll);
+        this.$verticalSlider.knobPct = sizey;
+        if (this.xform.height >= this.$scrollable.xform.height) {
+            if (this.autohide) {
+                this.$verticalSlider.active = false;
+                this.$verticalSlider.visible = false;
+            }
+            this.$scrollable.xform.y = 0;
+        } else {
+            this.$verticalSlider.active = true;
+            this.$verticalSlider.visible = true;
+            let overlap = (this.$scrollable.xform.height - this.xform.height);
+            let y = (.5 - this.$verticalSlider.value) * overlap;
+            this.$scrollable.xform.y = y;
+        }
+
+    }
+
+    $subrender(ctx) {
+        this.$compute_scrollsize();
+        if (this.$scrollable.sketch) {
+            if (this.fitToSketchWidth) this.$scrollable.xform.fixedWidth = this.$scrollable.sketch.width;
+            if (this.fitToSketchHeight) this.$scrollable.xform.fixedHeight = this.$scrollable.sketch.height;
         }
     }
 

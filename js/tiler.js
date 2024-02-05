@@ -1,5 +1,6 @@
 export { Tiler };
 
+    import { EvtEmitter } from './evt.js';
 import { GadgetCtx } from './gadget.js';
 import { GridArray } from './gridArray.js';
 import { Sketch } from './sketch.js';
