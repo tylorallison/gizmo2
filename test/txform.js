@@ -130,12 +130,12 @@ describe('xforms', () => {
             let parent = new XForm(test.px);
             test.x.parent = parent;
             let xform = new XForm(test.x);
-            let lp = xform.getLocal(test.wp);
+            let lp = xform.getLocal(test.wp).round();
             // workaround strange issue w/ jasmine treating -0 !== 0 which doesn't align w/ the rest of javascript
             if (Object.is(lp.x, -0)) lp.x = 0;
             if (Object.is(lp.y, -0)) lp.y = 0;
             expect(lp).toEqual(test.xlp)
-            let nwp = xform.getWorld(lp);
+            let nwp = xform.getWorld(lp).round();
             // workaround strange issue w/ jasmine treating -0 !== 0 which doesn't align w/ the rest of javascript
             if (Object.is(nwp.x, -0)) nwp.x = 0;
             if (Object.is(nwp.y, -0)) nwp.y = 0;

@@ -10,6 +10,18 @@ class $GadgetDefaults {
         this.$clsKeyMap = (map) ? map : {}
     }
 
+    assign(dflts) {
+        if (!dflts) return;
+        for (const [cls, key, dflt] of dflts) {
+            this.add(cls, key, dflt);
+        }
+    }
+    unassign(dflts) {
+        if (!dflts) return;
+        for (const [cls, key, dflt] of dflts) {
+            this.remove(cls, key, dflt);
+        }
+    }
     add(cls, key, dflt) {
         if (!(cls in this.$clsKeyMap)) this.$clsKeyMap[cls] = {}
         let keyMap = this.$clsKeyMap[cls];
@@ -523,7 +535,7 @@ class GadgetAssets {
         }
     }
 
-    push(xassets) {
+    push(xassets=[]) {
         let assets = {}
         Object.setPrototypeOf(assets, this.$assets);
         this.$stack.push(assets);
@@ -593,6 +605,7 @@ class GadgetCtx {
     static get at_created() { return this.current.at_created; }
     static get at_destroyed() { return this.current.at_destroyed; }
     static get at_sfxed() { return this.current.at_sfxed; }
+    static get at_gizmoed() { return this.current.at_gizmoed; }
     static get interacted() { return this.current.interacted; }
     static get media() { return this.current.media; }
     static get assets() { return this.current.assets; }
@@ -614,6 +627,7 @@ class GadgetCtx {
         this.at_created = new EvtEmitter(this, 'created');
         this.at_destroyed = new EvtEmitter(this, 'destroyed');
         this.at_sfxed = new EvtEmitter(this, 'sfxed');
+        this.at_gizmoed = new EvtEmitter(this, 'gizmoed');
         // the raw media cache
         this.media = {};
     }

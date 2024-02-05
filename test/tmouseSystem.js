@@ -24,8 +24,8 @@ describe('a mouse system', () => {
     it('can handle mouse movements', ()=>{
         GadgetCtx.at_moused.listen((evt) => tevt = evt);
         sys.$on_moved({ offsetX:125, offsetY:135 });
-        expect(tevt.x).toEqual(125);
-        expect(tevt.y).toEqual(135);
+        expect(tevt.mouse.x).toEqual(125);
+        expect(tevt.mouse.y).toEqual(135);
         expect(sys.active).toBeTruthy();
         gctx.at_tocked.trigger({ elapsed:100 })
         expect(v1.hovered).toBeTruthy();
@@ -43,8 +43,8 @@ describe('a mouse system', () => {
     it('can handle mouse clicks', ()=>{
         GadgetCtx.at_moused.listen((evt) => tevt = evt);
         sys.$on_clicked( {offsetX:125, offsetY:135 });
-        expect(tevt.x).toEqual(125);
-        expect(tevt.y).toEqual(135);
+        expect(tevt.mouse.x).toEqual(125);
+        expect(tevt.mouse.y).toEqual(135);
         expect(sys.active).toBeTruthy();
         let v1clicked=false, v2clicked=false;
         v1.at_clicked.listen(() => v1clicked=true);

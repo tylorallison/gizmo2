@@ -7,7 +7,6 @@ import { RenderSystem } from './renderSystem.js';
 //import { StateMgr } from './stateMgr.js';
 import { SystemMgr } from './systemMgr.js';
 import { SfxSystem } from './sfxSystem.js';
-//import { Configs } from './config.js';
 import { Fmt } from './fmt.js';
 import { GadgetCtx } from './gadget.js';
 
@@ -24,8 +23,7 @@ class Game extends Gizmo {
      * @static
      */
     static xassets = [];
-
-    static xcfgs = {};
+    static xdflts = [];
 
     // SCHEMA --------------------------------------------------------------
     /** @member {*} Game#dbg - enables debugging for gizmo */
@@ -42,7 +40,7 @@ class Game extends Gizmo {
     static { this.$schema('systems', { readonly: true, parser: (o,x) => new SystemMgr()}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
     //static { this.$schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
-    static { this.$schema('xcfgs', {dflt: (o) => o.constructor.xcfgs}); }
+    static { this.$schema('xdflts', {dflt: (o) => o.constructor.xdflts}); }
     static { this.$schema('xassets', {dflt: (o) => o.constructor.xassets}); }
     /** @member {bool} Game#ticksPerMS - game clock runs on ticks per ms */
     static { this.$schema('ticksPerMS', {dflt: 1}); }
@@ -59,14 +57,13 @@ class Game extends Gizmo {
     async $doinit() {
         if (this.dbg) console.log(`${this.name} starting initialization`);
         // init contexts
-        // -- config
-        //if (this.xcfgs) Configs.setValues(this.xcfgs);
+        // -- defaults
+        GadgetCtx.dflts.assign(this.xdflts);
         // -- assets
         GadgetCtx.assets.push(this.xassets);
         // game init
         await this.$init();
         if (this.dbg) console.log(`${this.name} initialization complete`);
-        //Evts.trigger(this, 'GameInited');
         return Promise.resolve();
     }
 
@@ -133,7 +130,7 @@ class Game extends Gizmo {
         await this.$doload();
         // prepare
         await this.$doprepare();
-        //Evts.trigger(this, 'GameStarted');
+        GadgetCtx.at_gizmoed.trigger({ actor:this, tag:'started' });
         // start the game loop
         window.requestAnimationFrame(this.$loop);
         return Promise.resolve();
