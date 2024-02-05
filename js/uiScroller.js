@@ -61,6 +61,9 @@ class UiScroller extends UiView {
         this.$schema('fitToSketchWidth', { readonly:true, dflt: false });
         this.$schema('fitToSketchHeight', { readonly:true, dflt: false });
 
+        this.$schema('minScale', { readonly:true, dflt: .1 });
+        this.$schema('maxScale', { readonly:true, dflt: 10 });
+
         this.$schema('$verticalSliderPanel', { order:-1, readonly:true, parser: (o,x) => {
             let view = new UiPanel({
                 xform:o.verticalSliderXForm,
@@ -170,6 +173,10 @@ class UiScroller extends UiView {
         if (this.zoomed) {
             this.$scrollable.xform.scalex *= (1+evt.scroll.y*this.zoomRate);
             this.$scrollable.xform.scaley *= (1+evt.scroll.y*this.zoomRate);
+            if (this.$scrollable.xform.scalex < this.minScale) this.$scrollable.xform.scalex = this.minScale;
+            if (this.$scrollable.xform.scaley < this.minScale) this.$scrollable.xform.scaley = this.minScale;
+            if (this.$scrollable.xform.scalex > this.maxScale) this.$scrollable.xform.scalex = this.maxScale;
+            if (this.$scrollable.xform.scaley > this.maxScale) this.$scrollable.xform.scaley = this.maxScale;
         } else if (this.scrollable) {
             let x = Mathf.clamp(this.$horizontalSlider.value + evt.scroll.x*this.scrollRateX, 0, 1);
             this.$horizontalSlider.value = x;
