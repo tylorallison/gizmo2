@@ -32,11 +32,11 @@ class UiView extends Gizmo {
         this.$schema('clickedSound');
         this.$schema('hoveredSound');
         this.$schema('unhoveredSound');
-        this.$schema('at_clicked', { readonly:true, dflt: () => new EvtEmitter(this, 'clicked') });
-        this.$schema('at_hovered', { readonly:true, dflt: () => new EvtEmitter(this, 'hovered') });
-        this.$schema('at_unhovered', { readonly:true, dflt: () => new EvtEmitter(this, 'unhovered') });
-        this.$schema('at_pressed', { readonly:true, dflt: () => new EvtEmitter(this, 'pressed') });
-        this.$schema('at_unpressed', { readonly:true, dflt: () => new EvtEmitter(this, 'unpressed') });
+        this.$schema('at_clicked', { readonly:true, dflt: (o) => new EvtEmitter(o, 'clicked') });
+        this.$schema('at_hovered', { readonly:true, dflt: (o) => new EvtEmitter(o, 'hovered') });
+        this.$schema('at_unhovered', { readonly:true, dflt: (o) => new EvtEmitter(o, 'unhovered') });
+        this.$schema('at_pressed', { readonly:true, dflt: (o) => new EvtEmitter(o, 'pressed') });
+        this.$schema('at_unpressed', { readonly:true, dflt: (o) => new EvtEmitter(o, 'unpressed') });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

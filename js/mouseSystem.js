@@ -18,6 +18,7 @@ class MouseSystem extends System {
     static { this.$schema('pressed', { dflt:false }) };
     static { this.$schema('clicked', { dflt:false }) };
     static { this.$schema('position', { readonly:true, dflt: () => new Vect() }) };
+    static { this.$schema('scroll', { readonly:true, dflt: () => new Vect() }) };
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     $cpost(spec={}) {
@@ -27,6 +28,7 @@ class MouseSystem extends System {
         this.$on_clicked = this.$on_clicked.bind(this);
         this.$on_pressed = this.$on_pressed.bind(this);
         this.$on_unpressed = this.$on_unpressed.bind(this);
+        this.$on_wheeled = this.$on_wheeled.bind(this);
         this.canvas.addEventListener('mousemove', this.$on_moved);
         this.canvas.addEventListener('click', this.$on_clicked);
         this.canvas.addEventListener('mousedown', this.$on_pressed);
@@ -43,8 +45,12 @@ class MouseSystem extends System {
 
     // EVENT HANDLERS ------------------------------------------------------
     $on_wheeled(sevt) {
-        console.log(`on wheeled: ${Fmt.ofmt(sevt)}`);
-        sevt.preventDefault();
+        //sevt.preventDefault();
+        //console.log(`on wheeled: ${Fmt.ofmt(sevt)} wheeling: ${this.$wheeling} delta: ${sevt.deltaX},${sevt.deltaY},${sevt.deltaZ}`);
+        this.scrolled = true;
+        this.active = true;
+        this.scroll.x += sevt.deltaX;
+        this.scroll.y += sevt.deltaY;
     }
 
     $on_clicked(sevt) {
@@ -127,8 +133,17 @@ class MouseSystem extends System {
                 if (e.at_pressed) e.at_pressed.trigger({ mouse:this.position });
                 if (this.dbg) console.log(`${this} mouse pressed: ${e}`);
             }
+            if (this.scrolled && e.at_scrolled) {
+                e.at_scrolled.trigger({ scroll:this.scroll.copy() });
+                // only one element can be scrolled at a time
+                break;
+            }
             if (e.blocking) break;
         }
+        // reset scroll
+        this.scroll.x = 0;
+        this.scroll.y = 0;
+        this.scrolled = false;
         // mouse system is only active if a mouse event is received
         this.active = false;
         this.clicked = false;

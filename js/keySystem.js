@@ -6,7 +6,7 @@ import { System } from './system.js';
 class KeySystem extends System {
 
     static {
-        this.$schema('$pressed', { link: false, readonly: true, parser: () => new Map()});
+        this.$schema('$pressed', { link: false, readonly: true, parser: () => new Set()});
     }
 
     $cpost(spec) {
@@ -27,6 +27,7 @@ class KeySystem extends System {
         sevt.preventDefault();
         if (!GadgetCtx.interacted) GadgetCtx.interacted = true;
         if (!this.$pressed.has(sevt.key)) {
+            this.$pressed.add(sevt.key);
             if (this.dbg) console.log(`${this} key down: ${sevt.key}`);
             GadgetCtx.at_keyed.trigger({
                 tag:'keydowned',

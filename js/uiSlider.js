@@ -14,6 +14,7 @@ class UiHorizontalSlider extends UiView {
                 o.knobXForm.left = o.value - o.value * v;
                 o.knobXForm.right = 1-o.value - (1-o.value)*v;
             }
+            return v;
         }});
         this.$schema('value', { order:-1, dflt:.5, setter:(o,v) => {
             v = Mathf.clamp(v, 0, 1);
@@ -65,7 +66,6 @@ class UiHorizontalSlider extends UiView {
         let lmouse = this.xform.getLocal(evt.mouse);
         let v = this.$translateMouse(lmouse.x);
         this.value = v;
-        //console.log(`value: ${v} at_modified.listeners ${this.at_modified.$listeners} mark: ${this.at_modified.$listeners.$mark}`);
     }
 
     // METHODS -------------------------------------------------------------
