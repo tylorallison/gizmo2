@@ -67,7 +67,7 @@ class $GadgetSchemaEntry {
         this.readonly = (this.getter) ? true : ('readonly' in spec) ? spec.readonly : false;
         this.parser = spec.parser || ((o, x) => {
             if (this.xkey in x) return x[this.xkey];
-            const dflt = this.getDefault(o);
+            const dflt = this.getDefault(o, x);
             if (this.getter) return this.getter(o,dflt);
             return dflt;
         });
@@ -78,13 +78,13 @@ class $GadgetSchemaEntry {
         this.serializer = spec.serializer;
         this.order = spec.order || 0;
     }
-    getDefault(o) {
+    getDefault(o, spec={}) {
         // class schema $dflts overrides sentry defaults
         if (o.$dflts && o.$dflts.has(this.key)) {
             return o.$dflts.get(this.key);
         }
         // sentry default
-        return (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
+        return (this.dflt instanceof Function) ? this.dflt(o, spec) : this.dflt;
     }
     toString() {
         return Fmt.toString(this.constructor.name, this.key);
@@ -277,7 +277,7 @@ class Gadget {
         if (schemas) {
             for (const sentry of schemas.$entries) {
                 if (sentry.getter) {
-                    this[sentry.key]  = sentry.getDefault(this);
+                    this[sentry.key]  = sentry.getDefault(this, spec);
                 } else {
                     this[sentry.key]  = sentry.parser(this, spec);
                 }
