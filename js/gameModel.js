@@ -9,9 +9,10 @@ class GameModel extends Gizmo {
         this.$schema('x', { dflt:0 });
         this.$schema('y', { dflt:0 });
         this.$schema('z', { dflt:0 });
-        this.$schema('sketch', { link:true, dflt:new Rect({color:'red', width:4, height:4}) });
+        this.$schema('sketch', { link:true, dflt:new Rect({color:'green', width:16, height:16}) });
         this.prototype.alignx = .5;
         this.prototype.aligny = .5;
+        this.prototype.gridable = true;
     }
 
     static sortBy(a,b) {
@@ -36,8 +37,9 @@ class GameModel extends Gizmo {
         if (this.sketch) {
             let width = this.sketch.width;
             let height = this.sketch.height;
-            let x = -(width*this.alignx);
-            let y = -(height*this.aligny);
+            let x = this.x - (width*this.alignx);
+            let y = this.y - (height*this.aligny);
+            console.log(`render: ${x},${y}`);
             this.sketch.render(ctx, x, y);
         }
     }

@@ -62,6 +62,9 @@ class Grid extends GridBucketArray {
         this.$schema('rowSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
         this.$schema('colSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
         this.$schema('$gzoIdxMap', { readonly:true, parser: () => new Map() });
+        this.$schema('$oob', { readonly:true, parser: () => new Set() })
+        this.$schema('minx', { dflt:0 });
+        this.$schema('miny', { dflt:0 });
     }
 
     // STATIC METHODS ------------------------------------------------------
@@ -127,31 +130,40 @@ class Grid extends GridBucketArray {
 
     // METHODS -------------------------------------------------------------
     _ijFromPoint(px, py) {
-        return this.constructor._ijFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        return this.constructor._ijFromPoint(px-this.minx, py-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
     }
     ijFromPoint(p) {
         if (!p) return {x:-1,y:-1};
-        return this.constructor._ijFromPoint(p.x, p.y, this.cols, this.rows, this.colSize, this.rowSize);
+        return this.constructor._ijFromPoint(p.x-this.minx, p.y-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
     _idxFromPoint(px, py) {
-        return this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        return this.constructor._idxFromPoint(px-this.minx, py-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
     }
     idxFromPoint(p) {
         if (!p) return -1;
-        return this.constructor._idxFromPoint(p.x, p.y, this.cols, this.rows, this.colSize, this.rowSize);
+        return this.constructor._idxFromPoint(p.x-this.minx, p.y-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
     pointFromIdx(idx, center=false) {
-        return this.constructor._pointFromIdx(idx, this.cols, this.rows, this.colSize, this.rowSize, center);
+        let p = this.constructor._pointFromIdx(idx, this.cols, this.rows, this.colSize, this.rowSize, center);
+        p.x += this.minx;
+        p.y += this.miny;
+        return p;
     }
 
     _pointFromIJ(i, j, center=false) {
-        return this.constructor._pointFromIJ(i, j, this.cols, this.rows, this.colSize, this.rowSize, center);
+        let p = this.constructor._pointFromIJ(i, j, this.cols, this.rows, this.colSize, this.rowSize, center);
+        p.x += this.minx;
+        p.y += this.miny;
+        return p;
     }
     pointFromIJ(ij, center=false) {
         if (!ij) return {x:-1, y:-1};
-        return this.constructor._pointFromIJ(ij.x, ij.y, this.cols, this.rows, this.colSize, this.rowSize, center);
+        let p = this.constructor._pointFromIJ(ij.x, ij.y, this.cols, this.rows, this.colSize, this.rowSize, center);
+        p.x += this.minx;
+        p.y += this.miny;
+        return p;
     }
 
     idxof(gzo) {
@@ -165,11 +177,11 @@ class Grid extends GridBucketArray {
 
     idxsFromGzo(gzo) {
         let b = this.boundsFor(gzo);
-        return this.constructor._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, this.cols, this.rows, this.colSize, this.rowSize);
+        return this.constructor._idxsFromBounds(b.minx-this.minx, b.miny-this.miny, b.maxx-this.minx, b.maxy-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
     *_findForPoint(px, py, filter=(v) => true) {
-        let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        let gidx = this.constructor._idxFromPoint(px-this.minx, py-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
         let found = new Set();
         for (const gzo of this.findForIdx(gidx, filter)) {
             let ob = this.boundsFor(gzo);
@@ -185,7 +197,7 @@ class Grid extends GridBucketArray {
     }
 
     _firstForPoint(px, py, filter=(v) => true) {
-        let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        let gidx = this.constructor._idxFromPoint(px-this.minx, py-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
         for (const gzo of this.findForIdx(gidx, filter)) {
             let ob = this.boundsFor(gzo);
             if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) return gzo;
@@ -198,7 +210,7 @@ class Grid extends GridBucketArray {
     }
 
     *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
-        let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
+        let gidxs = this.constructor._idxsFromBounds(bminx-this.minx, bminy-this.miny, bmaxx-this.minx, bmaxy-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
         let found = new Set();
         for (const gzo of this.findForIdx(gidxs, filter)) {
             let ob = this.boundsFor(gzo);
@@ -214,7 +226,7 @@ class Grid extends GridBucketArray {
     }
 
     _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
-        let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
+        let gidxs = this.constructor._idxsFromBounds(bminx-this.minx, bminy-this.miny, bmaxx-this.minx, bmaxy-this.miny, this.cols, this.rows, this.colSize, this.rowSize);
         for (const gzo of this.findForIdx(gidxs, filter)) {
             let ob = this.boundsFor(gzo);
             if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) return gzo;
@@ -227,10 +239,15 @@ class Grid extends GridBucketArray {
     }
 
     add(gzo) {
+        console.log(`add ${gzo} min: ${this.minx},${this.miny}`);
         let gidx = this.idxsFromGzo(gzo);
-        if (!gidx) return;
-        // assign object to grid
-        for (const idx of gidx) this.setidx(idx, gzo);
+        if (!gidx.length) {
+            console.log(`oob add: ${gzo}`);
+            this.$oob.add(gzo);
+        } else {
+            // assign object to grid
+            for (const idx of gidx) this.setidx(idx, gzo);
+        }
         // assign gizmo gidx
         this.$gzoIdxMap.set(gzo.gid, gidx);
         if (this.dbg) console.log(`grid add ${gzo} w/ idx: ${gidx}`);
@@ -248,22 +265,31 @@ class Grid extends GridBucketArray {
         if (!gzo) return;
         let ogidx = this.$gzoIdxMap.get(gzo.gid) || [];
         let gidx = this.idxsFromGzo(gzo) || [];
+        let modified = false;
+        console.log(`ogidx: ${ogidx}`)
+        console.log(`gidx: ${gidx}`)
+        console.log(`gzo min: ${gzo.x},${gzo.y} grid min: ${this.minx},${this.miny}`)
         if (!Util.arraysEqual(ogidx, gidx)) {
             if (this.dbg) console.log(`----- Grid.recheck: ${gzo} old ${ogidx} new ${gidx}`);
             // remove old
             for (const idx of ogidx) this.delidx(idx, gzo);
             // add new
             for (const idx of gidx) this.setidx(idx, gzo);
+            console.log(`set new`);
             // assign new gidx
             this.$gzoIdxMap.set(gzo.gid, gidx);
-            return true;
+            modified = true;
         } else {
             // resort
             for (const idx of gidx) {
                 if (this.sortBy) this.entries[idx].sort(this.sortBy);
             }
-            return false;
         }
+        if (gidx.length && this.$oob.has(gzo)) {
+            console.log(`oob delete ${gzo}`)
+            this.$oob.delete(gzo);
+        }
+        return modified;
     }
 
     resize(bounds, cols, rows) {
@@ -271,14 +297,21 @@ class Grid extends GridBucketArray {
         // handle grid array resize
         if (this.cols != cols || this.rows != rows) super.resize(cols, rows);
         // handle spatial resize
+        this.minx = bounds.minx;
+        this.miny = bounds.miny;
         this.colSize = bounds.width/cols;
         this.rowSize = bounds.height/rows;
         // recheck position of all assigned objects
         for (const gzo of gzos) this.recheck(gzo);
+        // recheck position of all out-of-bounds objects
+        for (const gzo of Array.from(this.$oob)) {
+            console.log(`recheck oob: ${gzo}`);
+            this.recheck(gzo);
+        }
     }
 
     render(ctx, x=0, y=0, color='rgba(0,255,255,.5)', occupiedColor='red') {
-        ctx.translate(x,y);
+        ctx.translate(x+this.minx,y+this.miny);
         for (let i=0; i<this.cols; i++) {
             for (let j=0; j<this.rows; j++) {
                 let idx = this._idxFromIJ(i, j);
@@ -290,7 +323,7 @@ class Grid extends GridBucketArray {
                 //ctx.setLineDash([]);
             }
         }
-        ctx.translate(-x,-y);
+        ctx.translate(-x-this.minx,-y-this.miny);
     }
 
     toString() {

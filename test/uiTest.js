@@ -21,6 +21,7 @@ import { Tiler } from '../js/tiler.js';
 import { SketchMixer } from '../js/randomSketch.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { Gizmo } from '../js/gizmo.js';
+import { GameModel } from '../js/gameModel.js';
 
 class UITest extends Game {
     static xassets = [
@@ -224,12 +225,12 @@ class UITest extends Game {
             */
         });
         this.placer(this.bgpanel, grid);
-        class Gridable extends Gizmo {
-            static {
-                this.$schema('x', { dflt:0 });
-                this.$schema('y', { dflt:0 });
-            }
-        }
+
+        let m = new GameModel({
+            x:grid._pointFromIJ(0,0,true).x,
+            y:grid._pointFromIJ(0,0,true).y,
+        });
+        console.log(`m: ${m} ${m.x},${m.y}`);
     }
 
     async $prepare() {
