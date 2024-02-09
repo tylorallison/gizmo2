@@ -19,6 +19,7 @@ import { GadgetCtx } from '../js/gadget.js';
 import { Sprite } from '../js/sprite.js';
 import { Tiler } from '../js/tiler.js';
 import { SketchMixer } from '../js/randomSketch.js';
+import { UiGrid } from '../js/uiGrid.js';
 
 class UITest extends Game {
     static xassets = [
@@ -202,6 +203,26 @@ class UITest extends Game {
         }));
     }
 
+    test13() {
+        let grid = new UiGrid({
+            //hex: true,
+            dbg: { xform: true, grid: true },
+            //createFilter: (gzo) => gzo.tag === 'grid',
+            rows: 4,
+            cols: 4,
+            //alignx: 0,
+            //aligny: 0,
+            xform: new XForm({ 
+                grip: .5, 
+                x: 0, 
+                y: 75+128, 
+                fixedWidth: 256, 
+                fixedHeight: 256*.75,
+            }),
+        });
+        this.placer(this.bgpanel, grid);
+    }
+
     async $prepare() {
         this.size = 600;
         this.maxCols = 4;
@@ -213,6 +234,7 @@ class UITest extends Game {
         this.bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         cvs.adopt(this.bgpanel);
 
+        /*
         this.test1();
         this.test2();
         this.test3();
@@ -225,6 +247,9 @@ class UITest extends Game {
         this.test10();
         this.test11();
         this.test12();
+        */
+
+        this.test13();
 
         /*
         let grid = new UiGrid({

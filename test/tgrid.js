@@ -1,7 +1,7 @@
 import { Bounds } from '../js/bounds.js';
 import { Grid } from '../js/grid.js';
 
-describe('grid implementation', () => {
+describe('a grid implementation', () => {
     let grid;
     beforeEach(() => {
         grid = new Grid({

@@ -17,12 +17,20 @@ class GadgetBounder extends Gadget {
 class GadgetXFormBounder extends Gadget {
     boundsFor(gzo) {
         if (!gzo || !gzo.xform) return new Bounds();
-        return new Bounds( { 
-            x:gzo.xform.minx,
-            y:gzo.xform.miny,
-            width:gzo.xform.width,
-            height:gzo.xform.height,
-        });
+        let min, max;
+        if (gzo.xform.angle) {
+            // min/max the four points of the bounds of the gzo, given that the angle
+            let p1 = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.miny}, false);
+            let p2 = gzo.xform.getWorld({x:gzo.xform.maxx, y:gzo.xform.miny}, false);
+            let p3 = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.maxy}, false);
+            let p4 = gzo.xform.getWorld({x:gzo.xform.maxx, y:gzo.xform.maxy}, false);
+            min = Vect.min(p1, p2, p3, p4);
+            max = Vect.max(p1, p2, p3, p4);
+        } else {
+            min = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.miny}, false);
+            max = gzo.xform.getWorld({x:gzo.xform.maxx, y:gzo.xform.maxy}, false);
+        }
+        return new Bounds({ x: min.x-o.xform.minx, y: min.y-o.xform.miny, width: max.x-min.x, height: max.y-min.y }); 
     }
 }
 

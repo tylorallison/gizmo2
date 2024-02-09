@@ -35,6 +35,7 @@ class Gizmo extends Gadget {
             throw new Error(`hierarchy loop detected ${child} already in root for ${this}`);
         }
         // avoid cycles in children
+        console.log(`self: ${self}`);
         if (child.find((v) => v === self)) {
             throw new Error(`hierarchy loop detected ${child} already in children for: ${this}`);
         }

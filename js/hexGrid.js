@@ -1,6 +1,7 @@
 export { HexGrid };
 
 import { Fmt } from './fmt.js';
+import { GadgetBounder } from './grid.js';
 import { HexBucketArray } from './hexArray.js';
 import { Contains, Overlaps } from './intersect.js';
 import { Mathf } from './math.js';
@@ -10,21 +11,11 @@ class HexGrid extends HexBucketArray {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema('bounder', { readonly: true, dflt: ((v) => v.xform) });
-        this.schema('dbg', { eventable: false, dflt: false });
-        this.schema('rowSize', { dflt: 32 });
-        this.schema('colSize', { dflt: 32 });
-    }
-
-    // CONSTRUCTOR ---------------------------------------------------------
-    constructor(spec={}) {
-        if ('size' in spec) {
-            if (!('rowSize' in spec)) spec.rowSize = spec.size;
-            if (!('colSize' in spec)) spec.colSize = spec.size;
-        }
-        super(spec);
-        this.gridSort = spec.gridSort;
-        this.gzoIdxMap = new Map();
+        this.$schema('bounder', { readonly:true, dflt:() => new GadgetBounder() }),
+        this.$schema('dbg', { eventable:false, dflt:false });
+        this.$schema('rowSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
+        this.$schema('colSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
+        this.$schema('$gzoIdxMap', { readonly:true, parser: () => new Map() });
     }
 
     // STATIC METHODS ------------------------------------------------------
@@ -229,16 +220,20 @@ class HexGrid extends HexBucketArray {
     }
 
     idxof(gzo) {
-        let gidx = this.gzoIdxMap.get(gzo.gid) || [];
+        let gidx = this.$gzoIdxMap.get(gzo.gid) || [];
         return gidx.slice();
     }
 
     includes(gzo) {
-        return this.gzoIdxMap.has(gzo.gid);
+        return this.$gzoIdxMap.has(gzo.gid);
+    }
+
+    boundsFor(gzo) {
+        return this.bounder.boundsFor(gzo);
     }
 
     idxsFromGzo(gzo) {
-        let b = this.bounder(gzo);
+        let b = this.boundsFor(gzo);
         return this.constructor._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
@@ -247,7 +242,7 @@ class HexGrid extends HexBucketArray {
         let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
         let found = new Set();
         for (const gzo of this.findForIdx(gidx, filter)) {
-            let ob = this.bounder(gzo);
+            let ob = this.boundsFor(gzo);
             if (!found.has(gzo) && Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) {
                 found.add(gzo);
                 yield gzo;
@@ -262,7 +257,7 @@ class HexGrid extends HexBucketArray {
     _firstForPoint(px, py, filter=(v) => true) {
         let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
         for (const gzo of this.findForIdx(gidx, filter)) {
-            let ob = this.bounder(gzo);
+            let ob = this.boundsFor(gzo);
             if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) return gzo;
         }
         return null;
@@ -276,7 +271,7 @@ class HexGrid extends HexBucketArray {
         let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
         let found = new Set();
         for (const gzo of this.findForIdx(gidxs, filter)) {
-            let ob = this.bounder(gzo);
+            let ob = this.boundsFor(gzo);
             if (!found.has(gzo) && Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) {
                 found.add(gzo);
                 yield gzo;
@@ -291,7 +286,7 @@ class HexGrid extends HexBucketArray {
     _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
         let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
         for (const gzo of this.findForIdx(gidxs, filter)) {
-            let ob = this.bounder(gzo);
+            let ob = this.boundsFor(gzo);
             if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) return gzo;
         }
         return null;
@@ -307,21 +302,21 @@ class HexGrid extends HexBucketArray {
         // assign object to grid
         for (const idx of gidx) this.setidx(idx, gzo);
         // assign gizmo gidx
-        this.gzoIdxMap.set(gzo.gid, gidx);
+        this.$gzoIdxMap.set(gzo.gid, gidx);
         if (this.dbg) console.log(`grid add ${gzo} w/ idx: ${gidx}`);
     }
 
     remove(gzo) {
         if (!gzo) return;
-        let gidx = this.gzoIdxMap.get(gzo.gid) || [];
-        this.gzoIdxMap.delete(gzo.gid);
+        let gidx = this.$gzoIdxMap.get(gzo.gid) || [];
+        this.$gzoIdxMap.delete(gzo.gid);
         // remove object from grid
         for (const idx of gidx) this.delidx(idx, gzo);
     }
 
     recheck(gzo) {
         if (!gzo) return;
-        let ogidx = this.gzoIdxMap.get(gzo.gid) || [];
+        let ogidx = this.$gzoIdxMap.get(gzo.gid) || [];
         let gidx = this.idxsFromGzo(gzo) || [];
         if (!Util.arraysEqual(ogidx, gidx)) {
             if (this.dbg) console.log(`----- Grid.recheck: ${gzo} old ${ogidx} new ${gidx}`);
@@ -330,7 +325,7 @@ class HexGrid extends HexBucketArray {
             // add new
             for (const idx of gidx) this.setidx(idx, gzo);
             // assign new gidx
-            this.gzoIdxMap.set(gzo.gid, gidx);
+            this.$gzoIdxMap.set(gzo.gid, gidx);
             return true;
         } else {
             // resort
