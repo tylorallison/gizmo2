@@ -381,7 +381,7 @@ class GridArray extends Gadget {
  */
 class GridBucketArray extends GridArray {
     static {
-        this.$schema('bucketSort', { readonly: true });
+        this.$schema('sortBy', { readonly: true });
     }
 
     *_getij(i, j) {
@@ -406,7 +406,7 @@ class GridBucketArray extends GridArray {
         if (!this.entries[idx]) this.entries[idx] = [];
         const entries = this.entries[idx];
         entries.push(v);
-        if (this.bucketSort) entries.sort(this.bucketSort);
+        if (this.sortBy) entries.sort(this.sortBy);
     }
     setij(ij, v) {
         if (!ij) return;
@@ -417,7 +417,7 @@ class GridBucketArray extends GridArray {
         if (!this.entries[idx]) this.entries[idx] = [];
         const entries = this.entries[idx];
         entries.push(v);
-        if (this.bucketSort) entries.sort(this.bucketSort);
+        if (this.sortBy) entries.sort(this.sortBy);
     }
 
     _delij(i, j, v) {

@@ -3,22 +3,23 @@ export { UiGrid };
 import { Bounds } from './bounds.js';
 import { UiView } from './uiView.js';
 import { Direction } from './direction.js';
-import { GadgetBounder, Grid } from './grid.js';
+import { Grid } from './grid.js';
 import { HexGrid } from './hexGrid.js';
 import { Overlaps } from './intersect.js';
 import { Vect } from './vect.js';
 import { GadgetCtx } from './gadget.js';
 import { Timer } from './timer.js';
+import { GameModel } from './gameModel.js';
 
 class UiGrid extends UiView {
     // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
     // This makes it possible to serialize data and still have customizable functions.
 
     static {
-        // the bounder is responsible for translating an object bounds to local grid space.  Object transformation is based on local coordinate space of the UI grid
+        // the boundsFor is responsible for translating an object bounds to local grid space.  Object transformation is based on local coordinate space of the UI grid
         // which needs to be translated to a zero-based coordinate space of the underlying storage grid
-        //this.schema('bounder', { readonly: true, parser: (o,x) => ((x.bounder) ? x.bounder : ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) )});
-        this.$schema('bounder', { readonly:true, dflt:() => new GadgetBounder() }),
+        this.$schema('boundsFor', { readonly:true, dflt:() => GameModel.boundsFor });
+        this.$schema('sortBy', { readonly:true, dflt:() => GameModel.sortBy });
 
         this.$schema('createFilter', { readonly:true, dflt:() => (gzo) => gzo.gridable });
         this.$schema('renderFilter', { eventable:false, dflt: (o,x) => ((idx, view) => true) });
@@ -33,9 +34,8 @@ class UiGrid extends UiView {
                 cols: cols,
                 colSize: o.xform.width/cols,
                 rowSize: o.xform.height/rows,
-                bounder: o.bounder,
-                // FIXME
-                bucketSort: x.bucketSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z),
+                boundsFor: o.boundsFor,
+                sortBy: o.sortBy,
             }
             if (x.hex) {
                 return new HexGrid(xgrid);

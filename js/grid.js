@@ -1,4 +1,4 @@
-export { Grid, GadgetBounder, GadgetXFormBounder };
+export { Grid, GadgetBounder, XFormBounder };
 
 import { GridBucketArray } from './gridArray.js';
 import { Bounds } from './bounds.js';
@@ -12,9 +12,16 @@ class GadgetBounder extends Gadget {
         if (!gzo) return new Bounds();
         return new Bounds( gzo );
     }
+    sortBy(a, b) {
+        if (a.z === b.z) {
+            return a.y-b.y;
+        } else {
+            return a.z-b.z;
+        }
+    }
 }
 
-class GadgetXFormBounder extends Gadget {
+class XFormBounder extends Gadget {
     boundsFor(gzo) {
         if (!gzo || !gzo.xform) return new Bounds();
         let min, max;
@@ -32,6 +39,13 @@ class GadgetXFormBounder extends Gadget {
         }
         return new Bounds({ x: min.x-o.xform.minx, y: min.y-o.xform.miny, width: max.x-min.x, height: max.y-min.y }); 
     }
+    sortBy(a, b) {
+        if (a.z === b.z) {
+            return a.xform.y-b.xform.y;
+        } else {
+            return a.z-b.z;
+        }
+    }
 }
 
 /** ========================================================================
@@ -43,7 +57,7 @@ class Grid extends GridBucketArray {
     static dfltRows = 8;
 
     static {
-        this.$schema('bounder', { readonly:true, dflt:() => new GadgetBounder() }),
+        this.$schema('boundsFor', { readonly:true, dflt:() => ((v) = ((v && ('bounds' in v)) ? v.bounds : new Bounds(v))) }),
         this.$schema('dbg', { eventable:false, dflt:false });
         this.$schema('rowSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
         this.$schema('colSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
@@ -112,10 +126,6 @@ class Grid extends GridBucketArray {
     }
 
     // METHODS -------------------------------------------------------------
-    boundsFor(gzo) {
-        return this.bounder.boundsFor(gzo);
-    }
-
     _ijFromPoint(px, py) {
         return this.constructor._ijFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
     }
@@ -250,7 +260,7 @@ class Grid extends GridBucketArray {
         } else {
             // resort
             for (const idx of gidx) {
-                if (this.bucketSort) this.entries[idx].sort(this.bucketSort);
+                if (this.sortBy) this.entries[idx].sort(this.sortBy);
             }
             return false;
         }

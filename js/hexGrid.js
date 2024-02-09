@@ -1,7 +1,6 @@
 export { HexGrid };
 
 import { Fmt } from './fmt.js';
-import { GadgetBounder } from './grid.js';
 import { HexBucketArray } from './hexArray.js';
 import { Contains, Overlaps } from './intersect.js';
 import { Mathf } from './math.js';
@@ -11,7 +10,7 @@ class HexGrid extends HexBucketArray {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.$schema('bounder', { readonly:true, dflt:() => new GadgetBounder() }),
+        this.$schema('boundsFor', { readonly:true, dflt:() => ((v) = ((v && ('bounds' in v)) ? v.bounds : new Bounds(v))) }),
         this.$schema('dbg', { eventable:false, dflt:false });
         this.$schema('rowSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
         this.$schema('colSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
@@ -228,10 +227,6 @@ class HexGrid extends HexBucketArray {
         return this.$gzoIdxMap.has(gzo.gid);
     }
 
-    boundsFor(gzo) {
-        return this.bounder.boundsFor(gzo);
-    }
-
     idxsFromGzo(gzo) {
         let b = this.boundsFor(gzo);
         return this.constructor._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, this.cols, this.rows, this.colSize, this.rowSize);
@@ -330,7 +325,7 @@ class HexGrid extends HexBucketArray {
         } else {
             // resort
             for (const idx of gidx) {
-                if (this.bucketSort) this.entries[idx].sort(this.bucketSort);
+                if (this.sortBy) this.entries[idx].sort(this.sortBy);
             }
             return false;
         }
