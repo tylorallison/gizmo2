@@ -1,6 +1,7 @@
 export { GridArray, GridBucketArray };
 
 import { Direction } from './direction.js';
+import { Fmt } from './fmt.js';
 import { Gadget } from './gadget.js';
 import { Util } from './util.js';
 import { Vect } from './vect.js';
@@ -99,7 +100,7 @@ class GridArray extends Gadget {
         let ij1 = this.ijFromIdx(idx1, dim);
         let ij2 = this.ijFromIdx(idx2, dim);
         for (const [i,j] of Util.pixelsInSegment(ij1.x, ij1.y, ij2.x, ij2.y)) {
-            yield this.idxFromIJ(i, j, dim);
+            yield this._idxFromIJ(i, j, dim.x, dim.y);
         }
     }
 

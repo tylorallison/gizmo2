@@ -10,12 +10,7 @@ import { Gadget } from './gadget.js';
 class GadgetBounder extends Gadget {
     boundsFor(gzo) {
         if (!gzo) return new Bounds();
-        return new Bounds( { 
-            minx:gzo.x || 0,
-            miny:gzo.y || 0,
-            maxx:gzo.width || 0,
-            maxy:gzo.height || 0,
-        });
+        return new Bounds( gzo );
     }
 }
 
@@ -23,10 +18,10 @@ class GadgetXFormBounder extends Gadget {
     boundsFor(gzo) {
         if (!gzo || !gzo.xform) return new Bounds();
         return new Bounds( { 
-            minx:gzo.xform.minx,
-            miny:gzo.xform.miny,
-            maxx:gzo.xform.maxx,
-            maxy:gzo.xform.maxy,
+            x:gzo.xform.minx,
+            y:gzo.xform.miny,
+            width:gzo.xform.width,
+            height:gzo.xform.height,
         });
     }
 }
