@@ -48,7 +48,7 @@ class UiHorizontalSlider extends UiView {
     }
 
     destroy() {
-        GadgetCtx.at_moused.ignore(this.$on_moved);
+        GadgetCtx.at_moused.ignore(this.$on_moved, this);
         super.destroy();
     }
 
@@ -60,7 +60,7 @@ class UiHorizontalSlider extends UiView {
         GadgetCtx.at_moused.listen(this.$on_moved, this, false, (evt) => evt.tag === 'mousemoved');
     }
     $on_unpressed(evt) {
-        GadgetCtx.at_moused.ignore(this.$on_moved);
+        GadgetCtx.at_moused.ignore(this.$on_moved, this);
     }
     $on_moved(evt) {
         let lmouse = this.xform.getLocal(evt.mouse);
@@ -134,7 +134,7 @@ class UiVerticalSlider extends UiView {
     }
 
     destroy() {
-        GadgetCtx.at_moused.ignore(this.$on_moved);
+        GadgetCtx.at_moused.ignore(this.$on_moved, this);
         super.destroy();
     }
 
@@ -146,7 +146,7 @@ class UiVerticalSlider extends UiView {
         GadgetCtx.at_moused.listen(this.$on_moved, this, false, (evt) => evt.tag === 'mousemoved');
     }
     $on_unpressed(evt) {
-        GadgetCtx.at_moused.ignore(this.$on_moved);
+        GadgetCtx.at_moused.ignore(this.$on_moved, this);
     }
     $on_moved(evt) {
         let lmouse = this.xform.getLocal(evt.mouse);

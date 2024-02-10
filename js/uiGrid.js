@@ -8,6 +8,7 @@ import { HexGrid } from './hexGrid.js';
 import { Overlaps } from './intersect.js';
 import { Vect } from './vect.js';
 import { GadgetCtx } from './gadget.js';
+import { Timer } from './timer.js';
 
 class UiGrid extends UiView {
     // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
@@ -33,6 +34,7 @@ class UiGrid extends UiView {
                 colSize: o.xform.width/cols,
                 rowSize: o.xform.height/rows,
                 bounder: o.bounder,
+                // FIXME
                 bucketSort: x.bucketSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z),
             }
             if (x.hex) {
@@ -48,6 +50,7 @@ class UiGrid extends UiView {
         this.$schema('$chunkCtx', { readonly: true, parser: (o,x) => o.$chunkCanvas.getContext('2d') });
         this.$schema('$gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         this.$schema('$gridCtx', { readonly: true, parser: (o,x) => o.$gridCanvas.getContext('2d') });
+        this.$schema('$resizeTimer');
         this.$schema('length', { getter: (o,x) => o.$chunks.length });
     }
 
@@ -60,22 +63,27 @@ class UiGrid extends UiView {
         this.$gridCanvas.height = this.xform.height;
         this.$chunkCanvas.width = this.$chunks.colSize;
         this.$chunkCanvas.height = this.$chunks.rowSize;
-        //console.log(`${this} size ${this.xform.width},${this.xform.height} dim: ${this.$chunks.cols},${this.$chunks.rows} csize: ${this.$chunks.colSize},${this.$chunks.rowSize}`)
         // handle view creation event handling
         if (this.createFilter) {
             GadgetCtx.at_created.listen(this.$on_viewCreated, this, false, (evt) => this.createFilter(evt.actor));
         }
+        this.at_modified.listen(this.$on_modified, this, false, (evt) => evt.key.startsWith('xform'));
     }
 
     destroy() {
-        GadgetCtx.ignore(this.$on_viewCreated);
+        GadgetCtx.ignore(this.$on_viewCreated, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------
-    // FIXME: handle window resize
-    $onGizmoRooted(evt) {
-        super.$onGizmoRooted(evt);
-        this.resize();
+    $on_modified(evt) {
+        if (!this.$resizeTimer) {
+            console.log(`on modified evt: ${evt}`);
+            this.$resizeTimer = new Timer({ttl:0, cb: () => {
+                this.$resizeTimer = null;
+                this.resize();
+            }});
+            this.$resizeTimer.dbg = true;
+        }
     }
 
     $on_viewCreated(evt) {
@@ -212,6 +220,7 @@ class UiGrid extends UiView {
         // remove from grid
         this.$chunks.remove(gzo);
         // ignore gizmo events
+        // FIXME
         Evts.ignore(gzo, 'gizmo.updated', this.onChildUpdate, this);
         Evts.ignore(gzo, 'gizmo.destroyed', this.onChildDestroyed, this);
         let needsUpdate = false;
@@ -225,7 +234,6 @@ class UiGrid extends UiView {
     resize() {
         if ((this.xform.width !== this.$gridCanvas.width) || (this.xform.height !== this.$gridCanvas.height)) {
             // resize grid
-            //console.log(`-- resize ${this.$gridCanvas.width},${this.$gridCanvas.height} => ${this.xform.width},${this.xform.height}`);
             this.$chunks.resize(this.xform, this.$chunks.cols, this.$chunks.rows);
             this.$gridCanvas.width = this.xform.width;
             this.$gridCanvas.height = this.xform.height;
@@ -265,7 +273,7 @@ class UiGrid extends UiView {
         this.$gridCtx.drawImage(this.$chunkCanvas, chunkOffset.x, chunkOffset.y);
     }
 
-    subrender(ctx) {
+    $subrender(ctx) {
         // compute delta between xform space and grid space
         let dx = this.xform.minx;
         let dy = this.xform.miny;
@@ -284,7 +292,7 @@ class UiGrid extends UiView {
             }
         }
         // render grid canvas
-        ctx.drawImage(this.$gridCanvas, dx, dy);
+        if (this.$gridCanvas.width && this.$gridCanvas.height) ctx.drawImage(this.$gridCanvas, dx, dy);
         // overlay grid
         if (this.dbg && this.dbg.grid) {
             this.$chunks.render(ctx, dx, dy);

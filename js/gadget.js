@@ -161,7 +161,7 @@ class $GadgetProxyHandler {
     }
 
     $unlink(proxy, value) {
-        if (value.at_modified) value.at_modified.ignore(proxy.$on_linkModified);
+        if (value.at_modified) value.at_modified.ignore(proxy.$on_linkModified, proxy);
     }
 
     get(target, key, proxy) {
@@ -319,7 +319,7 @@ class Gadget {
         for (const sentry of this.$schemas.$entries) {
             if (sentry.link && this[sentry.key]) {
                 let value = this[sentry.key];
-                if (value.at_modified) value.at_modified.ignore(this.$on_linkModified);
+                if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
                 if (value.destroy) value.destroy();
             }
         }
@@ -450,7 +450,7 @@ class GadgetArray extends Array {
     }
 
     $unlink(key, value) {
-        if (value.at_modified) value.at_modified.ignore(this.$on_linkModified);
+        if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
     }
 
     $on_linkModified(evt, key) {

@@ -31,12 +31,12 @@ class Gizmo extends Gadget {
             child.parent.orphan(child);
         }
         // avoid cycles in parent
-        if (this.root.find((v) => v === child)) {
+        if (this.gzroot.gzfind((v) => v === child)) {
             throw new Error(`hierarchy loop detected ${child} already in root for ${this}`);
         }
         // avoid cycles in children
-        console.log(`self: ${self}`);
-        if (child.find((v) => v === self)) {
+        let found = child.gzfind((v) => v === self);
+        if (found) {
             throw new Error(`hierarchy loop detected ${child} already in children for: ${this}`);
         }
         // assign parent/child links
@@ -56,7 +56,7 @@ class Gizmo extends Gadget {
      * find object in parent hierarchy (evaluating parent hierarchy)
      * @param {*} filter 
      */
-    findInParent(filter) {
+    gzfindInParent(filter) {
         for (let parent = this.parent; parent; parent = parent.parent) {
             if (filter(parent)) return parent;
         }
@@ -68,17 +68,17 @@ class Gizmo extends Gadget {
      * @param {*} obj 
      * @param {*} filter 
      */
-    find(filter) {
+    gzfind(filter) {
         if (filter(this)) return this;
         for (const child of this.children) {
             if (filter(child)) return child;
-            let match = child.find(filter);
+            let match = child.gzfind(filter);
             if (match) return match;
         }
         return null;
     }
 
-    *forEachChild(filter=()=>true) {
+    *gzforEachChild(filter=()=>true) {
         for (const child of (Array.from(this.children))) {
             if (!filter || filter(child)) yield child;
             yield *this.forEachChild(filter);
@@ -89,7 +89,7 @@ class Gizmo extends Gadget {
      * find root for given object
      * @param {*} obj 
      */
-    get root() {
+    get gzroot() {
         let gzo = this;
         while(gzo.parent) gzo = gzo.parent;
         return gzo;

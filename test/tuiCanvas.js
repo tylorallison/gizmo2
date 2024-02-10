@@ -25,7 +25,7 @@ describe('a ui canvas', () => {
             xform: new XForm({fixedWidth: 200, fixedHeight: 100}),
             children: [ new UiView({ tag: 'child' }), ],
         });
-        let child = cvs.find((v) => v.tag === 'child');
+        let child = cvs.gzfind((v) => v.tag === 'child');
         expect(child.xform.width).toEqual(200);
         expect(child.xform.height).toEqual(100);
     });
@@ -49,7 +49,7 @@ describe('a ui canvas', () => {
             xform: new XForm({fixedWidth: 200, fixedHeight: 100}),
             children: [ new UiView({ tag: 'child' }), ],
         });
-        let child = cvs.find((v) => v.tag === 'child');
+        let child = cvs.gzfind((v) => v.tag === 'child');
         expect(cvs.canvas.width).toEqual(200);
         expect(cvs.canvas.height).toEqual(100);
         expect(child.xform.width).toEqual(200);
@@ -67,7 +67,7 @@ describe('a ui canvas', () => {
             xform: new XForm({fixedWidth: 200, fixedHeight: 100}),
             children: [ new UiView({ tag: 'child' }), ],
         });
-        let child = cvs.find((v) => v.tag === 'child');
+        let child = cvs.gzfind((v) => v.tag === 'child');
         expect(cvs.canvas.width).toEqual(cvs.xform.width);
         expect(cvs.canvas.height).toEqual(cvs.xform.height);
         expect(child.xform.width).toEqual(cvs.xform.width);

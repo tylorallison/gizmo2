@@ -27,7 +27,7 @@ class Timer extends Gadget {
 
     destroy() {
         super.destroy();
-        GadgetCtx.at_tocked.ignore(this.$on_tocked);
+        GadgetCtx.at_tocked.ignore(this.$on_tocked, this);
     }
 
     $on_tocked(evt) {
@@ -41,7 +41,7 @@ class Timer extends Gadget {
                 this.$ticks = 0;
                 if (this.ttl < 0) this.ttl = 0;
             } else {
-                GadgetCtx.at_tocked.ignore(this.$on_tocked);
+                GadgetCtx.at_tocked.ignore(this.$on_tocked, this);
             }
             this.cb(Object.assign( {}, evt, this.data, { ticks: ticks, overflow: overflow, elapsed: this.$startTTL + overflow } ));
         }

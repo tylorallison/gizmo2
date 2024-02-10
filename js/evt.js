@@ -20,9 +20,10 @@ class Evt {
 }
 
 class $EvtListener {
-    constructor(fcn, boundfcn, once=false, filter=undefined, priority=0, ctx=undefined) {
+    constructor(fcn, boundfcn, receiver, once=false, filter=undefined, priority=0, ctx=undefined) {
         this.fcn = fcn;
         this.boundfcn = boundfcn;
+        this.receiver = receiver;
         this.priority = priority;
         this.once = once;
         this.filter = filter;
@@ -63,13 +64,13 @@ class EvtEmitter {
 
     listen(fcn, receiver, once=false, filter=undefined, priority=0, ctx=undefined) {
         let boundfcn = (receiver) ? fcn.bind(receiver) : fcn;
-        let listener = new $EvtListener(fcn, boundfcn, once, filter, priority, ctx);
+        let listener = new $EvtListener(fcn, boundfcn, receiver, once, filter, priority, ctx);
         this.$listeners.push(listener);
         this.$listeners.sort((a,b) => a.priority-b.priority);
     }
 
-    ignore(fcn) {
-        let idx = this.$listeners.findIndex((v) => v.fcn === fcn);
+    ignore(fcn, receiver) {
+        let idx = this.$listeners.findIndex((v) => (v.fcn === fcn) && v.receiver === receiver);
         if (idx !== -1) this.$listeners.splice(idx, 1);
     }
 

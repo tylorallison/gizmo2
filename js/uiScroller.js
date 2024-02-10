@@ -134,7 +134,7 @@ class UiScroller extends UiView {
     }
 
     destroy() {
-        GadgetCtx.at_keyed.ignore(this.$on_keyed);
+        GadgetCtx.at_keyed.ignore(this.$on_keyed, this);
     }
 
     $on_keyed(evt) {

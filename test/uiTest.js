@@ -20,6 +20,7 @@ import { Sprite } from '../js/sprite.js';
 import { Tiler } from '../js/tiler.js';
 import { SketchMixer } from '../js/randomSketch.js';
 import { UiGrid } from '../js/uiGrid.js';
+import { Gizmo } from '../js/gizmo.js';
 
 class UITest extends Game {
     static xassets = [
@@ -79,7 +80,7 @@ class UITest extends Game {
                 new UiPanel({ sketch:new Rect({ color:'red' }), }),
             ],
         }));
-        let vspacer = this.bgpanel.find((v) => v.tag === 'vspacer');
+        let vspacer = this.bgpanel.gzfind((v) => v.tag === 'vspacer');
         new Timer({ loop:true, ttl: 2000, cb: () => { 
             if (vspacer.children.length === 2) {
                 let panel = new UiPanel({ sketch:new Rect({ color:'blue' }) });
@@ -100,7 +101,7 @@ class UITest extends Game {
                 new UiPanel({ sketch:new Rect({ color:'red' }), }),
             ],
         }));
-        let hspacer = this.bgpanel.find((v) => v.tag === 'hspacer');
+        let hspacer = this.bgpanel.gzfind((v) => v.tag === 'hspacer');
         new Timer({ loop:true, ttl: 2000, cb: () => { 
             if (hspacer.children.length === 2) {
                 let panel = new UiPanel({ sketch:new Rect({ color:'blue' }) });
@@ -212,6 +213,7 @@ class UITest extends Game {
             cols: 4,
             //alignx: 0,
             //aligny: 0,
+            /*
             xform: new XForm({ 
                 grip: .5, 
                 x: 0, 
@@ -219,8 +221,15 @@ class UITest extends Game {
                 fixedWidth: 256, 
                 fixedHeight: 256*.75,
             }),
+            */
         });
         this.placer(this.bgpanel, grid);
+        class Gridable extends Gizmo {
+            static {
+                this.$schema('x', { dflt:0 });
+                this.$schema('y', { dflt:0 });
+            }
+        }
     }
 
     async $prepare() {

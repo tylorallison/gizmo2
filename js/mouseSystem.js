@@ -94,7 +94,7 @@ class MouseSystem extends System {
     $iterate(evt, e) {
         // skip inactive entities
         if (!e.active) return;
-        if (e.findInParent((v) => !v.active)) return;
+        if (e.gzfindInParent((v) => !v.active)) return;
         // determine if view bounds contains mouse point (mouse position is in world coords)
         // -- translate to local position
         let lpos = e.xform.getLocal(this.position);
