@@ -25,11 +25,19 @@ class GameModel extends Gizmo {
 
     static boundsFor(m) {
         if (!m) return new Bounds();
+        if (m.sketch) {
+            let x = m.x - (m.sketch.width*m.alignx);
+            let y = m.y - (m.sketch.height*m.aligny);
+            return new Bounds({
+                x:x,
+                y:y,
+                width:m.sketch.width,
+                height:m.sketch.height,
+            });
+        }
         return new Bounds({
             x:m.x,
             y:m.y,
-            width:(m.sketch) ? m.sketch.width : 0,
-            height:(m.sketch) ? m.sketch.height : 0,
         });
     }
 
@@ -39,7 +47,6 @@ class GameModel extends Gizmo {
             let height = this.sketch.height;
             let x = this.x - (width*this.alignx);
             let y = this.y - (height*this.aligny);
-            console.log(`render: ${x},${y}`);
             this.sketch.render(ctx, x, y);
         }
     }

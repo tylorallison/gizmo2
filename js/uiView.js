@@ -29,6 +29,7 @@ class UiView extends Gizmo {
         this.$schema('hovered', { dflt: false });
         this.$schema('pressed', { dflt: false });
         this.$schema('blocking', { dflt: false });
+        this.$schema('z', { dflt:0 });
         this.$schema('clickedSound');
         this.$schema('hoveredSound');
         this.$schema('unhoveredSound');
@@ -48,15 +49,6 @@ class UiView extends Gizmo {
         this.at_unhovered.listen(this.$on_unhovered, this);
     }
 
-    adopt(child) {
-        super.adopt(child);
-        child.xform.parent = this.xform;
-    }
-    orphan(child) {
-        super.orphan(child);
-        child.xform.parent = null;
-    }
-    
     // EVENT HANDLERS ------------------------------------------------------
     $on_clicked(evt) {
         if (this.clickedSound) SfxSystem.play(this, this.clickedSound);
@@ -69,7 +61,43 @@ class UiView extends Gizmo {
         if (this.unhoveredSound) SfxSystem.play(this, this.unhoveredSound);
     }
 
+    // STATIC METHODS ------------------------------------------------------
+    static sortBy(a,b) {
+        if (!a || !b) return 0;
+        if (a.z === b.z) {
+            return a.xform.y-b.xform.y;
+        }
+        return a.z-b.z;
+    }
+
+    static boundsFor(view) {
+        if (!view || !view.xform) return new Bounds();
+        let min, max;
+        if (view.xform.angle) {
+            // min/max the four points of the bounds of the view, given that the angle
+            let p1 = view.xform.getWorld({x:view.xform.minx, y:view.xform.miny}, false);
+            let p2 = view.xform.getWorld({x:view.xform.maxx, y:view.xform.miny}, false);
+            let p3 = view.xform.getWorld({x:view.xform.minx, y:view.xform.maxy}, false);
+            let p4 = view.xform.getWorld({x:view.xform.maxx, y:view.xform.maxy}, false);
+            min = Vect.min(p1, p2, p3, p4);
+            max = Vect.max(p1, p2, p3, p4);
+        } else {
+            min = view.xform.getWorld({x:view.xform.minx, y:view.xform.miny}, false);
+            max = view.xform.getWorld({x:view.xform.maxx, y:view.xform.maxy}, false);
+        }
+        return new Bounds({ x:min.x-o.xform.minx, y:min.y-o.xform.miny, width:max.x-min.x, height:max.y-min.y }); 
+    }
+
     // METHODS -------------------------------------------------------------
+    adopt(child) {
+        super.adopt(child);
+        child.xform.parent = this.xform;
+    }
+    orphan(child) {
+        super.orphan(child);
+        child.xform.parent = null;
+    }
+
     $prerender(ctx) {
     }
     $subrender(ctx) {

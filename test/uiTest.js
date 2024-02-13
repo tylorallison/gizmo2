@@ -26,7 +26,6 @@ import { GameModel } from '../js/gameModel.js';
 class UITest extends Game {
     static xassets = [
         Sfx.from('../media/sound.mp3', { tag:'test.sound' }),
-        //Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0, smoothing: false}), }),
         Rect.xspec({ tag: 'test.rect', joint:'round', color: 'blue', borderColor:'red', border: 3, width: 40, height: 40 }),
         Sprite.xspec({tag: 'test.sprite', smoothing:false, media:ImageMedia.xspec({src: '../media/sprite.png', width: 16, height: 16, x: 0, y: 0}), }),
         SketchMixer.xspec({ tag:'test.mixer', variations: [
@@ -207,30 +206,70 @@ class UITest extends Game {
 
     test13() {
         let grid = new UiGrid({
-            //hex: true,
-            dbg: { xform: true, grid: true },
-            //createFilter: (gzo) => gzo.tag === 'grid',
-            rows: 4,
-            cols: 4,
-            //alignx: 0,
-            //aligny: 0,
-            /*
-            xform: new XForm({ 
-                grip: .5, 
-                x: 0, 
-                y: 75+128, 
-                fixedWidth: 256, 
-                fixedHeight: 256*.75,
-            }),
-            */
+            dbg:{ xform: true, grid: true },
+            rows:4,
+            cols:4,
+            xform:new XForm({ orig: 0 }),
+            createFilter:(gzo) => gzo.gridable && gzo.tag.startsWith('test13'),
         });
         this.placer(this.bgpanel, grid);
-
-        let m = new GameModel({
+        new GameModel({
+            tag:'test13.1',
             x:grid._pointFromIJ(0,0,true).x,
             y:grid._pointFromIJ(0,0,true).y,
         });
-        console.log(`m: ${m} ${m.x},${m.y}`);
+        new GameModel({
+            tag:'test13.2',
+            x:grid._pointFromIJ(0,0,true).x+4,
+            y:grid._pointFromIJ(0,0,true).y+4,
+            sketch:new Rect({ color:'orange', width:16, height:16 }),
+        });
+        new GameModel({
+            tag:'test13.3',
+            x:grid._pointFromIJ(2,2,true).x,
+            y:grid._pointFromIJ(2,2,true).y,
+        });
+        new GameModel({
+            tag:'test13.4',
+            x:grid._pointFromIJ(2,2,true).x+4,
+            y:grid._pointFromIJ(2,2,true).y+4,
+            z:-1,
+            sketch:new Rect({ color:'orange', width:16, height:16 }),
+        });
+    }
+
+    test14() {
+        let grid = new UiGrid({
+            hex: true,
+            dbg: { xform: true, grid: true },
+            rows: 4,
+            cols: 4,
+            createFilter:(gzo) => gzo.gridable && gzo.tag.startsWith('test14'),
+        });
+        this.placer(this.bgpanel, grid);
+        let m = new GameModel({
+            tag:'test14.1',
+            x:grid._pointFromIJ(3,0,true).x,
+            y:grid._pointFromIJ(3,0,true).y,
+        });
+        new GameModel({
+            tag:'test14.2',
+            x:grid._pointFromIJ(3,0,true).x+4,
+            y:grid._pointFromIJ(3,0,true).y+4,
+            sketch:new Rect({ color:'orange', width:16, height:16 }),
+        });
+        new GameModel({
+            tag:'test14.3',
+            x:grid._pointFromIJ(1,2,true).x,
+            y:grid._pointFromIJ(1,2,true).y,
+        });
+        new GameModel({
+            tag:'test14.4',
+            x:grid._pointFromIJ(1,2,true).x+4,
+            y:grid._pointFromIJ(1,2,true).y+4,
+            z:-1,
+            sketch:new Rect({ color:'orange', width:16, height:16 }),
+        });
     }
 
     async $prepare() {
@@ -244,7 +283,6 @@ class UITest extends Game {
         this.bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         cvs.adopt(this.bgpanel);
 
-        /*
         this.test1();
         this.test2();
         this.test3();
@@ -257,31 +295,9 @@ class UITest extends Game {
         this.test10();
         this.test11();
         this.test12();
-        */
 
         this.test13();
-
-        /*
-        let grid = new UiGrid({
-            hex: true,
-            dbg: { xform: true, grid: true },
-            createFilter: (gzo) => gzo.tag === 'grid',
-            rows: 4,
-            cols: 4,
-            alignx: 0,
-            aligny: 0,
-            xform: new XForm({ 
-                grip: .5, 
-                x: 0, 
-                y: 75+128, 
-                fixedWidth: 256, 
-                fixedHeight: 256*.75,
-            }),
-        });
-        Hierarchy.adopt(cvs, grid)
-        */
-
-        //let panel = new UiPanel({sketch: new Rect({color: 'green'}), tag: 'grid', xform: new XForm({ x: 32, y: 32, fixedWidth: 16, fixedHeight: 16})});
+        this.test14();
 
     }
 }

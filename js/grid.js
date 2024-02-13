@@ -1,4 +1,4 @@
-export { Grid, GadgetBounder, XFormBounder };
+export { Grid };
 
 import { GridBucketArray } from './gridArray.js';
 import { Bounds } from './bounds.js';
@@ -6,47 +6,6 @@ import { Fmt } from './fmt.js';
 import { Contains, Overlaps } from './intersect.js';
 import { Util } from './util.js';
 import { Gadget } from './gadget.js';
-
-class GadgetBounder extends Gadget {
-    boundsFor(gzo) {
-        if (!gzo) return new Bounds();
-        return new Bounds( gzo );
-    }
-    sortBy(a, b) {
-        if (a.z === b.z) {
-            return a.y-b.y;
-        } else {
-            return a.z-b.z;
-        }
-    }
-}
-
-class XFormBounder extends Gadget {
-    boundsFor(gzo) {
-        if (!gzo || !gzo.xform) return new Bounds();
-        let min, max;
-        if (gzo.xform.angle) {
-            // min/max the four points of the bounds of the gzo, given that the angle
-            let p1 = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.miny}, false);
-            let p2 = gzo.xform.getWorld({x:gzo.xform.maxx, y:gzo.xform.miny}, false);
-            let p3 = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.maxy}, false);
-            let p4 = gzo.xform.getWorld({x:gzo.xform.maxx, y:gzo.xform.maxy}, false);
-            min = Vect.min(p1, p2, p3, p4);
-            max = Vect.max(p1, p2, p3, p4);
-        } else {
-            min = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.miny}, false);
-            max = gzo.xform.getWorld({x:gzo.xform.maxx, y:gzo.xform.maxy}, false);
-        }
-        return new Bounds({ x: min.x-o.xform.minx, y: min.y-o.xform.miny, width: max.x-min.x, height: max.y-min.y }); 
-    }
-    sortBy(a, b) {
-        if (a.z === b.z) {
-            return a.xform.y-b.xform.y;
-        } else {
-            return a.z-b.z;
-        }
-    }
-}
 
 /** ========================================================================
  * A grid-based object (gizmo) storage bucket which allows for quick lookups of game elements based on location.
@@ -239,10 +198,8 @@ class Grid extends GridBucketArray {
     }
 
     add(gzo) {
-        console.log(`add ${gzo} min: ${this.minx},${this.miny}`);
         let gidx = this.idxsFromGzo(gzo);
         if (!gidx.length) {
-            console.log(`oob add: ${gzo}`);
             this.$oob.add(gzo);
         } else {
             // assign object to grid
@@ -257,6 +214,7 @@ class Grid extends GridBucketArray {
         if (!gzo) return;
         let gidx = this.$gzoIdxMap.get(gzo.gid) || [];
         this.$gzoIdxMap.delete(gzo.gid);
+        this.$oob.delete(gzo);
         // remove object from grid
         for (const idx of gidx) this.delidx(idx, gzo);
     }
@@ -266,16 +224,12 @@ class Grid extends GridBucketArray {
         let ogidx = this.$gzoIdxMap.get(gzo.gid) || [];
         let gidx = this.idxsFromGzo(gzo) || [];
         let modified = false;
-        console.log(`ogidx: ${ogidx}`)
-        console.log(`gidx: ${gidx}`)
-        console.log(`gzo min: ${gzo.x},${gzo.y} grid min: ${this.minx},${this.miny}`)
         if (!Util.arraysEqual(ogidx, gidx)) {
             if (this.dbg) console.log(`----- Grid.recheck: ${gzo} old ${ogidx} new ${gidx}`);
             // remove old
             for (const idx of ogidx) this.delidx(idx, gzo);
             // add new
             for (const idx of gidx) this.setidx(idx, gzo);
-            console.log(`set new`);
             // assign new gidx
             this.$gzoIdxMap.set(gzo.gid, gidx);
             modified = true;
@@ -286,7 +240,6 @@ class Grid extends GridBucketArray {
             }
         }
         if (gidx.length && this.$oob.has(gzo)) {
-            console.log(`oob delete ${gzo}`)
             this.$oob.delete(gzo);
         }
         return modified;
@@ -305,7 +258,6 @@ class Grid extends GridBucketArray {
         for (const gzo of gzos) this.recheck(gzo);
         // recheck position of all out-of-bounds objects
         for (const gzo of Array.from(this.$oob)) {
-            console.log(`recheck oob: ${gzo}`);
             this.recheck(gzo);
         }
     }

@@ -13,19 +13,14 @@ import { GameModel } from './gameModel.js';
 import { Fmt } from './fmt.js';
 
 class UiGrid extends UiView {
-    // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
-    // This makes it possible to serialize data and still have customizable functions.
-
     static {
         // the boundsFor is responsible for translating an object bounds to local grid space.  Object transformation is based on local coordinate space of the UI grid
         // which needs to be translated to a zero-based coordinate space of the underlying storage grid
         this.$schema('boundsFor', { readonly:true, dflt:() => GameModel.boundsFor });
         this.$schema('sortBy', { readonly:true, dflt:() => GameModel.sortBy });
-
         this.$schema('createFilter', { readonly:true, dflt:() => (gzo) => gzo.gridable });
-        this.$schema('renderFilter', { eventable:false, dflt: (o,x) => ((idx, view) => true) });
-        this.$schema('optimizeRender', { eventable:false, dflt: true });
-
+        this.$schema('renderFilter', { eventable:false, dflt:() => ((idx, view) => true) });
+        this.$schema('optimizeRender', { eventable:false, dflt:true });
         this.$schema('$chunks', { parser: (o,x) => {
             if (x.chunks) return x.chunks;
             const rows = x.rows || 8;
@@ -44,14 +39,13 @@ class UiGrid extends UiView {
                 return new Grid(xgrid);
             }
         }});
-        this.$schema('$revision', { parser: (o,x) => 0 });
-        this.$schema('$rerender', { parser: (o,x) => true });
-        this.$schema('$chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
-        this.$schema('$chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
-        this.$schema('$chunkCtx', { readonly: true, parser: (o,x) => o.$chunkCanvas.getContext('2d') });
-        this.$schema('$gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
-        this.$schema('$gridCtx', { readonly: true, parser: (o,x) => o.$gridCanvas.getContext('2d') });
-        this.$schema('$resizeTimer');
+        this.$schema('$revision', { parser:(o,x) => 0 });
+        this.$schema('$rerender', { parser:(o,x) => true });
+        this.$schema('$chunkUpdates', { readonly:true, parser: (o,x) => new Set()});
+        this.$schema('$chunkCanvas', { readonly:true, parser: (o,x) => document.createElement('canvas') });
+        this.$schema('$chunkCtx', { readonly:true, parser: (o,x) => o.$chunkCanvas.getContext('2d') });
+        this.$schema('$gridCanvas', { readonly:true, parser: (o,x) => document.createElement('canvas') });
+        this.$schema('$gridCtx', { readonly:true, parser: (o,x) => o.$gridCanvas.getContext('2d') });
         this.$schema('length', { getter: (o,x) => o.$chunks.length });
     }
 
@@ -78,16 +72,6 @@ class UiGrid extends UiView {
     // EVENT HANDLERS ------------------------------------------------------
     $on_modified(evt) {
         this.resize();
-        /*
-        if (!this.$resizeTimer) {
-            console.log(`on modified evt: ${evt}`);
-            this.resize();
-            this.$resizeTimer = new Timer({ttl:0, cb: () => {
-                this.$resizeTimer = null;
-                //this.resize();
-            }});
-        }
-        */
     }
 
     $on_viewCreated(evt) {
@@ -114,68 +98,28 @@ class UiGrid extends UiView {
     }
 
     $on_viewDestroyed(evt) {
-        //console.log(`onChildDestroyed: ${Fmt.ofmt(evt)}`);
         this.remove(evt.actor);
     }
-
-    // STATIC METHODS ------------------------------------------------------
 
     // METHODS -------------------------------------------------------------
 
     // grid proxy functions
-    // -- methods requiring translation
-    _ijFromPoint(x, y) { return this.$chunks._ijFromPoint(x-this.xform.minx, y-this.xform.miny); }
-    ijFromPoint(p) { return ((p) ? this._ijFromPoint(p.x, p.y) : {x:-1,y:-1}); }
-    _idxFromPoint(x, y) { return this.$chunks._idxFromPoint(x-this.xform.minx, y-this.xform.miny) }
-    idxFromPoint(p) { return ((p) ? this._idxFromPoint(p.x, p.y) : -1); }
-    pointFromIdx(idx, center=false) { 
-        let v = this.$chunks.pointFromIdx(idx, center);
-        return { 
-            x: (v.x !== -1) ? (v.x+this.xform.minx) : -1,
-            y: (v.y !== -1) ? (v.y+this.xform.miny) : -1,
-        }
-    }
-    _pointFromIJ(i, j, center=false) { 
-        let v = this.$chunks._pointFromIJ(i, j, center);
-        return { 
-            x: (v.x !== -1) ? (v.x+this.xform.minx) : -1,
-            y: (v.y !== -1) ? (v.y+this.xform.miny) : -1,
-        }
-    }
-    pointFromIJ(ij, center=false) { return ((ij) ? this._pointFromIJ(ij.x, ij.y, center) : { x:-1,y:-1}); }
-
-    *_findForPoint(x, y, filter=(v) => true) { yield *this.$chunks._findForPoint(x-this.xform.minx, y-this.xform.miny, filter); }
-    *findForPoint(p, filter=(v) => true) { 
-        if (!p) return;
-        yield *this._findForPoint(p.x, p.y, filter); 
-    }
-
-    _firstForPoint(x, y, filter=(v) => true) { return this.$chunks._firstForPoint(x-this.xform.minx, y-this.xform.miny, filter); }
-    firstForPoint(p, filter=(v) => true) { 
-        if (!p) return null;
-        return this._firstForPoint(p.x, p.y, filter);
-    }
-
-    *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) { 
-        yield *this.$chunks._findForBounds(bminx-this.xform.minx, bminy-this.xform.miny, bmaxx-this.xform.minx, bmaxy-this.xform.miny, filter); 
-    }
-    *findForBounds(b, filter=(v) => true) { 
-        if (!b) return;
-        yield *this._findForBounds(b.minx, b.miny, b.maxx, b.maxy, filter); 
-    }
-
-    _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) { 
-        return this.$chunks._firstForBounds(bminx-this.xform.minx, bminy-this.xform.miny, bmaxx-this.xform.minx, bmaxy-this.xform.miny, filter); 
-    }
-    firstForBounds(b, filter=(v) => true) { 
-        if (!b) return null;
-        return this._firstForBounds(b.minx, b.miny, b.maxx, b.maxy, filter); 
-    }
-
-    // -- translation from bounder
+    _ijFromPoint(x, y) { return this.$chunks._ijFromPoint(x, y); }
+    ijFromPoint(p) { return this.$chunks.ijFromPoint(p); }
+    _idxFromPoint(x, y) { return this.$chunks._idxFromPoint(x, y) }
+    idxFromPoint(p) { return this.$chunks.idxFromPoint(p); }
+    pointFromIdx(idx, center=false) { return this.$chunks.pointFromIdx(idx, center); }
+    _pointFromIJ(i, j, center=false) { return this.$chunks._pointFromIJ(i, j, center); }
+    pointFromIJ(ij, center=false) { return this.$chunks.pointFromIJ(ij, center); }
+    *_findForPoint(x, y, filter=(v) => true) { yield *this.$chunks._findForPoint(x, y, filter); }
+    *findForPoint(p, filter=(v) => true) { yield *this.$chunks.findForPoint(p, filter); }
+    _firstForPoint(x, y, filter=(v) => true) { return this.$chunks._firstForPoint(x, y, filter); }
+    firstForPoint(p, filter=(v) => true) { return this.$chunks.firstForPoint(p, filter); }
+    *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) { yield *this.$chunks._findForBounds(bminx, bminy, bmaxx, bmaxy, filter); }
+    *findForBounds(b, filter=(v) => true) { yield *this.$chunks.findForBounds(b, filter); }
+    _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) { return this.$chunks._firstForBounds(bminx, bminy, bmaxx, bmaxy, filter); }
+    firstForBounds(b, filter=(v) => true) { return this.$chunks.firstForBounds(b, filter); }
     idxsFromGzo(gzo) { return this.$chunks.idxsFromGzo(gzo); }
-
-    // -- no translation
     ijFromIdx(idx) { return this.$chunks.ijFromIdx(idx); }
     _idxFromIJ(i,j) { return this.$chunks._idxFromIJ(i,j); }
     idxFromIJ(ij) { return this.$chunks.idxFromIJ(ij); }
@@ -203,7 +147,6 @@ class UiGrid extends UiView {
         this.$chunks.add(gzo);
         // retrieve idxs
         let gidxs = this.$chunks.idxof(gzo);
-        console.log(`idxs for gzo: ${gzo} @ ${gzo.x},${gzo.y} idxs: ${gidxs} ij: ${Fmt.ofmt(this.ijFromIdx(gidxs[0]))}`);
         let needsUpdate = false;
         // assign object to grid
         for (const idx of gidxs) {
@@ -225,9 +168,8 @@ class UiGrid extends UiView {
         // remove from grid
         this.$chunks.remove(gzo);
         // ignore gizmo events
-        // FIXME
-        Evts.ignore(gzo, 'gizmo.updated', this.onChildUpdate, this);
-        Evts.ignore(gzo, 'gizmo.destroyed', this.onChildDestroyed, this);
+        if (gzo.at_modified) gzo.at_modified.ignore(this.$on_viewModified, this);
+        if (gzo.at_destroyed) gzo.at_destroyed.ignore(this.$on_viewDestroyed, this);
         let needsUpdate = false;
         for (const idx of gidxs) {
             needsUpdate = true;
@@ -237,7 +179,6 @@ class UiGrid extends UiView {
     }
 
     resize() {
-        console.log(`uigrid resize min: ${this.xform.minx},${this.xform.miny} chunks min: ${this.$chunks.minx},${this.$chunks.miny}`);
         if ( (this.xform.minx !== this.$chunks.minx) || 
              (this.xform.miny !== this.$chunks.miny) || 
              (this.xform.width !== this.$gridCanvas.width) || 
@@ -254,10 +195,8 @@ class UiGrid extends UiView {
 
     renderChunk(idx, dx, dy) {
         if (!this.$chunkCanvas.width || !this.$chunkCanvas.height) return;
-        //console.log(`render chunk: ${idx}`);
         // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
         let chunkOffset = this.$chunks.pointFromIdx(idx);
-        //console.log(`${idx} chunk offset: ${Fmt.ofmt(chunkOffset)}`);
         // FIXME bounds on optimized rendering...
         /*
         if (this.parent && this.optimizeRender) {
@@ -270,27 +209,18 @@ class UiGrid extends UiView {
         }
         */
         this.$chunkCtx.clearRect( 0, 0, this.$chunks.colSize, this.$chunks.rowSize );
-        //let tx = -(dx+chunkOffset.x);
-        //let ty = -(dy+chunkOffset.y);
-        //console.log(`fill chunk: 0,0 dim: ${this.$chunks.colSize},${this.$chunks.rowSize}`);
         this.$chunkCtx.translate(-chunkOffset.x, -chunkOffset.y);
-        //this.$chunkCtx.fillStyle = 'red';
-        //this.$chunkCtx.fillRect(chunkOffset.x, chunkOffset.y, this.$chunks.colSize,this.$chunks.rowSize);
-        //console.log(`fill rect @ ${chunkOffset.x},${chunkOffset.y}`);
         // iterate through all views at given idx
         for (const view of this.getidx(idx)) {
-            console.log(`view: ${view}`)
             if (this.renderFilter(idx, view)) {
-                console.log(`render view: ${view} @ ${view.x},${view.y} idx: ${idx}`);
                 view.render(this.$chunkCtx);
             }
         }
         this.$chunkCtx.translate(chunkOffset.x, chunkOffset.y);
         // -- resulting chunk is rendered to grid canvas
-        //this.$gridCtx.clearRect(chunkOffset.x, chunkOffset.y, this.$chunks.colSize, this.$chunks.rowSize);
         let tx = chunkOffset.x-dx;
         let ty = chunkOffset.y-dy;
-        console.log(`== render chunk ${idx} to grid: ${tx},${tx} t: ${tx},${ty}`);
+        this.$gridCtx.clearRect(tx, ty, this.$chunks.colSize, this.$chunks.rowSize);
         this.$gridCtx.drawImage(this.$chunkCanvas, tx, ty);
     }
 
@@ -298,8 +228,6 @@ class UiGrid extends UiView {
         // compute delta between xform space and grid space
         let dx = this.xform.minx;
         let dy = this.xform.miny;
-        //let dx = 0;
-        //let dy = 0;
         // render any updated chunks
         if (this.$rerender) {
             this.$chunkUpdates.clear();
@@ -320,15 +248,6 @@ class UiGrid extends UiView {
         if (this.dbg && this.dbg.grid) {
             this.$chunks.render(ctx, 0, 0);
         }
-
-        //ctx.fillStyle = 'rgba(255,255,0,.2)';
-        //ctx.fillRect(dx, dy, this.$chunks.colSize*this.$chunks.cols,this.$chunks.rowSize*this.$chunks.rows);
-
-        let wp = this.xform.getWorld({x:this.xform.minx, y:this.xform.miny}, true);
-        console.log(`wp: ${wp}`);
-        //ctx.strokeStyle = 'red';
-        //ctx.strokeRect(-75, -75, 50, 50);
-
     }
 
 
