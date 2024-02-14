@@ -16,7 +16,7 @@ class Grid extends GridBucketArray {
     static dfltRows = 8;
 
     static {
-        this.$schema('boundsFor', { readonly:true, dflt:() => ((v) = ((v && ('bounds' in v)) ? v.bounds : new Bounds(v))) }),
+        this.$schema('boundsFor', { readonly:true, dflt:() => ((v) => ((v && ('bounds' in v)) ? v.bounds : new Bounds(v))) }),
         this.$schema('dbg', { eventable:false, dflt:false });
         this.$schema('rowSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });
         this.$schema('colSize', { dflt:(o,x) => ('size' in x) ? x.size : 32 });

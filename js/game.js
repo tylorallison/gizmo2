@@ -4,7 +4,7 @@ import { Gizmo } from './gizmo.js';
 import { KeySystem } from './keySystem.js';
 import { MouseSystem } from './mouseSystem.js';
 import { RenderSystem } from './renderSystem.js';
-//import { StateMgr } from './stateMgr.js';
+import { StateMgr } from './stateMgr.js';
 import { SystemMgr } from './systemMgr.js';
 import { SfxSystem } from './sfxSystem.js';
 import { Fmt } from './fmt.js';
@@ -39,7 +39,7 @@ class Game extends Gizmo {
     /** @member {SystemMgr} Game#systems - game systems {@link System} */
     static { this.$schema('systems', { readonly: true, parser: (o,x) => new SystemMgr()}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
-    //static { this.$schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
+    static { this.$schema('states', { readonly: true, parser:(o,x) => new StateMgr() }); }
     static { this.$schema('xdflts', {dflt: (o) => o.constructor.xdflts}); }
     static { this.$schema('xassets', {dflt: (o) => o.constructor.xassets}); }
     /** @member {bool} Game#ticksPerMS - game clock runs on ticks per ms */

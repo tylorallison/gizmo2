@@ -9,7 +9,7 @@ describe('a grid implementation', () => {
             rowSize:4,
             cols:4,
             colSize:4,
-            bucketSort:((a, b) => a.z-b.z),
+            sortBy:((a, b) => a.z-b.z),
         });
     });
 

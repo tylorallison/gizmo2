@@ -31,7 +31,7 @@ class GameState extends Gizmo {
     $cpost(spec) {
         super.$cpost(spec);
         // state-specific initialization
-        this.init();
+        this.$init();
         this.$state = 'inactive';
     }
 
@@ -41,7 +41,7 @@ class GameState extends Gizmo {
      * - intended to create required state/variables for the given game state
      * - override init() for state specific init functionality
      */
-    init() {
+    $init() {
     }
 
     /**
@@ -50,7 +50,7 @@ class GameState extends Gizmo {
      * @param {*} data - game specific data used during state setup
      * @returns Promise
      */
-    async prepare(data) {
+    async $prepare(data) {
         return Promise.resolve();
     }
 
@@ -63,13 +63,11 @@ class GameState extends Gizmo {
     async start(data) {
         // prepare
         if (this.$state === 'inactive') {
-            // prepare
-            await this.prepare(data);
             if (this.dbg) console.log(`${this} starting prepare`);
             // setup state assets
             GadgetCtx.assets.push(this.xassets);
             await GadgetCtx.assets.load();
-            await this.prepare(data);
+            await this.$prepare(data);
             if (this.dbg) console.log(`${this} prepare complete`);
 
             this.$state = 'active';
