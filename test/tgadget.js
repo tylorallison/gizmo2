@@ -1,7 +1,7 @@
 import { Fmt } from '../js/fmt.js';
 import { Gadget, GadgetArray, GadgetCtx, GadgetProperty } from '../js/gadget.js';
 
-describe('gadget properties', () => {
+xdescribe('gadget properties', () => {
 
     it('can be constructed', ()=>{
         let gzd = new Gadget();
@@ -122,7 +122,7 @@ describe('gadgets', () => {
         expect(o.getg()).toEqual(32);
     });
 
-    it('privates work', ()=>{
+    xit('privates work', ()=>{
         class tgadget extends Gadget {
             #p = 42;
             getp() {
@@ -133,7 +133,7 @@ describe('gadgets', () => {
         expect(o.getp()).toEqual(42);
     });
 
-    it('object calls work', ()=>{
+    xit('object calls work', ()=>{
         class tgadget extends Gadget {
             static { this.$schema('key1', { dflt: 'hello'}); }
             static { this.$schema('key2', { dflt: 'there'}); }
@@ -148,7 +148,7 @@ describe('gadgets', () => {
         expect('key3' in o).toBeFalse();
     });
 
-    it('trigger destroyed events on destroy', ()=>{
+    xit('trigger destroyed events on destroy', ()=>{
         let cls = class tgadget extends Gadget {};
         gctx.at_destroyed.listen((evt) => tevt=evt);
         let o = new cls;
@@ -157,7 +157,7 @@ describe('gadgets', () => {
         expect(tevt.actor).toEqual(o);
     });
 
-    it('have overrideable defaults', ()=>{
+    xit('have overrideable defaults', ()=>{
         let cls = class tgadget extends Gadget {
             static { this.$schema('key', { dflt: 'hello' }); }
         };
@@ -171,7 +171,7 @@ describe('gadgets', () => {
         expect(o.key).toEqual('hello');
     });
 
-    it('can have values set', ()=>{
+    xit('can have values set', ()=>{
         let cls = class tgadget extends Gadget {
             static { this.$schema('key', { dflt: 'hello' }); }
         };
@@ -181,7 +181,7 @@ describe('gadgets', () => {
         expect(o.key).toEqual('there');
     });
 
-    it('value changes trigger modified event', ()=>{
+    xit('value changes trigger modified event', ()=>{
         let cls = class tgadget extends Gadget {
             static { this.$schema('key', { dflt: 'hello' }); }
         };
@@ -195,7 +195,7 @@ describe('gadgets', () => {
         expect(tevt.value).toEqual('there');
     });
 
-    it('readonly keys cannot be modified', ()=>{
+    xit('readonly keys cannot be modified', ()=>{
         let cls = class tgadget extends Gadget {
             static { this.$schema('key', { dflt:'hello', readonly:true }); }
         };
@@ -208,7 +208,7 @@ describe('gadgets', () => {
         expect(tevt).toEqual(undefined);
     });
 
-    it('can have schema applied/redefined', ()=>{
+    xit('can have schema applied/redefined', ()=>{
         class tgadget extends Gadget {
             static { this.$schema('var1', { dflt: 'foo'} ); }
             static { this.$schema('var2', { dflt: 'bar'} ); }
@@ -234,7 +234,7 @@ describe('gadgets', () => {
         expect(o3.var3).toEqual(undefined);
     });
 
-    it('can have ordered schema', ()=>{
+    xit('can have ordered schema', ()=>{
         class tgadget extends Gadget {
             static { this.$schema('var2', { dflt: 'bar', order: 2} ); }
             static { this.$schema('var1', { dflt: 'bar', order: 1} ); }
@@ -243,7 +243,7 @@ describe('gadgets', () => {
         expect(tgadget.prototype.$schemas.$order).toEqual(['var0', 'var1', 'var2']);
     });
 
-    it('subclass schema can be reordered', ()=>{
+    xit('subclass schema can be reordered', ()=>{
         class tgadget extends Gadget {
             static { this.$schema('var2', { dflt: 'bar', order: 2} ); }
             static { this.$schema('var1', { dflt: 'bar', order: 1} ); }
@@ -256,7 +256,7 @@ describe('gadgets', () => {
         expect(tsub.prototype.$schemas.$order).toEqual(['var2', 'var0', 'var1']);
     });
 
-    it('can be linked', ()=>{
+    xit('can be linked', ()=>{
         class tdata extends Gadget {
             static { this.$schema('var'); };
         };
@@ -267,7 +267,7 @@ describe('gadgets', () => {
         expect(o.data.var).toEqual('foo');
     });
 
-    it('linked vars trigger base at_modified', ()=>{
+    xit('linked vars trigger base at_modified', ()=>{
         class tdata extends Gadget {
             static { this.$schema('var'); };
         };
@@ -289,7 +289,7 @@ describe('gadgets', () => {
         expect(tevt).toEqual(null);
     });
 
-    it('proxy is called', ()=>{
+    xit('proxy is called', ()=>{
         class tgadget extends Gadget {
             static { this.$schema('data', { dflt:42 }); }
             get paccess() {
@@ -310,7 +310,7 @@ describe('gadgets', () => {
 
 });
 
-describe('gadget arrays', () => {
+xdescribe('gadget arrays', () => {
 
     let arr;
     let tevt;

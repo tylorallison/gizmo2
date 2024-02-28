@@ -8,11 +8,12 @@ class GadgetProperty {
     static key = 'property';
     static dflt = null;
     constructor(gzd, xprop={}, xgzd={}) {
+        console.log(`gzd: ${gzd}, xprop: ${Fmt.ofmt(xprop)} xgzd: ${xgzd}`)
         // link to gadget
         this.$gzd = gzd;
         // determine keys
         // - key: property key as it exists in gadget
-        // - xkey: key to look for in passed spec
+        // - xkey: key to look for in passed xgzd spec
         this.$key = xprop.key || this.constructor.key;
         this.$xkey = xprop.xkey || this.$key;
         this.$dflt = xprop.dflt;
@@ -23,6 +24,10 @@ class GadgetProperty {
         this.$setter = xprop.setter;
         // parse/set initial value
         this.$parser(xprop, xgzd);
+    }
+
+    static apply(cls, key, xprop={}) {
+        cls.$schema(key, xprop, this);
     }
 
     $parser(xprop, xgzd) {
@@ -55,6 +60,7 @@ class GadgetProperty {
 
     $dflter(xgzd) {
         // class schema $dflts overrides sentry defaults
+        console.log(`gzd: ${this.$gzd}`)
         if (this.$gzd.$dflts && this.$gzd.$dflts.has(this.$key)) {
             return this.$gzd.$dflts.get(this.$key);
         }
@@ -164,6 +170,7 @@ class $GadgetDefaults {
 
 class $GadgetSchemaEntry {
     constructor(key, spec={}) {
+        this.pcls = spec.pcls || GadgetProperty;
         this.key = key;
         this.xkey = spec.xkey || this.key;
         this.dflt = spec.dflt;
@@ -189,6 +196,7 @@ class $GadgetSchemaEntry {
         this.serializable = (this.getter) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializer = spec.serializer;
         this.order = spec.order || 0;
+        this.xprop = Object.assign({key:key}, spec);
     }
     getDefault(o, spec={}) {
         // class schema $dflts overrides sentry defaults
@@ -279,16 +287,27 @@ class $GadgetProxyHandler {
     get(target, key, proxy) {
         if (key === '$target') return target;
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+        if (sentry) {
+            //console.log(`sentry: ${sentry} target[key]: ${target[key]}`);
+            //return target[key].value;
+        }
+        /*
         if (sentry && sentry.getter) {
             let value = sentry.getter(proxy, target[key]);
             if (sentry.getterStore) target[key] = value;
             return value;
         }
+        */
         return Reflect.get(target, key, proxy);
     }
 
     set(target, key, value, proxy) {
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
+        //if (sentry) {
+            //target[key] = value;
+            //return true;
+        //}
+        /*
         if (sentry) {
             let storedValue = target[key];
             // $setter overrides set actions
@@ -314,9 +333,9 @@ class $GadgetProxyHandler {
                 target.$at_modified.trigger({key:key, value:value});
             }
             return true;
-
         }
-        target[key] = value;
+        */
+        //target[key] = value;
         return Reflect.set(target, key, value, proxy);
     }
 
@@ -362,10 +381,11 @@ class Gadget {
         }
     }
 
-    static $schema(key, spec={}) {
+    static $schema(key, spec={}, pcls=GadgetProperty) {
         this.$register();
         let schemas = this.prototype.$schemas;
         let sentry = new $GadgetSchemaEntry(key, spec);
+        console.log(`-- adding sentry: ${sentry}`);
         schemas.set(sentry);
     }
 
@@ -389,7 +409,9 @@ class Gadget {
         const schemas = this.$schemas;
         if (schemas) {
             for (const sentry of schemas.$entries) {
-                this[sentry.key]  = sentry.parser(this, spec);
+                let prop = new sentry.pcls(this, sentry.xprop, spec);
+                this.$target[sentry.key] = prop;
+                //this[sentry.key]  = sentry.parser(this, spec);
             }
         }
     }
@@ -425,6 +447,7 @@ class Gadget {
     }
 
     destroy() {
+        // FIXME
         for (const sentry of this.$schemas.$entries) {
             if (sentry.link && this[sentry.key]) {
                 let value = this[sentry.key];
@@ -436,6 +459,7 @@ class Gadget {
         GadgetCtx.at_destroyed.trigger({actor:this});
     }
 
+    // FIXME
     toString() {
         return Fmt.toString(this.constructor.name);
     }
