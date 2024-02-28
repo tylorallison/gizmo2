@@ -9,7 +9,7 @@ class CachingProperty {
     static $schema(cls, tag=null, xsentry={}, xprop={}) {
         if (!tag) tag = this.tag;
         cls.$schema(tag, Object.assign({ 
-            dflt:(o) => new this(o, xprop),
+            parser:(o) => new this(o, xprop),
             getter:(o,v) => v.value,
             getterStore:false, 
         }, xsentry));

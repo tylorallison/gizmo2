@@ -1,8 +1,117 @@
-export { Gadget, GadgetArray, GadgetGenerator, GadgetAssets, GadgetCtx };
+export { GadgetProperty, Gadget, GadgetArray, GadgetGenerator, GadgetAssets, GadgetCtx };
 
 import { EvtEmitter } from './evt.js';
 import { Fmt } from './fmt.js';
 import { Util } from './util.js';
+
+class GadgetProperty {
+    static key = 'property';
+    static dflt = null;
+    constructor(gzd, xprop={}, xgzd={}) {
+        // link to gadget
+        this.$gzd = gzd;
+        // determine keys
+        // - key: property key as it exists in gadget
+        // - xkey: key to look for in passed spec
+        this.$key = xprop.key || this.constructor.key;
+        this.$xkey = xprop.xkey || this.$key;
+        this.$dflt = xprop.dflt;
+        this.$readonly = ('readonly' in xprop) ? xprop.readonly : false;
+        this.$eventable = ('eventable' in xprop) ? xprop.eventable : true;
+        this.$link = ('link' in xprop) ? xprop.link : false;
+        this.$getter = xprop.getter;
+        this.$setter = xprop.setter;
+        // parse/set initial value
+        this.$parser(xprop, xgzd);
+    }
+
+    $parser(xprop, xgzd) {
+        let value;
+        // determine initial value
+        if (xprop.parser) {
+            value = xprop.parser(this.$gzd, xgzd);
+        } else {
+            if (this.$xkey in xgzd) {
+                value = xgzd[this.$xkey];
+            } else {
+                let dflt = this.$dflter(xgzd);
+                if (this.$getter) {
+                    value = this.$getter(this.$gzd, dflt);
+                } else {
+                    value = dflt;
+                }
+            }
+        }
+        // handle initial value being assigned and linked
+        if (this.$link && value) {
+            if (value && Array.isArray(value)) {
+                value = new GadgetArray(...value);
+            }
+            this.$linker(value);
+        }
+        // assign stored value 
+        this.$value = value;
+    }
+
+    $dflter(xgzd) {
+        // class schema $dflts overrides sentry defaults
+        if (this.$gzd.$dflts && this.$gzd.$dflts.has(this.$key)) {
+            return this.$gzd.$dflts.get(this.$key);
+        }
+        // sentry default
+        return (this.$dflt instanceof Function) ? this.$dflt(this.$gzd, xgzd) : this.$dflt;
+    }
+
+    $linker(value) {
+        if (value.at_modified) value.at_modified.listen(this.$on_linkModified, this, false, null, 0, this.$key);
+    }
+
+    $unlinker(value) {
+        if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
+    }
+
+    $on_linkModified(evt, key) {
+        if (this.$gzd.$at_modified) {
+            let path = `${key}.${evt.key}`;
+            this.$gzd.$at_modified.trigger({key:path, value:evt.value});
+        }
+    }
+
+    get value() {
+        if (this.$getter) {
+            let nv = this.$getter(this.$gzd,this.$value);
+            this.$value = nv;
+        }
+        return this.$value;
+    }
+
+    set value(value) {
+        let gzd = this.$gzd;
+        // handle readonly
+        if (gzd.$gadgetReady && this.$readonly) return false;
+        // allow value to be updated or acted upon by schema specific setter
+        if (this.$setter) value = this.$setter(gzd, this.$value, value);
+        if (Object.is(this.$value, value)) return true;
+        if (gzd.$gadgetReady && this.$link && this.$value) {
+            this.$unlinker(this.$value);
+        }
+        if (this.$link && value) {
+            if (value && Array.isArray(value)) {
+                value = new GadgetArray(...value);
+            }
+            this.$linker(value);
+        }
+        this.$value = value;
+        if (gzd.$gadgetReady && gzd.$at_modified && this.$eventable) {
+            gzd.$at_modified.trigger({key:this.$key, value:value});
+        }
+        return true;
+    }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, this.$key);
+    }
+}
 
 class $GadgetDefaults {
 
@@ -64,7 +173,10 @@ class $GadgetSchemaEntry {
         this.getterStore = ('getterStore' in spec) ? spec.getterStore : true;
         // setter function of format (object, value) => { <function returning final value> };
         this.setter = spec.setter;
-        this.readonly = (this.getter) ? true : ('readonly' in spec) ? spec.readonly : false;
+        // $setter function overrides set function and takes function (object, value) => { <true|false> };
+        // true is returned if set is allowed, false is returned if set is disallowed
+        this.$setter = spec.$setter;
+        this.readonly = ('readonly' in spec) ? spec.readonly : false;
         this.parser = spec.parser || ((o, x) => {
             if (this.xkey in x) return x[this.xkey];
             const dflt = this.getDefault(o, x);
@@ -178,15 +290,16 @@ class $GadgetProxyHandler {
     set(target, key, value, proxy) {
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
         if (sentry) {
+            let storedValue = target[key];
+            // $setter overrides set actions
+            if (sentry.$setter) {
+                return sentry.$setter(proxy, storedValue, value);
+            }
+            // handle readonly
             if (target.$gadgetReady && sentry.readonly) return false;
-
             // allow value to be updated or acted upon by schema specific setter
             if (sentry.setter) value = sentry.setter(proxy, value);
-
-            let storedValue = target[key];
             if (Object.is(storedValue, value)) return true;
-
-
             if (target.$gadgetReady && sentry.link && storedValue) {
                 this.$unlink(proxy, storedValue);
             }
@@ -276,11 +389,7 @@ class Gadget {
         const schemas = this.$schemas;
         if (schemas) {
             for (const sentry of schemas.$entries) {
-                if (sentry.getter) {
-                    this[sentry.key]  = sentry.getDefault(this, spec);
-                } else {
-                    this[sentry.key]  = sentry.parser(this, spec);
-                }
+                this[sentry.key]  = sentry.parser(this, spec);
             }
         }
     }

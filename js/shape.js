@@ -11,23 +11,21 @@ class Shape extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     static {
+        this.$schema('verts', {order:-1, dflt: () => [{x:0,y:0}, {x:20,y:0}, {x:20,y:20}, {x:0,y:20}], readonly:true});
         this.$schema('border', {dflt: 0});
         this.$schema('fill', {dflt: true});
         this.$schema('color', {dflt: 'rgba(127,127,127,.75'});
         this.$schema('borderColor', {dflt: 'black'});
         this.$schema('dash', { dflt:null });
         this.$schema('joint', { dflt:'miter' });
-        this.$schema('verts', {dflt: () => [{x:0,y:0}, {x:20,y:0}, {x:20,y:20}, {x:0,y:20}], readonly: true});
-        this.$schema('$scalex', {parser: () => 1});
-        this.$schema('$scaley', {parser: () => 1});
         this.$schema('$xverts', {dflt: (o) => o.verts});
         this.$schema('$scalex', {dflt:1});
         this.$schema('$scaley', {dflt:1});
-        this.$schema('$path', { getter: (o, ov) => o.constructor.toPath(o.$xverts)});
-        this.$schema('$min', { getter: (o, ov) => Vect.min(...o.verts) });
-        this.$schema('$max', { getter: (o, ov) => Vect.max(...o.verts) });
-        this.$schema('width', { getter: (o, ov) => (o.$max.x-o.$min.x) });
-        this.$schema('height', { getter: (o, ov) => (o.$max.y-o.$min.y) });
+        this.$schema('$path', { readonly:true, getter: (o, ov) => o.constructor.toPath(o.$xverts)});
+        this.$schema('$min', { readonly:true, getter: (o, ov) => Vect.min(...o.verts) });
+        this.$schema('$max', { readonly:true, getter: (o, ov) => Vect.max(...o.verts) });
+        this.$schema('width', { readonly:true, getter: (o, ov) => (o.$max.x-o.$min.x) });
+        this.$schema('height', { readonly:true, getter: (o, ov) => (o.$max.y-o.$min.y) });
     }
 
     static toPath(verts) {

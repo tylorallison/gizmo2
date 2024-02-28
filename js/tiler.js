@@ -22,8 +22,8 @@ class Tiler extends Sketch {
         this.$schema('$assetCache', { readonly: true, parser: () => new Map()});
         this.$schema('$modifiedIdxs', { readonly: true, parser: () => new Set()});
         this.$schema('$modified', { dflt:false });
-        this.$schema('width', { getter: (o) => o.tileSize.x*o.gridSize.x });
-        this.$schema('height', { getter: (o) => o.tileSize.y*o.gridSize.y });
+        this.$schema('width', { readonly:true, getter: (o) => o.tileSize.x*o.gridSize.x });
+        this.$schema('height', { readonly:true, getter: (o) => o.tileSize.y*o.gridSize.y });
     }
 
     $renderIdx(idx) {
