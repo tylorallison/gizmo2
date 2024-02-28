@@ -45,7 +45,7 @@ class MouseSystem extends System {
 
     // EVENT HANDLERS ------------------------------------------------------
     $on_wheeled(sevt) {
-        //sevt.preventDefault();
+        sevt.preventDefault();
         //console.log(`on wheeled: ${Fmt.ofmt(sevt)} wheeling: ${this.$wheeling} delta: ${sevt.deltaX},${sevt.deltaY},${sevt.deltaZ}`);
         this.scrolled = true;
         this.active = true;

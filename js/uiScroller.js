@@ -58,8 +58,8 @@ class UiScroller extends UiView {
 
         this.$schema('minScroll', { readonly:true, dflt: .1 });
         this.$schema('maxScroll', { readonly:true, dflt: .9 });
-        this.$schema('fitToSketchWidth', { readonly:true, dflt: false });
-        this.$schema('fitToSketchHeight', { readonly:true, dflt: false });
+        this.$schema('fitToWidth', { readonly:true, dflt: false });
+        this.$schema('fitToHeight', { readonly:true, dflt: false });
 
         this.$schema('minScale', { readonly:true, dflt: .1 });
         this.$schema('maxScale', { readonly:true, dflt: 10 });
@@ -223,9 +223,12 @@ class UiScroller extends UiView {
 
     $subrender(ctx) {
         this.$compute_scrollsize();
-        if (this.$scrollable.sketch) {
-            if (this.fitToSketchWidth) this.$scrollable.xform.fixedWidth = this.$scrollable.sketch.width;
-            if (this.fitToSketchHeight) this.$scrollable.xform.fixedHeight = this.$scrollable.sketch.height;
+        if (this.scrollable instanceof UiView) {
+            if (this.fitToWidth) this.$scrollable.xform.fixedWidth = this.scrollable.xform.width;
+            if (this.fitToHeight) this.$scrollable.xform.fixedHeight = this.scrollable.xform.height;
+        } else if (this.scrollable instanceof Asset) {
+            if (this.fitToWidth) this.$scrollable.xform.fixedWidth = this.scrollable.width;
+            if (this.fitToHeight) this.$scrollable.xform.fixedHeight = this.scrollable.height;
         }
     }
 

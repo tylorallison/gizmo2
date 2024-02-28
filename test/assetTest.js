@@ -15,7 +15,7 @@ import { GadgetCtx } from '../js/gadget.js';
 import { Text } from '../js/text.js';
 import { TextFormat } from '../js/textFormat.js';
 import { Tiler } from '../js/tiler.js';
-import { SketchMixer } from '../js/randomSketch.js';
+import { SketchMixer } from '../js/sketchMixer.js';
 import { Autotiler } from '../js/autotiler.js';
 import { Prng } from '../js/prng.js';
 

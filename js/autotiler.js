@@ -111,7 +111,7 @@ class $TileOverlay extends Gadget {
     }
 
     $resolveSketch(which, tag, side) {
-        let assetTag = `${tag}.${side}`;
+        let assetTag = `${tag}_${side}`;
         //console.log(`which:${which} assettag:${assetTag}`);
         if (!(this[which]) || this[which].tag !== assetTag) {
             this[which] = GadgetCtx.assets.get(assetTag);
@@ -865,7 +865,6 @@ class Autotiler extends Tiler {
     }
 
     $renderIdx(idx) {
-        //console.log(`render: ${idx}`);
         let ij = this.$grid.ijFromIdx(idx);
         let x = ij.x*this.tileSize.x;
         let y = ij.y*this.tileSize.y;

@@ -4,6 +4,7 @@ import { Gadget } from './gadget.js';
 import { Sprite } from './sprite.js';
 import { ImageMedia } from './media.js';
 import { SketchMixer } from './sketchMixer.js';
+import { Fmt } from './fmt.js';
 
 class SheetTemplate extends Gadget {
     static { this.$schema('mediaDir', { dflt:'media' }); }
@@ -37,6 +38,7 @@ class SheetTemplate extends Gadget {
             let vtag = `${tag}.v${i}`;
             variations.push(this.spriteFromIJ(vtag, src, ij, overrides));
         }
+        //console.log(`${Fmt.ofmt(variations)}`);
         return SketchMixer.xspec({ 
             tag:tag,
             variations:variations,
@@ -108,7 +110,8 @@ class AutotilerTemplate extends SheetTemplate {
         xspecs.push(this.mixerFromIJs(tag, src, this.map.base, {width:this.width*2, height:this.height*2}));
         // push specs for each of the "sides" of the autotiler map
         for (const [which,ijs] of this.map.entries()) {
-            let mtag = `${tag}.${which}`;
+            if (which === 'base') continue;
+            let mtag = `${tag}_${which}`;
             xspecs.push(this.mixerFromIJs(mtag, src, ijs));
         }
         return xspecs;
