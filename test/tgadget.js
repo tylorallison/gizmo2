@@ -1,5 +1,90 @@
 import { Fmt } from '../js/fmt.js';
-import { Gadget, GadgetArray, GadgetCtx } from '../js/gadget.js';
+import { Gadget, GadgetArray, GadgetCtx, GadgetProperty } from '../js/gadget.js';
+
+describe('gadget properties', () => {
+
+    it('can be constructed', ()=>{
+        let gzd = new Gadget();
+        let xprop = { key:'tprop' };
+        let xgzd = { tprop:42 };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        expect(p.$key).toEqual('tprop');
+        expect(p.$value).toEqual(42);
+        expect(p.value).toEqual(42);
+    });
+
+    it('can provide parser via spec', ()=>{
+        let gzd = new Gadget();
+        let xprop = { key:'tprop', parser:() => 'no way' };
+        let xgzd = { tprop:42 };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        expect(p.value).toEqual('no way');
+    });
+
+    it('can provide dflts', ()=>{
+        let gzd = new Gadget();
+        let xprop = { key:'tprop', dflt:'hello' };
+        let xgzd = { };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        expect(p.value).toEqual('hello');
+        xprop = { key:'tprop', dflt:(o,x) => x.foo };
+        xgzd = { foo:'there' };
+        p = new GadgetProperty(gzd, xprop, xgzd);
+        expect(p.value).toEqual('there');
+    });
+
+    it('can provide a getter', ()=>{
+        let gzd = new Gadget();
+        let xprop = { key:'tprop', getter:() => 'hello' };
+        let xgzd = { tprop:42 };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        expect(p.value).toEqual('hello');
+    });
+
+    it('can provide a setter', ()=>{
+        let gzd = new Gadget();
+        let xprop = { key:'tprop', setter:(o,ov,v) => 'resist' };
+        let xgzd = { tprop:42 };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        expect(p.value).toEqual(42);
+        p.value = 'hello';
+        expect(p.value).toEqual('resist');
+    });
+
+    it('mods trigger gzd modified', ()=>{
+        let gzd = new Gadget();
+        let tevt = {};
+        gzd.at_modified.listen((evt) => tevt=evt);
+        let xprop = { key:'tprop' };
+        let xgzd = { tprop:42 };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        p.value = 'hello';
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.key).toEqual('tprop');
+        expect(tevt.value).toEqual('hello');
+    });
+
+    it('linked value modify cascades', ()=>{
+        let gzd = new Gadget();
+        let gzdv = new Gadget();
+        let tevt = {};
+        gzd.at_modified.listen((evt) => tevt=evt);
+        let xprop = { key:'tprop', link:true };
+        let xgzd = { tprop:gzdv };
+        let p = new GadgetProperty(gzd, xprop, xgzd);
+        gzdv.at_modified.trigger({key:'hello', value:'there'});
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.tag).toEqual('modified');
+        expect(tevt.key).toEqual('tprop.hello');
+        expect(tevt.value).toEqual('there');
+        p.value = null;
+        tevt = {};
+        gzdv.at_modified.trigger({key:'hello', value:'there'});
+        expect(tevt).toEqual({});
+    });
+
+});
 
 describe('gadgets', () => {
     var gctx;
@@ -31,10 +116,10 @@ describe('gadgets', () => {
             }
         };
         let o = new tgadget();
-        expect(o.g).toEqual(2);
         expect(o.g).toEqual(4);
         expect(o.g).toEqual(8);
-        expect(o.getg()).toEqual(16);
+        expect(o.g).toEqual(16);
+        expect(o.getg()).toEqual(32);
     });
 
     it('privates work', ()=>{

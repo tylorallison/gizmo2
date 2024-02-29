@@ -46,7 +46,7 @@ class UiGrid extends UiView {
         this.$schema('$chunkCtx', { readonly:true, parser: (o,x) => o.$chunkCanvas.getContext('2d') });
         this.$schema('$gridCanvas', { readonly:true, parser: (o,x) => document.createElement('canvas') });
         this.$schema('$gridCtx', { readonly:true, parser: (o,x) => o.$gridCanvas.getContext('2d') });
-        this.$schema('length', { getter: (o,x) => o.$chunks.length });
+        this.$schema('length', { readonly:true, getter: (o,x) => o.$chunks.length });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

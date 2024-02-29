@@ -22,9 +22,9 @@ class Sketch extends Asset {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {number} Sketch#width=0 - width of sketch */
-    static { this.$schema('width', {dflt: 0, readonly: true}); }
+    static { this.$schema('width', {dflt: 0, readonly:true}); }
     /** @member {number} Sketch#height=0 - height of sketch */
-    static { this.$schema('height', {dflt: 0, readonly: true}); }
+    static { this.$schema('height', {dflt: 0, readonly:true}); }
     /** @member {boolean} Sketch#active=false - indicates if sketch is active */
     static { this.$schema('active', {dflt: false}); }
     /** @member {boolean|null} Sketch#smoothing=nul - indicates if image smoothing should be applied to this sketch, true/false controls this sketch, null defers to current context setting */

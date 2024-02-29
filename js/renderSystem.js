@@ -18,7 +18,7 @@ class RenderSystem extends System {
         if (this.$iterating) this.$stayActive = true;
     }
     $on_gizmoDestroyed(evt) {
-        this.store.delete(evt.actor.gid);
+        this.$store.delete(evt.actor.gid);
         this.active = true;
         if (this.$iterating) this.$stayActive = true;
     }

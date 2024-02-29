@@ -18,7 +18,7 @@ import { ImageMedia } from '../js/media.js';
 import { GadgetCtx } from '../js/gadget.js';
 import { Sprite } from '../js/sprite.js';
 import { Tiler } from '../js/tiler.js';
-import { SketchMixer } from '../js/randomSketch.js';
+import { SketchMixer } from '../js/sketchMixer.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { Gizmo } from '../js/gizmo.js';
 import { GameModel } from '../js/gameModel.js';
