@@ -28,7 +28,7 @@ class UiText extends UiView {
 
     static {
         this.$schema('$text', { order:-1, link:true, dflt: () => new Text({text: 'default text'}) });
-        this.$schema('text', { dflt: 'default text', setter: (o,v) => { o.$text.text = v; return v } });
+        this.$schema('text', { dflt: 'default text', setter: (o,ov,v) => { o.$text.text = v; return v } });
     }
 
     // METHODS -------------------------------------------------------------

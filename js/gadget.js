@@ -8,7 +8,6 @@ class GadgetProperty {
     static key = 'property';
     static dflt = null;
     constructor(gzd, xprop={}, xgzd={}) {
-        console.log(`gzd: ${gzd}, xprop: ${Fmt.ofmt(xprop)} xgzd: ${xgzd}`)
         // link to gadget
         this.$gzd = gzd;
         // determine keys
@@ -22,8 +21,16 @@ class GadgetProperty {
         this.$link = ('link' in xprop) ? xprop.link : false;
         this.$getter = xprop.getter;
         this.$setter = xprop.setter;
+        //console.log(`setter: ${this.$setter}`);
         // parse/set initial value
         this.$parser(xprop, xgzd);
+    }
+
+    destroy() {
+        if (this.$link && this.$value) {
+            this.$unlinker(this.$value);
+            if (this.$value.destroy) this.$value.destroy();
+        }
     }
 
     static apply(cls, key, xprop={}) {
@@ -54,13 +61,14 @@ class GadgetProperty {
             }
             this.$linker(value);
         }
+        // handle setter value conversion
+        if (this.$setter) value = this.$setter(this.$gzd, undefined, value);
         // assign stored value 
         this.$value = value;
     }
 
     $dflter(xgzd) {
         // class schema $dflts overrides sentry defaults
-        console.log(`gzd: ${this.$gzd}`)
         if (this.$gzd.$dflts && this.$gzd.$dflts.has(this.$key)) {
             return this.$gzd.$dflts.get(this.$key);
         }
@@ -69,6 +77,7 @@ class GadgetProperty {
     }
 
     $linker(value) {
+        //console.log(`-- linker ${this} proxy: ${this.$proxy} gzd proxy: ${this.$gzd.$proxy}`);
         if (value.at_modified) value.at_modified.listen(this.$on_linkModified, this, false, null, 0, this.$key);
     }
 
@@ -85,7 +94,7 @@ class GadgetProperty {
 
     get value() {
         if (this.$getter) {
-            let nv = this.$getter(this.$gzd,this.$value);
+            let nv = this.$getter(this.$gzd, this.$value);
             this.$value = nv;
         }
         return this.$value;
@@ -94,10 +103,10 @@ class GadgetProperty {
     set value(value) {
         let gzd = this.$gzd;
         // handle readonly
-        if (gzd.$gadgetReady && this.$readonly) return false;
+        if (gzd.$gadgetReady && this.$readonly) throw new Error(`${this.$key} is readonly`);
         // allow value to be updated or acted upon by schema specific setter
         if (this.$setter) value = this.$setter(gzd, this.$value, value);
-        if (Object.is(this.$value, value)) return true;
+        if (Object.is(this.$value, value)) return;
         if (gzd.$gadgetReady && this.$link && this.$value) {
             this.$unlinker(this.$value);
         }
@@ -111,7 +120,6 @@ class GadgetProperty {
         if (gzd.$gadgetReady && gzd.$at_modified && this.$eventable) {
             gzd.$at_modified.trigger({key:this.$key, value:value});
         }
-        return true;
     }
 
     toString() {
@@ -172,6 +180,8 @@ class $GadgetSchemaEntry {
     constructor(key, spec={}) {
         this.pcls = spec.pcls || GadgetProperty;
         this.key = key;
+        // FIXME
+        /*
         this.xkey = spec.xkey || this.key;
         this.dflt = spec.dflt;
         this.eventable = ('eventable' in spec) ? spec.eventable : true;
@@ -192,6 +202,7 @@ class $GadgetSchemaEntry {
         });
         // link - if the value is an object, setup Gadget links between the trunk and leaf.
         this.link = ('link' in spec) ? spec.link : false;
+        */
         // generated fields are not serializable
         this.serializable = (this.getter) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializer = spec.serializer;
@@ -214,36 +225,46 @@ class $GadgetSchemaEntry {
 class $GadgetDfltProxy {
     constructor(cls, base) {
         this.$cls = cls;
-        if (base) Object.setPrototypeOf(this, base);
+        this.$base = base;
     }
     has(key) {
-        return GadgetCtx.dflts.has(this.$cls, key)
+        let present = GadgetCtx.dflts.has(this.$cls, key);
+        if (present) return present;
+        if (this.$base) return this.$base.has(key);
+        return false;
     }
     get(key) {
-        return GadgetCtx.dflts.get(this.$cls, key)
+        if (GadgetCtx.dflts.has(this.$cls, key)) {
+            return GadgetCtx.dflts.get(this.$cls, key)
+        }
+        if (this.$base) return this.$base.get(key);
+        return undefined;
     }
 }
 
 class $GadgetSchemas {
     constructor(base) {
         this.$order = [];
-        this.$dflts = new $GadgetDefaults((base) ? base.$dflts : null);
+        //this.$dflts = new $GadgetDefaults((base) ? base.$dflts : null);
         this.$order = (base) ? Array.from(base.$order) : [];
-        if (base) Object.setPrototypeOf(this, base);
+        this.$entries = new Map();
+        if (base) {
+            base.$entries.forEach((value, key) => this.$entries.set(key, value));
+        }
     }
 
-    get $entries() {
+    get entries() {
         let entries = [];
-        for (const key of this.$order) entries.push(this[key]);
+        for (const key of this.$order) entries.push(this.$entries.get(key));
         return entries;
     }
 
     has(key) {
-        return key in this;
+        return this.$entries.has(key);
     }
 
     get(key) {
-        return this[key];
+        return this.$entries.get(key);
     }
 
     keys() {
@@ -256,18 +277,18 @@ class $GadgetSchemas {
      */
     set(entry) {
         let key = entry.key;
-        this[key] = entry;
+        this.$entries.set(key, entry);
         if (!this.$order.includes(key)) this.$order.push(key);
         // adjust order for sentries appropriately
         this.$order.sort(((self) => {
-            return (a, b) => (self[a].order - self[b].order);
+            return (a, b) => (self.$entries.get(a).order - self.$entries.get(b).order);
         })(this));
     }
 
     clear(key) {
         let idx = this.$order.indexOf(key);
         if (idx !== -1) this.$order.splice(idx, 1);
-        if (Object.hasOwn(this, key)) delete this[key];
+        delete this.$entries.delete(key);
     }
 }
 
@@ -288,8 +309,8 @@ class $GadgetProxyHandler {
         if (key === '$target') return target;
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
         if (sentry) {
-            //console.log(`sentry: ${sentry} target[key]: ${target[key]}`);
-            //return target[key].value;
+            let prop = target[key];
+            if (prop) return prop.value;
         }
         /*
         if (sentry && sentry.getter) {
@@ -303,10 +324,13 @@ class $GadgetProxyHandler {
 
     set(target, key, value, proxy) {
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
-        //if (sentry) {
-            //target[key] = value;
-            //return true;
-        //}
+        if (sentry) {
+            let prop = target[key];
+            if (prop) {
+                target[key].value = value;
+                return true;
+            }
+        }
         /*
         if (sentry) {
             let storedValue = target[key];
@@ -385,7 +409,6 @@ class Gadget {
         this.$register();
         let schemas = this.prototype.$schemas;
         let sentry = new $GadgetSchemaEntry(key, spec);
-        console.log(`-- adding sentry: ${sentry}`);
         schemas.set(sentry);
     }
 
@@ -408,7 +431,7 @@ class Gadget {
     $cparse(spec={}) {
         const schemas = this.$schemas;
         if (schemas) {
-            for (const sentry of schemas.$entries) {
+            for (const sentry of schemas.entries) {
                 let prop = new sentry.pcls(this, sentry.xprop, spec);
                 this.$target[sentry.key] = prop;
                 //this[sentry.key]  = sentry.parser(this, spec);
@@ -448,13 +471,27 @@ class Gadget {
 
     destroy() {
         // FIXME
-        for (const sentry of this.$schemas.$entries) {
+        for (const sentry of this.$schemas.entries) {
+            if (sentry.key in this.$target) {
+                this.$target[sentry.key].destroy();
+            }
+            /*
+            if (sentry.link && this[sentry.key]) {
+                let value = this[sentry.key];
+                if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
+                if (value.destroy) value.destroy();
+            }
+            */
+        }
+        /*
+        for (const sentry of this.$schemas.entries) {
             if (sentry.link && this[sentry.key]) {
                 let value = this[sentry.key];
                 if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
                 if (value.destroy) value.destroy();
             }
         }
+        */
         if (this.$at_destroyed) this.$at_destroyed.trigger();
         GadgetCtx.at_destroyed.trigger({actor:this});
     }

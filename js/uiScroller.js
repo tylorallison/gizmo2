@@ -25,7 +25,7 @@ class UiScroller extends UiView {
         }});
 
         // modifiable internal scrollable xform properties
-        this.$schema('width', { order:-1, dflt:0, setter: (o,v) => {
+        this.$schema('width', { order:-1, dflt:0, setter: (o,ov,v) => {
             if (o.$scrollable) {
                 if (v) {
                     o.$scrollable.xform.fixedWidth = v;
@@ -35,7 +35,7 @@ class UiScroller extends UiView {
             }
             return v;
         }});
-        this.$schema('height', { order:-1, dflt:0, setter: (o,v) => {
+        this.$schema('height', { order:-1, dflt:0, setter: (o,ov,v) => {
             if (o.$scrollable) {
                 if (v) {
                     o.$scrollable.xform.fixedHeight = v;
@@ -45,11 +45,11 @@ class UiScroller extends UiView {
             }
             return v;
         }});
-        this.$schema('origx', { order:-1, dflt:.5, setter: (o,v) => {
+        this.$schema('origx', { order:-1, dflt:.5, setter: (o,ov,v) => {
             if (o.$scrollable) o.$scrollable.xform.origx = v;
             return v;
         }});
-        this.$schema('origy', { order:-1, dflt:.5, setter: (o,v) => {
+        this.$schema('origy', { order:-1, dflt:.5, setter: (o,ov,v) => {
             if (o.$scrollable) o.$scrollable.xform.origy = v;
             return v;
         }});

@@ -69,12 +69,13 @@ class UiCanvas extends UiView {
         this.canvas.height = height;
         this.xform.fixedWidth = width;
         this.xform.fixedHeight = height;
+        console.error(`== set xform w: ${width} proxy: ${this.xform.$proxy}`);
     }  
 
     $on_xformUpdated(evt) {
         if (this.fitToWindow) {
-            this.xform.$target.fixedWidth = this.canvas.width;
-            this.xform.$target.fixedHeight = this.canvas.height;
+            this.xform.$target.fixedWidth.value = this.canvas.width;
+            this.xform.$target.fixedHeight.value = this.canvas.height;
         } else {
             this.canvas.width = this.xform.fixedWidth;
             this.canvas.height = this.xform.fixedHeight;

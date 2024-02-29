@@ -19,7 +19,7 @@ class UiButton extends UiPanel {
         this.$schema('inactiveSketch', { link: true, dflt: (o) => new Rect({ borderColor:'rgba(55,55,55,.5)', border:3, color: 'rgba(127,127,127,.25)' }) });
         // button text
         this.$schema('textXForm', { readonly:true, dflt: () => new XForm({grip:.1}) });
-        this.$schema('text', { dflt:'default text', setter: (o,v) => { o.$text.text = v; return v } });
+        this.$schema('text', { dflt:'default text', setter: (o,ov,v) => { o.$text.text = v; return v } });
         this.$schema('highlightFmt', { eventable:false });
         this.$schema('inactiveFmt', { eventable:false });
         this.$schema('highlighted', { dflt:false });

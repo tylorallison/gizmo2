@@ -14,9 +14,9 @@ class Gizmo extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {int} Gizmo#gid - unique gadget identifier*/
-    static { this.$schema('gid', { readonly: true, dflt: (o) => Gizmo.$getgid() }); }
+    static { this.$schema('gid', { order:-2, readonly: true, dflt: (o) => Gizmo.$getgid() }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */
-    static { this.$schema('tag', { order: 1, readonly: true, dflt: (o) => `${o.constructor.name}.${o.gid}` }); }
+    static { this.$schema('tag', { order:-1, readonly: true, dflt: (o) => `${o.constructor.name}.${o.gid}` }); }
     static { this.$schema('parent', { link: false, serializable: false, parser: () => null }); }
     static { this.$schema('children', { link: true, parser: () => [] }); }
 

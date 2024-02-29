@@ -9,14 +9,14 @@ import { XForm } from './xform.js';
 class UiHorizontalSlider extends UiView {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.$schema('knobPct', { order:-2, dflt:.1, setter:(o,v) => {
+        this.$schema('knobPct', { order:-2, dflt:.1, setter:(o,ov,v) => {
             if (o.knobXForm) {
                 o.knobXForm.left = o.value - o.value * v;
                 o.knobXForm.right = 1-o.value - (1-o.value)*v;
             }
             return v;
         }});
-        this.$schema('value', { order:-1, dflt:.5, setter:(o,v) => {
+        this.$schema('value', { order:-1, dflt:.5, setter:(o,ov,v) => {
             v = Mathf.clamp(v, 0, 1);
             if (o.knobXForm) {
                 o.knobXForm.left = v - v * o.knobPct;
@@ -95,14 +95,14 @@ class UiHorizontalSlider extends UiView {
 class UiVerticalSlider extends UiView {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.$schema('knobPct', { order:-2, dflt:.1, setter:(o,v) => {
+        this.$schema('knobPct', { order:-2, dflt:.1, setter:(o,ov,v) => {
             if (o.knobXForm) {
                 o.knobXForm.top = o.value - o.value * v;
                 o.knobXForm.bottom = 1-o.value - (1-o.value)*v;
             }
             return v;
         } });
-        this.$schema('value', { order:-1, dflt:.5, setter:(o,v) => {
+        this.$schema('value', { order:-1, dflt:.5, setter:(o,ov,v) => {
             v = Mathf.clamp(v, 0, 1);
             if (o.knobXForm) {
                 o.knobXForm.top = v - v * o.knobPct;

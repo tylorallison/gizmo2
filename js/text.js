@@ -172,14 +172,18 @@ class Text extends Sketch {
     $cpost(spec) {
         super.$cpost(spec);
         this.$wrapWidth = this.wrapWidth;
-        this.$parse();
-        this.$layout();
+        if (this.text) {
+            this.$parse();
+            this.$layout();
+        }
         this.at_modified.listen(this.$on_modified, this);
     }
 
     $on_modified(evt) {
-        this.$parse();
-        this.$layout();
+        if (this.text) {
+            this.$parse();
+            this.$layout();
+        }
     }
 
     /**
