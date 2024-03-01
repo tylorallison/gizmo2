@@ -7,6 +7,10 @@ import { Util } from './util.js';
 class GadgetProperty {
     static key = 'property';
     static dflt = null;
+    static readonly = false;
+    static eventable = true;
+    static link = false;
+
     constructor(gzd, xprop={}, xgzd={}) {
         // link to gadget
         this.$gzd = gzd;
@@ -15,12 +19,12 @@ class GadgetProperty {
         // - xkey: key to look for in passed xgzd spec
         this.$key = xprop.key || this.constructor.key;
         this.$xkey = xprop.xkey || this.$key;
-        this.$dflt = xprop.dflt;
-        this.$readonly = ('readonly' in xprop) ? xprop.readonly : false;
-        this.$eventable = ('eventable' in xprop) ? xprop.eventable : true;
-        this.$link = ('link' in xprop) ? xprop.link : false;
-        this.$getter = xprop.getter;
-        this.$setter = xprop.setter;
+        this.$dflt = ('dflt' in xprop) ? xprop.dflt : this.constructor.dflt;
+        this.$readonly = ('readonly' in xprop) ? xprop.readonly : this.constructor.readonly;
+        this.$eventable = ('eventable' in xprop) ? xprop.eventable : this.constructor.eventable;
+        this.$link = ('link' in xprop) ? xprop.link : this.constructor.link;
+        this.$pgetter = xprop.getter;
+        this.$psetter = xprop.setter;
         // parse/set initial value
         this.$parser(xprop, xgzd);
     }
@@ -32,8 +36,8 @@ class GadgetProperty {
         }
     }
 
-    static apply(cls, key, xprop={}) {
-        cls.$schema(key, xprop, this);
+    static apply(cls, key=this.key, xprop={}) {
+        cls.$schema(key, Object.assign({pcls:this, xprop}), this);
     }
 
     $parser(xprop, xgzd) {
@@ -46,8 +50,8 @@ class GadgetProperty {
                 value = xgzd[this.$xkey];
             } else {
                 let dflt = this.$dflter(xgzd);
-                if (this.$getter) {
-                    value = this.$getter(this.$gzd, dflt);
+                if (this.$pgetter) {
+                    value = this.$pgetter(this.$gzd, dflt);
                 } else {
                     value = dflt;
                 }
@@ -61,7 +65,7 @@ class GadgetProperty {
             this.$linker(value);
         }
         // handle setter value conversion
-        if (this.$setter) value = this.$setter(this.$gzd, undefined, value);
+        if (this.$psetter) value = this.$psetter(this.$gzd, undefined, value);
         // assign stored value 
         this.$value = value;
     }
@@ -90,20 +94,20 @@ class GadgetProperty {
         }
     }
 
-    get value() {
-        if (this.$getter) {
-            let nv = this.$getter(this.$gzd, this.$value);
+    $getter() {
+        if (this.$pgetter) {
+            let nv = this.$pgetter(this.$gzd, this.$value);
             this.$value = nv;
         }
         return this.$value;
     }
 
-    set value(value) {
+    $setter(value) {
         let gzd = this.$gzd;
         // handle readonly
         if (gzd.$gadgetReady && this.$readonly) throw new Error(`${this.$key} is readonly`);
         // allow value to be updated or acted upon by schema specific setter
-        if (this.$setter) value = this.$setter(gzd, this.$value, value);
+        if (this.$psetter) value = this.$psetter(gzd, this.$value, value);
         if (Object.is(this.$value, value)) return;
         if (gzd.$gadgetReady && this.$link && this.$value) {
             this.$unlinker(this.$value);
@@ -118,6 +122,14 @@ class GadgetProperty {
         if (gzd.$gadgetReady && gzd.$at_modified && this.$eventable) {
             gzd.$at_modified.trigger({key:this.$key, value:value});
         }
+    }
+
+    get value() {
+        return this.$getter();
+    }
+
+    set value(value) {
+        this.$setter(value);
     }
 
     toString() {

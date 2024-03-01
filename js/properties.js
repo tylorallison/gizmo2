@@ -1,24 +1,9 @@
 export { CachingProperty, DependentProperty };
 
 import { Fmt } from './fmt.js';
+import { GadgetProperty } from './gadget.js';
 
-class CachingProperty {
-    static tag = 'factor';
-    static dflt = null;
-
-    static $schema(cls, tag=null, xsentry={}, xprop={}) {
-        if (!tag) tag = this.tag;
-        cls.$schema(tag, Object.assign({ 
-            parser:(o) => new this(o, xprop),
-            getter:(o,v) => v.value,
-            getterStore:false, 
-        }, xsentry));
-    }
-
-    constructor(gzo, spec={}) {
-        this.$gzo = gzo;
-        this.$value = ('value' in spec) ? spec.value : this.constructor.dflt;
-    }
+class CachingProperty extends GadgetProperty{
 
     $check() {
         return true;
@@ -28,7 +13,7 @@ class CachingProperty {
         return null;
     }
 
-    get value() {
+    $getter() {
         if (this.$check()) this.$compute()
         return this.$value;
     }
@@ -37,18 +22,19 @@ class CachingProperty {
 
 class DependentProperty extends CachingProperty {
     static deps = [];
-    constructor(gzo, spec={}) {
-        super(gzo, spec);
-        this.$deps = ('deps' in spec) ? spec.deps : this.constructor.deps;
+
+    constructor(gzd, xprop={}, xgzd={}) {
+        super(gzd, xprop, xgzd);
+        this.$deps = ('deps' in xprop) ? xprop.deps : this.constructor.deps;
         this.$lasts = {};
     }
 
     $check() {
         let recompute = false;
         for (const dep of this.$deps) {
-            if (this.$gzo[dep] != this.$lasts[dep]) {
+            if (this.$gzd[dep] != this.$lasts[dep]) {
                 recompute = true;
-                this.$lasts[dep] = this.$gzo[dep];
+                this.$lasts[dep] = this.$gzd[dep];
             }
         }
         return recompute;

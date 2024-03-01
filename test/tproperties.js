@@ -4,7 +4,7 @@ import { CachingProperty, DependentProperty } from '../js/properties.js';
 describe('a caching property', () => {
     let docheck = false;
     class tprop extends CachingProperty {
-        static tag = 'tprop';
+        static key = 'tprop';
         static dflt = 1;
         $check() {
             return docheck;
@@ -15,7 +15,7 @@ describe('a caching property', () => {
     }
     class tgadget extends Gadget {
         static {
-            tprop.$schema(this);
+            tprop.apply(this);
         }
     }
 
@@ -33,7 +33,7 @@ describe('a caching property', () => {
 
 describe('a dependent property', () => {
     class tprop extends DependentProperty {
-        static tag = 'tprop';
+        static key = 'tprop';
         static dflt = 1;
         static deps = ['v1', 'v2'];
         $compute() {
@@ -42,7 +42,7 @@ describe('a dependent property', () => {
     }
     class tgadget extends Gadget {
         static {
-            tprop.$schema(this);
+            tprop.apply(this);
             this.$schema('v1', { dflt: 1 })
             this.$schema('v2', { dflt: 2 })
             this.$schema('v3', { dflt: 3 })
