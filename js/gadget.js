@@ -178,29 +178,6 @@ class $GadgetSchemaEntry {
     constructor(key, spec={}) {
         this.pcls = spec.pcls || GadgetProperty;
         this.key = key;
-        // FIXME
-        /*
-        this.xkey = spec.xkey || this.key;
-        this.dflt = spec.dflt;
-        this.eventable = ('eventable' in spec) ? spec.eventable : true;
-        // getter function of format (object, value) => { <function returning final value> };
-        this.getter = spec.getter;
-        this.getterStore = ('getterStore' in spec) ? spec.getterStore : true;
-        // setter function of format (object, value) => { <function returning final value> };
-        this.setter = spec.setter;
-        // $setter function overrides set function and takes function (object, value) => { <true|false> };
-        // true is returned if set is allowed, false is returned if set is disallowed
-        this.$setter = spec.$setter;
-        this.readonly = ('readonly' in spec) ? spec.readonly : false;
-        this.parser = spec.parser || ((o, x) => {
-            if (this.xkey in x) return x[this.xkey];
-            const dflt = this.getDefault(o, x);
-            if (this.getter) return this.getter(o,dflt);
-            return dflt;
-        });
-        // link - if the value is an object, setup Gadget links between the trunk and leaf.
-        this.link = ('link' in spec) ? spec.link : false;
-        */
         // generated fields are not serializable
         this.serializable = (this.getter) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializer = spec.serializer;
@@ -243,7 +220,6 @@ class $GadgetDfltProxy {
 class $GadgetSchemas {
     constructor(base) {
         this.$order = [];
-        //this.$dflts = new $GadgetDefaults((base) ? base.$dflts : null);
         this.$order = (base) ? Array.from(base.$order) : [];
         this.$entries = new Map();
         if (base) {
@@ -295,14 +271,6 @@ class $GadgetProxyHandler {
         this.$fcns = {};
     }
 
-    $link(proxy, key, value) {
-        if (value.at_modified) value.at_modified.listen(proxy.$on_linkModified, proxy, false, null, 0, key);
-    }
-
-    $unlink(proxy, value) {
-        if (value.at_modified) value.at_modified.ignore(proxy.$on_linkModified, proxy);
-    }
-
     get(target, key, proxy) {
         if (key === '$target') return target;
         let sentry = (target.$schemas) ? target.$schemas.get(key) : null;
@@ -310,13 +278,6 @@ class $GadgetProxyHandler {
             let prop = target[key];
             if (prop) return prop.value;
         }
-        /*
-        if (sentry && sentry.getter) {
-            let value = sentry.getter(proxy, target[key]);
-            if (sentry.getterStore) target[key] = value;
-            return value;
-        }
-        */
         return Reflect.get(target, key, proxy);
     }
 
@@ -329,35 +290,6 @@ class $GadgetProxyHandler {
                 return true;
             }
         }
-        /*
-        if (sentry) {
-            let storedValue = target[key];
-            // $setter overrides set actions
-            if (sentry.$setter) {
-                return sentry.$setter(proxy, storedValue, value);
-            }
-            // handle readonly
-            if (target.$gadgetReady && sentry.readonly) return false;
-            // allow value to be updated or acted upon by schema specific setter
-            if (sentry.setter) value = sentry.setter(proxy, value);
-            if (Object.is(storedValue, value)) return true;
-            if (target.$gadgetReady && sentry.link && storedValue) {
-                this.$unlink(proxy, storedValue);
-            }
-            if (sentry.link && value) {
-                if (value && Array.isArray(value)) {
-                    value = new GadgetArray(...value);
-                }
-                this.$link(proxy, key, value);
-            }
-            target[key] = value;
-            if (target.$gadgetReady && target.$at_modified && sentry && sentry.eventable) {
-                target.$at_modified.trigger({key:key, value:value});
-            }
-            return true;
-        }
-        */
-        //target[key] = value;
         return Reflect.set(target, key, value, proxy);
     }
 
@@ -460,36 +392,12 @@ class Gadget {
         return this.$proxy;
     }
 
-    $on_linkModified(evt, key) {
-        if (this.$at_modified) {
-            let path = `${key}.${evt.key}`;
-            this.$at_modified.trigger({key:path, value:evt.value});
-        }
-    }
-
     destroy() {
-        // FIXME
         for (const sentry of this.$schemas.entries) {
             if (sentry.key in this.$target) {
                 this.$target[sentry.key].destroy();
             }
-            /*
-            if (sentry.link && this[sentry.key]) {
-                let value = this[sentry.key];
-                if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
-                if (value.destroy) value.destroy();
-            }
-            */
         }
-        /*
-        for (const sentry of this.$schemas.entries) {
-            if (sentry.link && this[sentry.key]) {
-                let value = this[sentry.key];
-                if (value.at_modified) value.at_modified.ignore(this.$on_linkModified, this);
-                if (value.destroy) value.destroy();
-            }
-        }
-        */
         if (this.$at_destroyed) this.$at_destroyed.trigger();
         GadgetCtx.at_destroyed.trigger({actor:this});
     }
