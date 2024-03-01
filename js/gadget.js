@@ -21,7 +21,6 @@ class GadgetProperty {
         this.$link = ('link' in xprop) ? xprop.link : false;
         this.$getter = xprop.getter;
         this.$setter = xprop.setter;
-        //console.log(`setter: ${this.$setter}`);
         // parse/set initial value
         this.$parser(xprop, xgzd);
     }
@@ -77,7 +76,6 @@ class GadgetProperty {
     }
 
     $linker(value) {
-        //console.log(`-- linker ${this} proxy: ${this.$proxy} gzd proxy: ${this.$gzd.$proxy}`);
         if (value.at_modified) value.at_modified.listen(this.$on_linkModified, this, false, null, 0, this.$key);
     }
 
@@ -496,7 +494,6 @@ class Gadget {
         GadgetCtx.at_destroyed.trigger({actor:this});
     }
 
-    // FIXME
     toString() {
         return Fmt.toString(this.constructor.name);
     }

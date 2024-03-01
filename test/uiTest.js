@@ -284,7 +284,6 @@ class UITest extends Game {
         this.bgpanel = new UiPanel( { xform:new XForm({ grip:.5, fixedWidth:this.size, fixedHeight:this.size })});
         cvs.adopt(this.bgpanel);
 
-        /*
         this.test1();
         this.test2();
         this.test3();
@@ -294,16 +293,11 @@ class UITest extends Game {
         this.test7();
         this.test8();
         this.test9();
-        */
-
         this.test10();
-
-        /*
         this.test11();
         this.test12();
         this.test13();
         this.test14();
-        */
 
     }
 }

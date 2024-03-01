@@ -129,6 +129,7 @@ class UiScroller extends UiView {
         // setup event handlers
         this.$verticalSlider.at_modified.listen(this.$on_verticalSlider_modified, this, false, (evt) => (evt.key === 'value'));
         this.$horizontalSlider.at_modified.listen(this.$on_horizontalSlider_modified, this, false, (evt) => (evt.key === 'value'));
+        this.at_modified.listen(this.$on_xform_modified, this, false, (evt) => evt.key.startsWith('xform'));
         this.at_scrolled.listen(this.$on_scrolled, this);
         if (this.zoomable) GadgetCtx.at_keyed.listen(this.$on_keyed, this);
     }
@@ -145,12 +146,9 @@ class UiScroller extends UiView {
         }
     }
 
-    $on_linkModified(evt, key) {
-        super.$on_linkModified(evt, key);
-        if (key.toString().startsWith('xform')) {
-            if (!this.width) this.$scrollable.xform.fixedWidth = this.xform.width;
-            if (!this.height) this.$scrollable.xform.fixedHeight = this.xform.height;
-        }
+    $on_xform_modified(evt, key) {
+        if (!this.width) this.$scrollable.xform.fixedWidth = this.xform.width;
+        if (!this.height) this.$scrollable.xform.fixedHeight = this.xform.height;
     }
 
     $on_verticalSlider_modified(evt) {
