@@ -11,7 +11,7 @@ class GadgetProperty {
     static eventable = true;
     static link = false;
 
-    constructor(gzd, xprop={}, xgzd={}) {
+    constructor(gzd, xprop={}) {
         // link to gadget
         this.$gzd = gzd;
         // determine keys
@@ -23,10 +23,15 @@ class GadgetProperty {
         this.$readonly = ('readonly' in xprop) ? xprop.readonly : this.constructor.readonly;
         this.$eventable = ('eventable' in xprop) ? xprop.eventable : this.constructor.eventable;
         this.$link = ('link' in xprop) ? xprop.link : this.constructor.link;
+        this.$pparser = xprop.parser;
         this.$pgetter = xprop.getter;
         this.$psetter = xprop.setter;
         // parse/set initial value
-        this.$parser(xprop, xgzd);
+        //this.$parser(xprop, xgzd);
+    }
+
+    cparse(xgzd={}) {
+        this.$parser(xgzd);
     }
 
     destroy() {
@@ -40,11 +45,11 @@ class GadgetProperty {
         cls.$schema(key, Object.assign({pcls:this, xprop}), this);
     }
 
-    $parser(xprop, xgzd) {
+    $parser(xgzd) {
         let value;
         // determine initial value
-        if (xprop.parser) {
-            value = xprop.parser(this.$gzd, xgzd);
+        if (this.$pparser) {
+            value = this.$pparser(this.$gzd, xgzd);
         } else {
             if (this.$xkey in xgzd) {
                 value = xgzd[this.$xkey];
@@ -376,7 +381,7 @@ class Gadget {
             for (const sentry of schemas.entries) {
                 let prop = new sentry.pcls(this, sentry.xprop, spec);
                 this.$target[sentry.key] = prop;
-                //this[sentry.key]  = sentry.parser(this, spec);
+                prop.cparse(spec);
             }
         }
     }

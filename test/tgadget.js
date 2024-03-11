@@ -7,7 +7,8 @@ describe('gadget properties', () => {
         let gzd = new Gadget();
         let xprop = { key:'tprop' };
         let xgzd = { tprop:42 };
-        let p = new GadgetProperty(gzd, xprop, xgzd);
+        let p = new GadgetProperty(gzd, xprop);
+        p.cparse(xgzd);
         expect(p.$key).toEqual('tprop');
         expect(p.$value).toEqual(42);
         expect(p.value).toEqual(42);
@@ -17,7 +18,8 @@ describe('gadget properties', () => {
         let gzd = new Gadget();
         let xprop = { key:'tprop', parser:() => 'no way' };
         let xgzd = { tprop:42 };
-        let p = new GadgetProperty(gzd, xprop, xgzd);
+        let p = new GadgetProperty(gzd, xprop);
+        p.cparse(xgzd);
         expect(p.value).toEqual('no way');
     });
 
@@ -26,10 +28,12 @@ describe('gadget properties', () => {
         let xprop = { key:'tprop', dflt:'hello' };
         let xgzd = { };
         let p = new GadgetProperty(gzd, xprop, xgzd);
+        p.cparse(xgzd);
         expect(p.value).toEqual('hello');
         xprop = { key:'tprop', dflt:(o,x) => x.foo };
         xgzd = { foo:'there' };
         p = new GadgetProperty(gzd, xprop, xgzd);
+        p.cparse(xgzd);
         expect(p.value).toEqual('there');
     });
 
@@ -37,7 +41,8 @@ describe('gadget properties', () => {
         let gzd = new Gadget();
         let xprop = { key:'tprop', getter:() => 'hello' };
         let xgzd = { tprop:42 };
-        let p = new GadgetProperty(gzd, xprop, xgzd);
+        let p = new GadgetProperty(gzd, xprop);
+        p.cparse(xgzd);
         expect(p.value).toEqual('hello');
     });
 
@@ -45,7 +50,8 @@ describe('gadget properties', () => {
         let gzd = new Gadget();
         let xprop = { key:'tprop', setter:(o,ov,v) => 'resist' };
         let xgzd = { tprop:42 };
-        let p = new GadgetProperty(gzd, xprop, xgzd);
+        let p = new GadgetProperty(gzd, xprop);
+        p.cparse(xgzd);
         expect(p.value).toEqual('resist');
         p.value = 'hello';
         expect(p.value).toEqual('resist');
@@ -58,6 +64,7 @@ describe('gadget properties', () => {
         let xprop = { key:'tprop' };
         let xgzd = { tprop:42 };
         let p = new GadgetProperty(gzd, xprop, xgzd);
+        p.cparse(xgzd);
         p.value = 'hello';
         expect(tevt.actor).toBe(gzd);
         expect(tevt.tag).toEqual('modified');
@@ -73,6 +80,7 @@ describe('gadget properties', () => {
         let xprop = { key:'tprop', link:true };
         let xgzd = { tprop:gzdv };
         let p = new GadgetProperty(gzd, xprop, xgzd);
+        p.cparse(xgzd);
         gzdv.at_modified.trigger({key:'hello', value:'there'});
         expect(tevt.actor).toBe(gzd);
         expect(tevt.tag).toEqual('modified');
