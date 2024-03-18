@@ -701,6 +701,8 @@ class GadgetCtx {
     static get interacted() { return this.current.interacted; }
     static get media() { return this.current.media; }
     static get assets() { return this.current.assets; }
+    static get game() { return this.current.game; }
+    static set game(v) { return this.current.game = v; }
     static set interacted(v) { return this.current.interacted = v; }
     static generate(spec) {
         return this.current.generator.generate(spec);
@@ -713,6 +715,7 @@ class GadgetCtx {
         this.generator = ('generator' in spec) ? spec.generator: new GadgetGenerator();
         this.assets = ('assets' in spec) ? spec.assets: new GadgetAssets();
         this.interacted = false;
+        this.game = null;
         this.at_tocked = new EvtEmitter(this, 'tocked');
         this.at_keyed = new EvtEmitter(this, 'keyed');
         this.at_moused = new EvtEmitter(this, 'moused');

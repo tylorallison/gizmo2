@@ -50,7 +50,7 @@ class Game extends Gizmo {
     $cpre(spec) {
         super.$cpre(spec);
         this.$loop = this.$loop.bind(this);
-        //Global.game = this;
+        GadgetCtx.game = this;
     }
 
     // METHODS -------------------------------------------------------------
