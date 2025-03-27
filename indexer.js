@@ -1,5 +1,9 @@
-const glob = require("glob");
+//const glob = require("glob");
 const fs = require('fs');
+//import { glob } from 'glob';
+const {
+  glob,
+} = require('glob')
 
 let contents = "";
 
