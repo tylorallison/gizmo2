@@ -4,7 +4,7 @@
   "scripts": {
     "build": "rollup js/index.js --format iife --name gizmo -o dist/gizmo.js",
     "mbuild": "rollup js/index.js --format es --name gizmo -o dist/gizmo.mjs",
-    "index": "node indexer.js"
+    "index": "cat indexer.js | node --input-type=module"
   },
   "devDependencies": {
     "glob": "^11.0.1",
