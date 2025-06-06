@@ -4,8 +4,6 @@ import { System } from './system.js';
 import { UiCanvas } from './uiCanvas.js';
 import { Vect } from './vect.js';
 import { Contains } from './intersect.js';
-import { Fmt } from './fmt.js';
-import { EvtEmitter } from '../../gizmo2/js/evt.js';
 import { GadgetCtx } from './gadget.js';
 
 class MouseSystem extends System {

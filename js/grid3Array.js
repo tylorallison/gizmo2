@@ -78,7 +78,7 @@ class Grid3Array extends Gadget {
     }
     static idxFromIJK(ijk, dim) {
         if (!ijk || !dim) return -1;
-        return this._idxFromIJK(ij.x, ij.y, ij.z, dim.x, dim.y, dim.z);
+        return this._idxFromIJK(ijk.x, ijk.y, ijk.z, dim.x, dim.y, dim.z);
     }
 
     /**
@@ -169,10 +169,8 @@ class Grid3Array extends Gadget {
     }
     static ijkAdjacent(ijk1, ijk2) {
         if (!ijk1 || !ijk2) return false;
-        return this._ijAdjacent(ijk1.x, ijk1.y, ijk1.z, ijk2.x, ijk2.y, ijk2.z);
+        return this._ijkAdjacent(ijk1.x, ijk1.y, ijk1.z, ijk2.x, ijk2.y, ijk2.z);
     }
-
-    //@@@ FIXME @@@
 
     /**
      * Resizes the given grid array and creates a new grid array and optionally shifts array entries based on given offsets.  Any out-of-bounds data is lost.
@@ -180,25 +178,30 @@ class Grid3Array extends Gadget {
      * @param {ArrayDimension} dim - dimensions for the array
      * @param {i} cols - number of columns for new array
      * @param {i} rows - number of rows for new array
+     * @param {i} layers - number of layers for new array
      * @param {i} [offi=0] - column offset for original array data
      * @param {i} [offj=0] - row offset for original array data
+     * @param {i} [offk=0] - layer offset for original array data
      * @returns {int}
      */
-    static resize(ga, cols, rows, offi=0, offj=0) {
+    static resize(ga, cols, rows, layers, offi=0, offj=0, offk=0) {
         // re-align data
-        let nentries = new Array(rows*cols);
+        let nentries = new Array(rows*cols*layers);
         for (let i=0; i<cols; i++) {
             for (let j=0; j<rows; j++) {
-                let oi = i+offi;
-                let oj = j+offj;
-                if (oi >= 0 && oi < this.cols && oj >= 0 && oj < this.rows) {
-                    let oidx = this._idxFromIJ(oi, oj, ga.cols, ga.rows);
-                    let nidx = this._idxFromIJ(i, j, cols, rows);
-                    nentries[nidx] = ga.entries[oidx];
+                for (let k=0; k<layers; k++) {
+                    let oi = i+offi;
+                    let oj = j+offj;
+                    let ok = k+offk;
+                    if (oi >= 0 && oi < this.cols && oj >= 0 && oj < this.rows && ok >= 0 && ok < this.layers) {
+                        let oidx = this._idxFromIJK(oi, oj, ok, ga.cols, ga.rows, ga.layers);
+                        let nidx = this._idxFromIJK(i, j, k, cols, rows, layers);
+                        nentries[nidx] = ga.entries[oidx];
+                    }
                 }
             }
         }
-        return new GridArray({ rows: rows, cols: cols, entries: nentries });
+        return new GridArray({ rows:rows, cols:cols, layers:layers, entries:nentries });
     }
 
     // METHODS -------------------------------------------------------------
@@ -208,8 +211,8 @@ class Grid3Array extends Gadget {
      * @param {int} idx - flat array index
      * @returns {ArrayIndex} 
      */
-    ijFromIdx(idx) {
-        return this.constructor._ijFromIdx(idx, this.cols, this.cros);
+    ijkFromIdx(idx) {
+        return this.constructor._ijkFromIdx(idx, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -217,12 +220,12 @@ class Grid3Array extends Gadget {
      * @param {ArrayIndex} ij - array index
      * @returns {int}
      */
-    _idxFromIJ(i,j) {
-        return this.constructor._idxFromIJ(i, j, this.cols, this.rows);
+    _idxFromIJK(i,j,k) {
+        return this.constructor._idxFromIJK(i, j, k, this.cols, this.rows, this.layers);
     }
-    idxFromIJ(ij) {
-        if (!ij) return -1;
-        return this.constructor._idxFromIJ(ij.x, ij.y, this.cols, this.rows);
+    idxFromIJK(ijk) {
+        if (!ijk) return -1;
+        return this.constructor._idxFromIJK(ijk.x, ijk.y, ijk.z, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -232,7 +235,7 @@ class Grid3Array extends Gadget {
      * @returns {int}
      */
     idxFromDir(idx, dir) {
-        return this.constructor._idxFromDir(idx, dir, this.cols, this.rows);
+        return this.constructor._idxFromDir(idx, dir, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -243,11 +246,11 @@ class Grid3Array extends Gadget {
      * @yields {int}
      */
     *idxsBetween(idx1, idx2) {
-        yield *this.constructor.idxsBetween(idx1, idx2, {x: this.cols, y:this.rows});
+        yield *this.constructor.idxsBetween(idx1, idx2, {x: this.cols, y:this.rows, z:this.layers});
     }
 
     *idxsInRange(idx, range) {
-        yield *this.constructor._idxsInRange(idx, range, this.cols, this.rows)
+        yield *this.constructor._idxsInRange(idx, range, this.cols, this.rows, this.layers)
     }
 
     /**
@@ -257,10 +260,7 @@ class Grid3Array extends Gadget {
      * @returns  {boolean}
      */
     idxsAdjacent(idx1, idx2) {
-        for (const dir of this.constructor.directions) {
-            if (this.idxFromDir(idx1, dir) === idx2) return true;
-        }
-        return false;
+        return this.constructor._idxsAdjacent(idx1, idx2, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -269,27 +269,25 @@ class Grid3Array extends Gadget {
      * @param {int} ij2 - indexed ij
      * @returns  {boolean}
      */
-    _ijAdjacent(i1, j1, i2, j2) {
-        return this.constructor._ijAdjacent(i1, j1, i2, j2)
+    _ijkAdjacent(i1, j1, k1, i2, j2, k2) {
+        return this.constructor._ijkAdjacent(i1, j1, k1, i2, j2, k2);
     }
-    ijAdjacent(ij1, ij2) {
-        if (!ij1 || !ij2) return false;
-        return this.constructor.ijAdjacent(ij1, ij2)
+    ijkAdjacent(ij1, ij2) {
+        return this.constructor.ijkAdjacent(ij1, ij2);
     }
 
     // -- accessor methods
     /**
      * retrieve array value for the given column, row (i,j) indices
-     * @param {ArrayIndex} ij - array index
+     * @param {ArrayIndex} ijk - array index
      * @returns {*}
      */
-    _getij(i, j) {
-        let idx = this._idxFromIJ(i, j);
+    _getijk(i, j, k) {
+        let idx = this._idxFromIJK(i, j, k);
         return this.entries[idx];
     }
-    getij(ij) {
-        if (!ij) return null;
-        let idx = this._idxFromIJ(ij.x, ij.y);
+    getijk(ijk) {
+        let idx = this.idxFromIJK(ijk);
         return this.entries[idx];
     }
 
@@ -307,13 +305,12 @@ class Grid3Array extends Gadget {
      * @param {ArrayIndex} ij - array index
      * @param {*} v - value to set
      */
-    _setij(i, j, v) {
-        let idx = this._idxFromIJ(i, j);
+    _setijk(i, j, k, v) {
+        let idx = this._idxFromIJK(i, j, k);
         if (idx !== -1) this.entries[idx] = v;
     }
-    setij(ij, v) {
-        if (!ij) return;
-        let idx = this._idxFromIJ(ij.x, ij.y);
+    setijk(ijk, v) {
+        let idx = this.idxFromIJK(ijk);
         if (idx !== -1) this.entries[idx] = v;
     }
 
@@ -326,13 +323,13 @@ class Grid3Array extends Gadget {
         this.entries[idx] = v;
     }
 
-    _delij(i, j, v) {
-        const idx = this._idxFromIJ(i, j);
-        delete this.entries[idx];
+    _delijk(i, j, k) {
+        const idx = this._idxFromIJK(i, j, k);
+        if (idx !== -1) delete this.entries[idx];
     }
-    delij(ij, v) {
-        if (!ij) return;
-        this._delij(ij.x, ij.y, v);
+    delijk(ijk, v) {
+        const idx = this.idxFromIJK(ijk);
+        if (idx !== -1) delete this.entries[idx];
     }
 
     delidx(idx, v) {
@@ -393,22 +390,22 @@ class Grid3Array extends Gadget {
 
 /**
  * Implements object buckets for each grid array entry.
- * @extends GridArray
+ * @extends Grid3Array
  */
-class GridBucketArray extends GridArray {
+class Grid3BucketArray extends Grid3Array {
     static {
         this.$schema('sortBy', { readonly: true });
     }
 
-    *_getij(i, j) {
-        let idx = this._idxFromIJ(i, j);
+    *_getijk(i, j, k) {
+        let idx = this._idxFromIJK(i, j, k);
         if (this.entries[idx]) {
             yield *Array.from(this.entries[idx]);
         }
     }
-    *getij(ij) {
-        if (!ij) return;
-        yield this._getij(ij.x, ij.y);
+    *getijk(ijk) {
+        if (!ijk) return;
+        yield this._getijk(ijk.x, ijk.y, ijk.z);
     }
 
     *getidx(idx) {
@@ -417,16 +414,16 @@ class GridBucketArray extends GridArray {
         }
     }
 
-    _setij(i, j, v) {
-        const idx = this._idxFromIJ(i, j);
+    _setijk(i, j, k, v) {
+        const idx = this._idxFromIJK(i, j, k);
         if (!this.entries[idx]) this.entries[idx] = [];
         const entries = this.entries[idx];
         entries.push(v);
         if (this.sortBy) entries.sort(this.sortBy);
     }
-    setij(ij, v) {
-        if (!ij) return;
-        this._setij(ij.x, ij.y, v);
+    setijk(ijk, v) {
+        if (!ijk) return;
+        this._setijk(ijk.x, ijk.y, ijk.z, v);
     }
 
     setidx(idx, v) {
@@ -436,8 +433,8 @@ class GridBucketArray extends GridArray {
         if (this.sortBy) entries.sort(this.sortBy);
     }
 
-    _delij(i, j, v) {
-        const idx = this._idxFromIJ(i, j);
+    _delijk(i, j, k, v) {
+        const idx = this._idxFromIJK(i, j, k);
         entries = this.entries[idx];
         if (entries) {
             let i = entries.indexOf(v);
@@ -447,9 +444,9 @@ class GridBucketArray extends GridArray {
             }
         }
     }
-    delij(ij, v) {
-        if (!ij) return;
-        this._delij(ij.x, ij.y, v);
+    delijk(ijk, v) {
+        if (!ijk) return;
+        this._delijk(ijk.x, ijk.y, ijk.z, v);
     }
 
     delidx(idx, v) {

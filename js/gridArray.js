@@ -193,7 +193,7 @@ class GridArray extends Gadget {
      * @returns {ArrayIndex} 
      */
     ijFromIdx(idx) {
-        return this.constructor._ijFromIdx(idx, this.cols, this.cros);
+        return this.constructor._ijFromIdx(idx, this.cols, this.rows);
     }
 
     /**
