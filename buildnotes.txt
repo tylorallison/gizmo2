@@ -1,6 +1,7 @@
 # rev package version in package.json
 # publish new git tag/release
 # build
+npm run index
 npm run build
 npm run mbuild
 # cp build files from dist to releases
