@@ -75,7 +75,7 @@ class Direction {
     }
 
     static maskToString(dir) {
-        return Array.from(this.all.filter((v) => dir&v).map((v)=>this.toString(v))).join('|');
+        return Array.from(this.all.filter((v) => dir&v).map((v)=>this.toAbbrev(v))).join('|');
     }
 
     // kinds should be cardinals, diagonals, or all
