@@ -130,6 +130,13 @@ class Vect3 extends Gadget {
         return ((v1.x||0)*(v2.x||0)) + ((v1.y||0)*(v2.y||0)) + ((v1.z||0)*(v2.z||0));
     }
 
+    static _dist(x1, y1, z1, x2, y2, z2) {
+        const dx = x2-x1;
+        const dy = y2-y1;
+        const dz = z2-z1;
+        return Math.sqrt(dx*dx + dy*dy + dz*dz);
+    }
+
     static dist(v1, v2) {
         if (!v1 || !v2) return NaN;
         const dx = (v2.x||0)-(v1.x||0);

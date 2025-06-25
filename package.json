@@ -1,6 +1,6 @@
 {
   "name": "gizmo2",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "rollup js/index.js --format iife --name gizmo -o dist/gizmo.js",
     "mbuild": "rollup js/index.js --format es --name gizmo -o dist/gizmo.mjs",

@@ -1,26 +1,29 @@
-export { GridArray, GridBucketArray };
+export { Grid3Array, Grid3BucketArray };
 
 import { Direction } from './direction.js';
-import { Fmt } from './fmt.js';
 import { Gadget } from './gadget.js';
 import { Util } from './util.js';
-import { Vect } from './vect.js';
+import { Vect3 } from './vect3.js';
 
 /**
- * Implements a 2-dimensional grid array and methods for indexing and accessing data within
+ * Implements a 3-dimensional grid array and methods for indexing and accessing data within
  * @extends Gadget
  */
-class GridArray extends Gadget {
+class Grid3Array extends Gadget {
     static directions = Array.from(Direction.all);
 
     /** @member {string} GridArray#cols=16 - columns in grid array */
     static { this.$schema('cols', { readonly: true, dflt: 16 }); }
     /** @member {string} GridArray#rows=16 - rows in grid array */
     static { this.$schema('rows', { readonly: true, dflt: 16 }); }
+    /** @member {string} GridArray#layers=16 - layers in grid array */
+    static { this.$schema('layers', { readonly: true, dflt: 16 }); }
     /** @member {string} GridArray#length - length of flat array */
-    static { this.$schema('length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
+    static { this.$schema('length', { readonly: true, parser: (o,x) => o.cols*o.rows*o.layers }); }
     /** @member {string} GridArray#entries - array storage */
     static { this.$schema('entries', { readonly: true, dflt: () => [] }); }
+    /** @member {string} GridArray#layerSize - number of entries in a layer */
+    static { this.$schema('$layerSize', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
 
     // STATIC METHODS ------------------------------------------------------
 
@@ -28,47 +31,54 @@ class GridArray extends Gadget {
      * @typedef {Object} ArrayIndex
      * @property {number} x - row index (i)
      * @property {number} y - column index (j)
+     * @property {number} z - column index (k)
     */
 
     /**
      * @typedef {Object} ArrayDimension
      * @property {number} x - number of columns
      * @property {number} y - number of rows
+     * @property {number} z - number of layers
     */
 
     /**
-     * Returns the column (i) and row (j) indices from the given flat index (idx)
+     * Returns the column (i), row (j), layer (k) indices from the given flat index (idx)
      * @param {int} idx - flat array index
      * @param {ArrayDimension} dim - dimensions for the array
      * @returns {ArrayIndex} 
      */
-    static _ijFromIdx(idx, dimx, dimy) {
-        if (idx < 0) return {x:-1,y:-1};
-        let i = idx % dimx;
+    static _ijkFromIdx(idx, dimx, dimy, dimz) {
+        if (idx < 0) return {x:-1,y:-1,z:-1};
+        let lsize = dimx*dimy;
+        let ijidx = idx%lsize;
+        let i = ijidx % dimx;
         if (i>dimx) i = -1;
-        let j = Math.floor(idx/dimx);
+        let j = Math.floor(ijidx/dimx);
         if (j>dimy) j = -1;
-        return {x:i, y:j};
+        let k = Math.floor(idx/lsize);
+        if (k>dimz) k = -1;
+        return {x:i, y:j, z:k};
     }
-    static ijFromIdx(idx, dim) {
-        if (!dim) return {x:-1,y:-1};
-        return this._ijFromIdx(idx, dim.x, dim.y);
+    static ijkFromIdx(idx, dim) {
+        if (!dim) return {x:-1,y:-1,z:-1};
+        return this._ijkFromIdx(idx, dim.x, dim.y, dim.z);
     }
 
     /**
-     * Returns the flat index (idx) from the given column and row indices (i,j)
-     * @param {ArrayIndex} ij - array index
+     * Returns the flat index (idx) from the given column and row indices (i,j,k)
+     * @param {ArrayIndex} ijk - array index
      * @param {ArrayDimension} dim - dimensions for the array
      * @returns {int}
      */
-    static _idxFromIJ(i, j, dimx, dimy) {
+    static _idxFromIJK(i, j, k, dimx, dimy, dimz) {
         if (i >= dimx || i<0) return -1;
         if (j >= dimy || j<0) return -1;
-        return i + dimx*j;
+        if (k >= dimz || k<0) return -1;
+        return i + dimx*j + dimx*dimy*k;
     }
-    static idxFromIJ(ij, dim) {
-        if (!ij || !dim) return -1;
-        return this._idxFromIJ(ij.x, ij.y, dim.x, dim.y);
+    static idxFromIJK(ijk, dim) {
+        if (!ijk || !dim) return -1;
+        return this._idxFromIJK(ijk.x, ijk.y, ijk.z, dim.x, dim.y, dim.z);
     }
 
     /**
@@ -78,13 +88,13 @@ class GridArray extends Gadget {
      * @param {ArrayDimension} dim - dimensions for the array
      * @returns {int}
      */
-    static _idxFromDir(idx, dir, dimx, dimy) {
-        let ij = this._ijFromIdx(idx, dimx, dimy);
-        return this._idxFromIJ(ij.x + Direction.asX(dir), ij.y + Direction.asY(dir), dimx, dimy);
+    static _idxFromDir(idx, dir, dimx, dimy, dimz) {
+        let ijk = this._ijkFromIdx(idx, dimx, dimy, dimz);
+        return this._idxFromIJK(ijk.x + Direction.asX(dir), ijk.y + Direction.asY(dir), ijk.z + Direction.asZ(dir), dimx, dimy, dimz);
     }
     static idxFromDir(idx, dir, dim) {
         if (!dim) return -1;
-        return this._idxFromDir(idx, dir, dim.x, dim.y);
+        return this._idxFromDir(idx, dir, dim.x, dim.y, dim.z);
     }
 
     /**
@@ -97,31 +107,35 @@ class GridArray extends Gadget {
      */
     static *idxsBetween(idx1, idx2, dim) {
         if (!dim) return;
-        let ij1 = this.ijFromIdx(idx1, dim);
-        let ij2 = this.ijFromIdx(idx2, dim);
-        for (const [i,j] of Util.pixelsInSegment(ij1.x, ij1.y, ij2.x, ij2.y)) {
-            yield this._idxFromIJ(i, j, dim.x, dim.y);
+        let ijk1 = this.ijkFromIdx(idx1, dim);
+        let ijk2 = this.ijkFromIdx(idx2, dim);
+        for (const [i,j,k] of Util.pixelsInSegment3d(ijk1.x, ijk1.y, ijk1.z, ijk2.x, ijk2.y, ijk2.z)) {
+            yield this._idxFromIJK(i, j, k, dim.x, dim.y, dim.z);
         }
     }
 
-    static *_idxsInRange(idx, range, dimx, dimy) {
-        let cij = this._ijFromIdx(idx, dimx, dimy);
-        let mini = Math.max(cij.x-range, 0);
-        let maxi = Math.min(cij.x+range, dimx);
-        let minj = Math.max(cij.y-range, 0);
-        let maxj = Math.min(cij.y+range, dimy);
+    static *_idxsInRange(idx, range, dimx, dimy, dimz) {
+        let cijk = this._ijkFromIdx(idx, dimx, dimy, dimz);
+        let mini = Math.max(cijk.x-range, 0);
+        let maxi = Math.min(cijk.x+range, dimx);
+        let minj = Math.max(cijk.y-range, 0);
+        let maxj = Math.min(cijk.y+range, dimy);
+        let mink = Math.max(cijk.z-range, 0);
+        let maxk = Math.min(cijk.z+range, dimz);
         for (let i=mini; i<=maxi; i++) {
             for (let j=minj; j<=maxj; j++) {
-                let d = Vect._dist(cij.x, cij.y, i, j)
-                if (d<=range) {
-                    yield this._idxFromIJ(i, j, dimx, dimy);
+                for (let k=mink; k<=maxk; k++) {
+                    let d = Vect3._dist(cijk.x, cijk.y, cijk.z, i, j, k)
+                    if (d<=range) {
+                        yield this._idxFromIJK(i, j, k, dimx, dimy, dimz);
+                    }
                 }
             }
         }
     }
     static *idxsInRange(idx, range, dim) {
         if (!dim) return;
-        yield *this._idxsInRange(idx, range, dim.x, dim.y)
+        yield *this._idxsInRange(idx, range, dim.x, dim.y, dim.z)
     }
 
     /**
@@ -130,32 +144,32 @@ class GridArray extends Gadget {
      * @param {int} idx2 - index 2
      * @returns  {boolean}
      */
-    static _idxsAdjacent(idx1, idx2, dimx, dimy) {
-        for (const dir of this.constructor.directions) {
-            if (this._idxFromDir(idx1, dir, dimx, dimy) === idx2) return true;
-        }
-        return false;
+    static _idxsAdjacent(idx1, idx2, dimx, dimy, dimz) {
+        let ijk1 = this._ijkFromIdx(idx1, dimx, dimy, dimz);
+        let ijk2 = this._ijkFromIdx(idx2, dimx, dimy, dimz);
+        return this._ijkAdjacent(ijk1.x, ijk1.y, ijk1.z, ijk2.x, ijk2.y, ijk2.z);
     }
     static idxsAdjacent(idx1, idx2, dim) {
         if (!dim) return false;
-        return this._idxsAdjacent(idx1, idx2, dim.x, dim.y);
+        return this._idxsAdjacent(idx1, idx2, dim.x, dim.y, dim.z);
     }
 
     /**
-     * Determines if the given two ij points are adjacent to each other.
-     * @param {int} ij1 - indexed ij
-     * @param {int} ij2 - indexed ij
+     * Determines if the given two ijk points are adjacent to each other.
+     * @param {int} ijk1 - indexed ijk
+     * @param {int} ijk2 - indexed ijk
      * @returns  {boolean}
      */
-    static _ijAdjacent(i1, j1, i2, j2) {
-        if (i1 === i2 && j1 === j2) return false;
-        let di = Math.abs(i1-i2);
-        let dj = Math.abs(j1-j2);
-        return di<=1 && dj <=1;
+    static _ijkAdjacent(i1, j1, k1, i2, j2, k2) {
+        if ((i1 === i2) && (j1 === j2) && (k1 === k2)) return false;
+        if ( (Math.abs(i1-i2)<=1) && (Math.abs(j1-j2)<=1) && (Math.abs(k1-k2)<=1)) {
+            return true;
+        }
+        return false;
     }
-    static ijAdjacent(ij1, ij2) {
-        if (!ij1 || !ij2) return false;
-        return this._ijAdjacent(ij1.x, ij1.y, ij2.x, ij2.y);
+    static ijkAdjacent(ijk1, ijk2) {
+        if (!ijk1 || !ijk2) return false;
+        return this._ijkAdjacent(ijk1.x, ijk1.y, ijk1.z, ijk2.x, ijk2.y, ijk2.z);
     }
 
     /**
@@ -164,25 +178,30 @@ class GridArray extends Gadget {
      * @param {ArrayDimension} dim - dimensions for the array
      * @param {i} cols - number of columns for new array
      * @param {i} rows - number of rows for new array
+     * @param {i} layers - number of layers for new array
      * @param {i} [offi=0] - column offset for original array data
      * @param {i} [offj=0] - row offset for original array data
+     * @param {i} [offk=0] - layer offset for original array data
      * @returns {int}
      */
-    static resize(ga, cols, rows, offi=0, offj=0) {
+    static resize(ga, cols, rows, layers, offi=0, offj=0, offk=0) {
         // re-align data
-        let nentries = new Array(rows*cols);
+        let nentries = new Array(rows*cols*layers);
         for (let i=0; i<cols; i++) {
             for (let j=0; j<rows; j++) {
-                let oi = i+offi;
-                let oj = j+offj;
-                if (oi >= 0 && oi < this.cols && oj >= 0 && oj < this.rows) {
-                    let oidx = this._idxFromIJ(oi, oj, ga.cols, ga.rows);
-                    let nidx = this._idxFromIJ(i, j, cols, rows);
-                    nentries[nidx] = ga.entries[oidx];
+                for (let k=0; k<layers; k++) {
+                    let oi = i+offi;
+                    let oj = j+offj;
+                    let ok = k+offk;
+                    if (oi >= 0 && oi < this.cols && oj >= 0 && oj < this.rows && ok >= 0 && ok < this.layers) {
+                        let oidx = this._idxFromIJK(oi, oj, ok, ga.cols, ga.rows, ga.layers);
+                        let nidx = this._idxFromIJK(i, j, k, cols, rows, layers);
+                        nentries[nidx] = ga.entries[oidx];
+                    }
                 }
             }
         }
-        return new GridArray({ rows: rows, cols: cols, entries: nentries });
+        return new GridArray({ rows:rows, cols:cols, layers:layers, entries:nentries });
     }
 
     // METHODS -------------------------------------------------------------
@@ -192,8 +211,8 @@ class GridArray extends Gadget {
      * @param {int} idx - flat array index
      * @returns {ArrayIndex} 
      */
-    ijFromIdx(idx) {
-        return this.constructor._ijFromIdx(idx, this.cols, this.rows);
+    ijkFromIdx(idx) {
+        return this.constructor._ijkFromIdx(idx, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -201,12 +220,12 @@ class GridArray extends Gadget {
      * @param {ArrayIndex} ij - array index
      * @returns {int}
      */
-    _idxFromIJ(i,j) {
-        return this.constructor._idxFromIJ(i, j, this.cols, this.rows);
+    _idxFromIJK(i,j,k) {
+        return this.constructor._idxFromIJK(i, j, k, this.cols, this.rows, this.layers);
     }
-    idxFromIJ(ij) {
-        if (!ij) return -1;
-        return this.constructor._idxFromIJ(ij.x, ij.y, this.cols, this.rows);
+    idxFromIJK(ijk) {
+        if (!ijk) return -1;
+        return this.constructor._idxFromIJK(ijk.x, ijk.y, ijk.z, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -216,7 +235,7 @@ class GridArray extends Gadget {
      * @returns {int}
      */
     idxFromDir(idx, dir) {
-        return this.constructor._idxFromDir(idx, dir, this.cols, this.rows);
+        return this.constructor._idxFromDir(idx, dir, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -227,11 +246,11 @@ class GridArray extends Gadget {
      * @yields {int}
      */
     *idxsBetween(idx1, idx2) {
-        yield *this.constructor.idxsBetween(idx1, idx2, {x: this.cols, y:this.rows});
+        yield *this.constructor.idxsBetween(idx1, idx2, {x: this.cols, y:this.rows, z:this.layers});
     }
 
     *idxsInRange(idx, range) {
-        yield *this.constructor._idxsInRange(idx, range, this.cols, this.rows)
+        yield *this.constructor._idxsInRange(idx, range, this.cols, this.rows, this.layers)
     }
 
     /**
@@ -241,10 +260,7 @@ class GridArray extends Gadget {
      * @returns  {boolean}
      */
     idxsAdjacent(idx1, idx2) {
-        for (const dir of this.constructor.directions) {
-            if (this.idxFromDir(idx1, dir) === idx2) return true;
-        }
-        return false;
+        return this.constructor._idxsAdjacent(idx1, idx2, this.cols, this.rows, this.layers);
     }
 
     /**
@@ -253,27 +269,25 @@ class GridArray extends Gadget {
      * @param {int} ij2 - indexed ij
      * @returns  {boolean}
      */
-    _ijAdjacent(i1, j1, i2, j2) {
-        return this.constructor._ijAdjacent(i1, j1, i2, j2)
+    _ijkAdjacent(i1, j1, k1, i2, j2, k2) {
+        return this.constructor._ijkAdjacent(i1, j1, k1, i2, j2, k2);
     }
-    ijAdjacent(ij1, ij2) {
-        if (!ij1 || !ij2) return false;
-        return this.constructor.ijAdjacent(ij1, ij2)
+    ijkAdjacent(ij1, ij2) {
+        return this.constructor.ijkAdjacent(ij1, ij2);
     }
 
     // -- accessor methods
     /**
      * retrieve array value for the given column, row (i,j) indices
-     * @param {ArrayIndex} ij - array index
+     * @param {ArrayIndex} ijk - array index
      * @returns {*}
      */
-    _getij(i, j) {
-        let idx = this._idxFromIJ(i, j);
+    _getijk(i, j, k) {
+        let idx = this._idxFromIJK(i, j, k);
         return this.entries[idx];
     }
-    getij(ij) {
-        if (!ij) return null;
-        let idx = this._idxFromIJ(ij.x, ij.y);
+    getijk(ijk) {
+        let idx = this.idxFromIJK(ijk);
         return this.entries[idx];
     }
 
@@ -291,13 +305,12 @@ class GridArray extends Gadget {
      * @param {ArrayIndex} ij - array index
      * @param {*} v - value to set
      */
-    _setij(i, j, v) {
-        let idx = this._idxFromIJ(i, j);
+    _setijk(i, j, k, v) {
+        let idx = this._idxFromIJK(i, j, k);
         if (idx !== -1) this.entries[idx] = v;
     }
-    setij(ij, v) {
-        if (!ij) return;
-        let idx = this._idxFromIJ(ij.x, ij.y);
+    setijk(ijk, v) {
+        let idx = this.idxFromIJK(ijk);
         if (idx !== -1) this.entries[idx] = v;
     }
 
@@ -310,13 +323,13 @@ class GridArray extends Gadget {
         this.entries[idx] = v;
     }
 
-    _delij(i, j, v) {
-        const idx = this._idxFromIJ(i, j);
-        delete this.entries[idx];
+    _delijk(i, j, k) {
+        const idx = this._idxFromIJK(i, j, k);
+        if (idx !== -1) delete this.entries[idx];
     }
-    delij(ij, v) {
-        if (!ij) return;
-        this._delij(ij.x, ij.y, v);
+    delijk(ijk, v) {
+        const idx = this.idxFromIJK(ijk);
+        if (idx !== -1) delete this.entries[idx];
     }
 
     delidx(idx, v) {
@@ -377,22 +390,22 @@ class GridArray extends Gadget {
 
 /**
  * Implements object buckets for each grid array entry.
- * @extends GridArray
+ * @extends Grid3Array
  */
-class GridBucketArray extends GridArray {
+class Grid3BucketArray extends Grid3Array {
     static {
         this.$schema('sortBy', { readonly: true });
     }
 
-    *_getij(i, j) {
-        let idx = this._idxFromIJ(i, j);
+    *_getijk(i, j, k) {
+        let idx = this._idxFromIJK(i, j, k);
         if (this.entries[idx]) {
             yield *Array.from(this.entries[idx]);
         }
     }
-    *getij(ij) {
-        if (!ij) return;
-        yield this._getij(ij.x, ij.y);
+    *getijk(ijk) {
+        if (!ijk) return;
+        yield this._getijk(ijk.x, ijk.y, ijk.z);
     }
 
     *getidx(idx) {
@@ -401,16 +414,16 @@ class GridBucketArray extends GridArray {
         }
     }
 
-    _setij(i, j, v) {
-        const idx = this._idxFromIJ(i, j);
+    _setijk(i, j, k, v) {
+        const idx = this._idxFromIJK(i, j, k);
         if (!this.entries[idx]) this.entries[idx] = [];
         const entries = this.entries[idx];
         entries.push(v);
         if (this.sortBy) entries.sort(this.sortBy);
     }
-    setij(ij, v) {
-        if (!ij) return;
-        this._setij(ij.x, ij.y, v);
+    setijk(ijk, v) {
+        if (!ijk) return;
+        this._setijk(ijk.x, ijk.y, ijk.z, v);
     }
 
     setidx(idx, v) {
@@ -420,8 +433,8 @@ class GridBucketArray extends GridArray {
         if (this.sortBy) entries.sort(this.sortBy);
     }
 
-    _delij(i, j, v) {
-        const idx = this._idxFromIJ(i, j);
+    _delijk(i, j, k, v) {
+        const idx = this._idxFromIJK(i, j, k);
         entries = this.entries[idx];
         if (entries) {
             let i = entries.indexOf(v);
@@ -431,9 +444,9 @@ class GridBucketArray extends GridArray {
             }
         }
     }
-    delij(ij, v) {
-        if (!ij) return;
-        this._delij(ij.x, ij.y, v);
+    delijk(ijk, v) {
+        if (!ijk) return;
+        this._delijk(ijk.x, ijk.y, ijk.z, v);
     }
 
     delidx(idx, v) {

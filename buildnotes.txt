@@ -1,0 +1,11 @@
+# rev package version in package.json
+# publish new git tag/release
+# build
+npm run index
+npm run build
+npm run mbuild
+# cp build files from dist to releases
+cp dist/gizmo.js releases/gizmo.<tag>.js
+cp dist/gizmo.mjs releases/gizmo.<tag>.mjs
+cp dist/gizmo.js releases/gizmo.js
+cp dist/gizmo.mjs releases/gizmo.mjs

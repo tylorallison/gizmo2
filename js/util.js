@@ -186,6 +186,70 @@ class Util {
         }
     }
 
+    static *pixelsInSegment3d(x0, y0, z0, x1, y1, z1) {
+        let dx = Math.abs(x1 - x0);
+        let sx = x0 < x1 ? 1 : -1;
+        let dy = Math.abs(y1 - y0);
+        let sy = y0 < y1 ? 1 : -1; 
+        let dz = Math.abs(z1 - z0);
+        let sz = z0 < z1 ? 1 : -1; 
+        // Driving axis is X-axis"
+        if (dx >= dy && dx >= dz) {
+            let p1 = 2 * dy - dx;
+            let p2 = 2 * dz - dx;
+            while (x0 != x1) {
+                x0 += sx;
+                if (p1 >= 0) {
+                    y0 += sy;
+                    p1 -= 2 * dx;
+                }
+                if (p2 >= 0) {
+                    z0 += sz;
+                    p2 -= 2 * dx;
+                }
+                p1 += 2 * dy;
+                p2 += 2 * dz;
+                yield [x0,y0,z0];
+            }
+        // Driving axis is Y-axis"
+        } else if (dy >= dx && dy >= dz) {
+            let p1 = 2 * dx - dy;
+            let p2 = 2 * dz - dy;
+            while (y0 != y1) {
+                y0 += sy;
+                if (p1 >= 0) {
+                    x0 += sx;
+                    p1 -= 2 * dy;
+                }
+                if (p2 >= 0) {
+                    z0 += sz;
+                    p2 -= 2 * dy;
+                }
+                p1 += 2 * dx;
+                p2 += 2 * dz;
+                yield [x0,y0,z0];
+            }
+        // Driving axis is Z-axis"
+        } else {
+            let p1 = 2 * dy - dz;
+            let p2 = 2 * dx - dz;
+            while (z0 != z1) {
+                z0 += sz;
+                if (p1 >= 0) {
+                    y0 += sy;
+                    p1 -= 2 * dz;
+                }
+                if (p2 >= 0) {
+                    x0 += sx;
+                    p2 -= 2 * dz;
+                }
+                p1 += 2 * dy;
+                p2 += 2 * dx;
+                yield [x0,y0,z0];
+            }
+        }
+    }
+
     static nameFunction(name, body) {
         return { [name](...args) { return body.apply(this, args) } }[name]
     }
