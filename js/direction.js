@@ -217,6 +217,18 @@ class Direction {
         return Array.from(this.all.filter((v) => dir&v).map((v)=>this.toAbbrev(v))).join('|');
     }
 
+    static isDiagonal(dir) {
+        return (dir & this.diagonal) !== 0;
+    }
+
+    static isCardinal(dir) {
+        return (dir & this.cardinal) !== 0;
+    }
+
+    static isVertical(dir) {
+        return (dir & (this.up|this.down)) !== 0;
+    }
+
     // kinds should be cardinals, diagonals, or all
     static nextInRotation(kinds, current, clockwise=true) {
         let idx = kinds.indexOf(current);

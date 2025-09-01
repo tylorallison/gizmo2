@@ -1,6 +1,7 @@
 # rev package version in package.json
 # publish new git tag/release
 # build
+npm install
 npm run index
 npm run build
 npm run mbuild
