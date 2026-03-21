@@ -110,7 +110,7 @@ class GadgetProperty {
     $setter(value) {
         let gzd = this.$gzd;
         // handle readonly
-        if (gzd.$gadgetReady && this.$readonly) throw new Error(`${this.$key} is readonly`);
+        if (gzd.$gadgetReady && this.$readonly) throw new Error(`${this.key} is readonly`);
         // allow value to be updated or acted upon by schema specific setter
         if (this.$psetter) value = this.$psetter(gzd, this.$value, value);
         if (Object.is(this.$value, value)) return;

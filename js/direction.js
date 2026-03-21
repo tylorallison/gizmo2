@@ -214,7 +214,7 @@ class Direction {
     }
 
     static maskToString(dir) {
-        return Array.from(this.all.filter((v) => dir&v).map((v)=>this.toAbbrev(v))).join('|');
+        return Array.from(this.all3d.filter((v) => dir&v).map((v)=>this.toAbbrev(v))).join('|');
     }
 
     static isDiagonal(dir) {
@@ -335,20 +335,6 @@ class Direction {
         case Direction.north:
         case Direction.northWest:
         case Direction.northEast:
-            return -1;
-        case Direction.south:
-        case Direction.southWest:
-        case Direction.southEast:
-            return 1;
-        }
-        return 0;
-    }
-
-    static asY(dir) {
-        switch(dir) {
-        case Direction.north:
-        case Direction.northWest:
-        case Direction.northEast:
         case Direction.northUp:
         case Direction.northWestUp:
         case Direction.northEastUp:
@@ -372,6 +358,7 @@ class Direction {
 
     static asZ(dir) {
         switch(dir) {
+        case Direction.up:
         case Direction.northUp:
         case Direction.northEastUp:
         case Direction.eastUp:
@@ -381,6 +368,7 @@ class Direction {
         case Direction.westUp:
         case Direction.northWestUp:
             return 1;
+        case Direction.down:
         case Direction.northDown:
         case Direction.northEastDown:
         case Direction.eastDown:
