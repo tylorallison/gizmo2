@@ -193,7 +193,7 @@ class UiGrid extends UiView {
         }
     }
 
-    renderChunk(idx, dx, dy) {
+    renderChunk(idx) {
         if (!this.$chunkCanvas.width || !this.$chunkCanvas.height) return;
         // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
         let chunkOffset = this.$chunks.pointFromIdx(idx);
@@ -218,8 +218,8 @@ class UiGrid extends UiView {
         }
         this.$chunkCtx.translate(chunkOffset.x, chunkOffset.y);
         // -- resulting chunk is rendered to grid canvas
-        let tx = chunkOffset.x-dx;
-        let ty = chunkOffset.y-dy;
+        let tx = chunkOffset.x;
+        let ty = chunkOffset.y;
         this.$gridCtx.clearRect(tx, ty, this.$chunks.colSize, this.$chunks.rowSize);
         this.$gridCtx.drawImage(this.$chunkCanvas, tx, ty);
     }
@@ -233,13 +233,13 @@ class UiGrid extends UiView {
             this.$chunkUpdates.clear();
             this.$rerender = false;
             for (let idx=0; idx<this.$chunks.length; idx++) {
-                this.renderChunk(idx, dx, dy);
+                this.renderChunk(idx);
             }
         } else {
             let chunkUpdates = Array.from(this.$chunkUpdates);
             this.$chunkUpdates.clear();
             for (const idx of chunkUpdates) {
-                this.renderChunk(idx, dx, dy);
+                this.renderChunk(idx);
             }
         }
         // render grid canvas
