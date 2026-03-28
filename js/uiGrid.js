@@ -66,7 +66,7 @@ class UiGrid extends UiView {
     }
 
     destroy() {
-        GadgetCtx.ignore(this.$on_viewCreated, this);
+        GadgetCtx.at_created.ignore(this.$on_viewCreated, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------
